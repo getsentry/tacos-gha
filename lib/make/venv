@@ -9,7 +9,8 @@ onerror() {
 trap onerror ERR
 onerror  # let's start clean
 
-pyenv install --skip-existing
+brew bundle
+pyenv install -v --skip-existing
 pyenv exec python -m venv "$venv"
 "$venv"/bin/pip install -r requirements-dev.txt
 touch "$venv"
