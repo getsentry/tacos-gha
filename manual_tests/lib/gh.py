@@ -23,9 +23,9 @@ def assert_matching_comment(comment: str, since: datetime) -> None:
             "comments",
             "--jq",
             ".comments.[] | {body, createdAt}",
-        )
+        ),
+        encoding="UTF-8",
     )
-    assert isinstance(comments, list), comments
 
     # Parse the comments and their creation times
     for c in comments:
@@ -38,7 +38,7 @@ def assert_matching_comment(comment: str, since: datetime) -> None:
             if comment in c["body"]:
                 return
     else:
-        raise AssertionError(f"No matching comment: {comment}")
+        raise AssertionError(f"No matching comment: {comment}\n{comments}")
 
 
 def open_pr(branch: Branch) -> str:

@@ -6,6 +6,8 @@ from typing import TYPE_CHECKING
 from typing import Iterable
 from typing import Iterator
 
+US_ASCII = "US-ASCII"  # the least-ambiguous encoding
+
 if TYPE_CHECKING:
     # strict encapsulation: limit run-time access to just one function each
     from subprocess import CalledProcessError
@@ -20,7 +22,7 @@ debug: bool = bool(getenv("DEBUG", "1"))
 PS4 = "+ \033[36;1m$\033[m"
 
 
-def info(msg: tuple[str, ...]) -> None:
+def info(msg: tuple[object, ...]) -> None:
     from sys import stderr
 
     print(*msg, file=stderr, flush=True)
@@ -52,11 +54,11 @@ def stdout(cmd: Command) -> str:
     return _wait(_popen(cmd, capture_output=True)).stdout.rstrip("\n")
 
 
-def json(cmd: Command) -> Iterable[object]:
+def json(cmd: Command, encoding: str = US_ASCII) -> Iterable[object]:
     """Return a parsing of newline-delimited json on a subprocess' stdout."""
     import json
 
-    process = _popen(cmd, capture_output=True)
+    process = _popen(cmd, encoding=encoding, capture_output=True)
     assert process.stdout, process.stdout
     for line in process.stdout:
         line = line.strip()
@@ -77,7 +79,9 @@ def success(cmd: Command, returncode: int = 0) -> bool:
     return result.returncode == returncode
 
 
-def _popen(cmd: Command, capture_output: bool = False) -> Popen[str]:
+def _popen(
+    cmd: Command, capture_output: bool = False, encoding: str = US_ASCII
+) -> Popen[str]:
     import subprocess
 
     xtrace(cmd)
@@ -90,14 +94,14 @@ def _popen(cmd: Command, capture_output: bool = False) -> Popen[str]:
     else:
         stdout = None
 
-    return subprocess.Popen(cmd, text=True, encoding="US-ASCII", stdout=stdout)
+    return subprocess.Popen(cmd, text=True, encoding=encoding, stdout=stdout)
 
 
 def _wait(
     process: Popen[str],
     input: str | None = None,
     timeout: int | None = None,
-    check: bool = False,
+    check: bool = True,
 ) -> CompletedProcess[str]:
     """Stolen from the last half of stdlib subprocess.run; finish a process."""
     with process:
@@ -113,6 +117,8 @@ def _wait(
                 retcode, process.args, output=stdout, stderr=stderr
             )
     assert retcode is not None, retcode
+    from subprocess import CompletedProcess
+
     return CompletedProcess(process.args, retcode, stdout, stderr)
 
 

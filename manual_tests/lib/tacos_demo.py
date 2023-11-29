@@ -45,7 +45,7 @@ def commit_changes_to(
 ) -> Branch:
     branch = f"test/{USER}/{test_name}/{NOW.isoformat().replace(':', '_')}"
 
-    sh.run(("git", "checkout", "-b", branch))
+    sh.run(("git", "checkout", "-B", branch))
 
     for s in slices:
         slice.edit(s)

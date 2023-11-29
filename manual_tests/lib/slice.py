@@ -5,7 +5,7 @@ from random import Random
 from typing import TYPE_CHECKING
 
 from lib import sh
-from lib.constants import NOW
+from lib.functions import now
 from lib.functions import one
 
 if TYPE_CHECKING:
@@ -22,7 +22,7 @@ def edit(slice: Slice) -> None:
             f"""\
 resource "null_resource" "edit-me" {{
   triggers = {{
-    now = "{NOW}"
+    now = "{now()}"
   }}
 }}
 """

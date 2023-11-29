@@ -6,14 +6,14 @@ from typing import Callable
 
 from lib import sh
 
-WAIT_LIMIT = int(getenv("WAIT_LIMIT", "30"))
+WAIT_LIMIT = int(getenv("WAIT_LIMIT", "60"))
 WAIT_SLEEP = int(getenv("WAIT_SLEEP", "3"))
 
 Assertion = Callable[[], None | bool]
 
 
 def _wait_loop(assertion: Assertion, limit: int, sleep: int) -> None:
-    while limit > sleep:
+    while limit >= 0:
         try:
             result = assertion()
         except AssertionError:
@@ -24,6 +24,8 @@ def _wait_loop(assertion: Assertion, limit: int, sleep: int) -> None:
 
         do_sleep(sleep)
         limit -= sleep
+    else:
+        do_sleep(sleep)  # we're about to try one last time
 
 
 def for_(
@@ -31,6 +33,6 @@ def for_(
 ) -> None:
     sh.banner(f"retrying for {limit} seconds...")
     with sh.quiet():
-        _wait_loop(assertion, limit, sleep)
+        _wait_loop(assertion, limit - sleep, sleep)
     sh.run((":", "show the final try:"))
     assertion()

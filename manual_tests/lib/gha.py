@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+from typing import Iterable
 from typing import cast
 
 from lib import sh
@@ -9,9 +10,9 @@ from lib import wait
 Check = str
 
 
-def get_checks() -> list[object]:
+def get_checks() -> Iterable[object]:
     """get the most recent run of the named check"""
-    result = sh.json(
+    return sh.json(
         (
             "gh",
             "pr",
@@ -20,16 +21,15 @@ def get_checks() -> list[object]:
             "statusCheckRollup",
             "--jq",
             # TODO: where are these fields documented??
-            ".currentBranch.statusCheckRollup",
+            ".currentBranch.statusCheckRollup[]",
         )
     )
-    assert isinstance(result, list), result
-    return result
 
 
 def assert_ran(check: Check, since: datetime) -> None:
     """success if a specified github-actions job ran"""
     c = get_check(check)
+    sh.info((check, ":", c["status"], c["completedAt"]))
     completed_at = c["completedAt"]
     assert isinstance(completed_at, str), completed_at
 
@@ -57,7 +57,7 @@ def assert_success(check: Check) -> None:
 
 
 def assert_eventual_success(check: Check, since: datetime) -> None:
-    sh.banner(f"waiting for {check}...")
+    sh.info((f"waiting for {check} (since {since})...",))
     wait.for_(lambda: assert_ran(check, since))
     sh.banner(f"{check} ran")
     assert_success(check)

@@ -113,14 +113,7 @@ warn_unreachable = true
 # these are better-covered by pyright:
 disallow_untyped_defs = false
 
-[tool.pylsp.plugins.pycodestyle]
-enabled = false
-[pylsp.plugins.pycodestyle]
-enabled = false
-[pylsp.plugins.autopep8]
-enable = false
-[pylsp.plugins.yapf]
-enabled	= false
+# NOTE: the pylsp server itself cannot be configured via pyproject.toml =.=
 
 [tool.pylsp-mypy]
 enabled = true
