@@ -1,4 +1,3 @@
-export PYTHON ?= python$(shell cat  .python-version)
 export PORT ?= 8088
 
 venv: ./lib/make/venv .brew.done requirements-dev.txt .python-version
@@ -18,7 +17,7 @@ coverage: venv
 
 coverage-html: coverage
 	./venv/bin/coverage html
-	$(PYTHON) -m http.server --directory ./htmlcov $(PORT)
+	pyenv exec python -m http.server --directory ./htmlcov $(PORT)
 
 
 format: ./lib/make/format venv
