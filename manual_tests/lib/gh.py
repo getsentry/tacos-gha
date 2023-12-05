@@ -14,7 +14,7 @@ Branch = str
 
 def assert_matching_comment(comment: str, since: datetime) -> None:
     # Fetch the comments on the PR
-    comments = sh.json(
+    comments = sh.jq(
         (
             "gh",
             "pr",
@@ -39,6 +39,30 @@ def assert_matching_comment(comment: str, since: datetime) -> None:
                 return
     else:
         raise AssertionError(f"No matching comment: {comment}\n{comments}")
+
+
+def assert_pr_has_label(pr_url: URL, label: str) -> None:
+    sh.banner("asserting PR has label:")
+    labels = sh.stdout(
+        (
+            "gh",
+            "pr",
+            "view",
+            "--json",
+            "labels",
+            "--jq",
+            ".labels.[] | .name",
+            pr_url,
+        )
+    )
+
+    assert label in labels, (label, labels)
+
+
+def assert_pr_is_approved(pr_url: URL) -> None:
+    sh.banner("asserting PR is approved:")
+    # TODO: actually check that the PR is approved (once we add a second service account)
+    assert_pr_has_label(pr_url, ":taco::approve")
 
 
 def open_pr(branch: Branch) -> str:
@@ -66,3 +90,14 @@ def close_pr(pr_url: URL) -> None:
             pr_url,
         )
     )
+
+
+def approve_pr(pr_url: URL) -> None:
+    sh.banner("approving PR:")
+    # TODO: find a way to approve with a separate service account
+    add_label(pr_url, ":taco::approve")
+
+
+def add_label(pr_url: URL, label: str) -> None:
+    sh.banner(f"adding label {label} to PR:")
+    sh.run(("gh", "pr", "edit", "--add-label", label, pr_url))

@@ -1,12 +1,21 @@
 from __future__ import annotations
 
 import contextlib
+import os
 from os import getenv
 from typing import TYPE_CHECKING
+from typing import Dict
 from typing import Iterable
 from typing import Iterator
+from typing import List
+from typing import MutableMapping
+from typing import Union
 
 US_ASCII = "US-ASCII"  # the least-ambiguous encoding
+JSONPrimitive = Union[str, int, float, bool, None]
+JSONObject = Dict[str, JSONPrimitive]
+JSONArray = List[JSONPrimitive]
+JSONValue = Union[JSONPrimitive, JSONArray, JSONObject]
 
 if TYPE_CHECKING:
     # strict encapsulation: limit run-time access to just one function each
@@ -37,11 +46,25 @@ def xtrace(cmd: Command) -> None:
         info((PS4, quote(cmd)))
 
 
-def cd(dirname: str) -> None:
+def cd(
+    dirname: str,
+    env: MutableMapping[str, str] = os.environ,
+    direnv: bool = True,
+) -> None:
     from os import chdir
 
     xtrace(("cd", dirname))
     chdir(dirname)
+    if direnv:
+        direnv_json: JSONValue = json(("direnv", "export", "json"))
+        if not isinstance(direnv_json, dict):
+            raise TypeError(f"expected dict, got {type(direnv_json)}")
+        for key, value in direnv_json.items():
+            if value is None:
+                env.pop(key, None)
+            else:
+                assert isinstance(value, str), value
+                env[key] = value
 
 
 def quote(cmd: Command) -> str:
@@ -54,8 +77,16 @@ def stdout(cmd: Command) -> str:
     return _wait(_popen(cmd, capture_output=True)).stdout.rstrip("\n")
 
 
-def json(cmd: Command, encoding: str = US_ASCII) -> Iterable[object]:
-    """Return a parsing of newline-delimited json on a subprocess' stdout."""
+def json(cmd: Command) -> JSONValue:
+    """Parse the (singular) json on a subprocess' stdout."""
+    import json
+
+    result: JSONValue = json.loads(stdout(cmd))
+    return result
+
+
+def jq(cmd: Command, encoding: str = US_ASCII) -> Iterable[object]:
+    """Yield the objects from newline-delimited json on a subprocess' stdout."""
     import json
 
     process = _popen(cmd, encoding=encoding, capture_output=True)

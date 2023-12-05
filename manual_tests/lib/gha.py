@@ -12,7 +12,7 @@ Check = str
 
 def get_checks() -> Iterable[object]:
     """get the most recent run of the named check"""
-    return sh.json(
+    return sh.jq(
         (
             "gh",
             "pr",
