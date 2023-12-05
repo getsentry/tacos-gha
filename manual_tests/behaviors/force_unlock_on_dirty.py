@@ -1,6 +1,8 @@
 #!/usr/bin/env py.test
 from __future__ import annotations
 
+import pytest
+
 from lib.functions import now
 from manual_tests.lib import gh
 from manual_tests.lib import gha
