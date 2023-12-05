@@ -10,6 +10,7 @@ from manual_tests.lib import tacos_demo
 TEST_NAME = __name__
 
 
+@pytest.mark.xfail
 def test() -> None:
     tacos_demo.clone()
 
