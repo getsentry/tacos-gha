@@ -18,7 +18,9 @@ def test() -> None:
     try:
         gha.assert_eventual_success("terraform_lock", since)
         gh.add_label(tacos_demo_pr.url, ":taco::unlock")
-        # nothing has been applied, this should succeed.
         gha.assert_eventual_success("terraform_unlock", since)
+        gh.assert_matching_comment(
+            "INFO: Main branch clean, unlock successful.", since
+        )
     finally:
         gh.close_pr(tacos_demo_pr.branch)

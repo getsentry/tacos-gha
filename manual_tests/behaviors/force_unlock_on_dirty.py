@@ -24,5 +24,6 @@ def test() -> None:
         gh.assert_matching_comment(
             "WARNING: Unlocked while applied but not merged!", since
         )
+        # TODO: maybe check for the opening of the drift remediation branch.
     finally:
         gh.close_pr(tacos_demo_pr.branch)
