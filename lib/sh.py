@@ -56,7 +56,9 @@ def cd(
     xtrace(("cd", dirname))
     chdir(dirname)
     if direnv:
-        direnv_json: Dict[str, JSONValue] = json(("direnv", "export", "json"))
+        direnv_json: JSONValue = json(("direnv", "export", "json"))
+        if not isinstance(direnv_json, dict):
+            raise TypeError(f"expected dict, got {type(direnv_json)}")
         for key, value in direnv_json.items():
             if value is None:
                 env.pop(key, None)
@@ -75,11 +77,11 @@ def stdout(cmd: Command) -> str:
     return _wait(_popen(cmd, capture_output=True)).stdout.rstrip("\n")
 
 
-def json(cmd: Command) -> Dict[str, JSONValue]:
+def json(cmd: Command) -> JSONValue:
     """Parse the (singular) json on a subprocess' stdout."""
     import json
 
-    result: Dict[str, JSONValue] = json.loads(stdout(cmd))
+    result: JSONValue = json.loads(stdout(cmd))
     return result
 
 
