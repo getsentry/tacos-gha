@@ -1,0 +1,8 @@
+#!/bin/bash
+set -euo pipefail
+exec >&2  # all output is logging
+
+set -x
+
+pip-compile --upgrade requirements-dev.in "$@" \
+  > requirements-dev.txt

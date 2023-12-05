@@ -1,0 +1,7 @@
+#!/bin/bash
+set -euo pipefail
+exec >&2  # all output is logging
+
+set -x
+
+coverage report "$@"

@@ -1,8 +1,16 @@
-pip-tools
-coverage
-covdefaults
-pytest
-black
+# typing
 pyright
 mypy
+
+# auto-formatting
 isort
+black
+
+# test & coverage
+pytest
+coverage_enable_subprocess
+coverage
+covdefaults
+
+# dependency management
+pip-tools

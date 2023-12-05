@@ -1,0 +1,8 @@
+#!/bin/bash
+set -euo pipefail
+exec >&2  # all output is logging
+
+set -x
+
+brew bundle "$@"
+touch "$REPO_TOP/.done/brew"

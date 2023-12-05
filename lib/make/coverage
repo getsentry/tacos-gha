@@ -1,0 +1,17 @@
+#!/bin/bash
+set -euo pipefail
+exec >&2  # all output is logging
+
+set -x
+
+export COVERAGE_PROCESS_START="$REPO_TOP/.coveragerc"
+
+# disable the cache plugin to ensure we get data from all tests
+if ! ./lib/make/test -p no:cache "$@"; then
+  : 'some tests failed :('
+fi
+
+unset COVERAGE_PROCESS_START
+
+: create .coverage data file:
+coverage collect

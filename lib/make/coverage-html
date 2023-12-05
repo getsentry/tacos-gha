@@ -1,0 +1,12 @@
+#!/bin/bash
+set -euo pipefail
+exec >&2  # all output is logging
+
+set -x
+
+coverage html \
+  --directory coverage-html \
+  --fail-under=0 \
+  "$@" \
+;
+touch coverage-html/

@@ -1,6 +1,8 @@
 #!/bin/bash
-set -euxo pipefail
+set -euo pipefail
 exec >&2  # all output is logging
+
+set -x
 
 fail=()
 if ! pyright .; then
@@ -20,8 +22,8 @@ fi
 
 if ! git ls-files |
   file --mime-type --no-pad --files-from=- |
-  sed 's@: text/x-shellscript$@@; t; d' |
-  xargs shellcheck
+    sed 's@: text/x-shellscript$@@; t; d' |
+    xargs -r shellcheck
 then
   fail+=(shellcheck)
 fi

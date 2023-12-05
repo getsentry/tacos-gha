@@ -1,0 +1,12 @@
+#!/bin/bash
+set -euo pipefail
+exec >&2  # all output is logging
+
+set -x
+
+: these make pyenv very confused:
+unset MAKEFLAGS MAKELEVEL MFLAGS
+
+pyenv install -v --skip-existing "$@"
+
+touch "$REPO_TOP/.done/pyenv"
