@@ -1,16 +1,19 @@
 #!/bin/bash
-set -euxo pipefail
-venv="./$1"
+set -euo pipefail
+exec >&2  # all output is logging
 
-onerror() {
-  rm -rf "$venv"
-}
+VIRTUAL_ENV=${VIRTUAL_ENV:-$PWD/venv}
+cleanup() { rm -rf "$VIRTUAL_ENV"; }
+trap cleanup ERR
 
-trap onerror ERR
-onerror  # let's start clean
+set -x
 
-brew bundle
+: lets start clean
+cleanup
 pyenv install -v --skip-existing
-pyenv exec python -m venv "$venv"
-"$venv"/bin/pip install -r requirements-dev.txt
-touch "$venv"
+pyenv exec python3 -m venv "$VIRTUAL_ENV"
+: should be the venv pip:
+which pip
+pip install -r requirements-dev.txt "$@"
+
+touch "$VIRTUAL_ENV"

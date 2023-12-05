@@ -1,1 +1,7 @@
+# please ensure these all agree:
+#   1. this file: .python-version
+#   2. pyproject.toml tool.black.target-version
+#   3. pyproject.toml tool.pyright.pythonVersion
+#   4. pyproject.toml tool.pyright.extraPaths
+#   5. pyproject.toml tool.mypy.python_version
 3.12

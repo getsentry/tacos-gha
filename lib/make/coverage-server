@@ -1,0 +1,17 @@
+#!/bin/bash
+set -euo pipefail
+exec >&2  # all output is logging
+
+if ! [[ "$*" ]]; then
+  # default args
+  set -- "${PORT:-8088}"
+fi
+
+set -x
+
+python3 \
+  -m http.server \
+  --directory ./coverage-html \
+  --bind 127.0.0.1 \
+  "$@" \
+;

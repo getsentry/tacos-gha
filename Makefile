@@ -1,32 +1,48 @@
-export PORT ?= 8088
+# all recipes live in scripts at ./lib/make/
+makelib ?= ./lib/make
 
-venv: ./lib/make/venv .brew.done requirements-dev.txt .python-version
-	./lib/make/venv "$@"
+# a nicer-looking xtrace: (one intentional trailing space)
+export PS4 ?= + \033[31;1m$$\033[m\ 
 
-.brew.done: Brewfile
-	brew bundle
-	touch .brew.done
+# listing of all python-relevant inputs
+python_files := $(shell git ls-files *.py requirements*.in requirements*.txt)
 
-
-requirements-dev.txt: requirements-dev.in
-	pip-compile requirements-dev.in --upgrade > requirements-dev.txt
-
-
-coverage: venv
-	./venv/bin/coverage run -m pytest
-
-coverage-html: coverage
-	./venv/bin/coverage html
-	pyenv exec python -m http.server --directory ./htmlcov $(PORT)
+.PHONY: all
+all: venv
 
 
-format: ./lib/make/format venv
-	./lib/make/format
+### commands: these will always run, even if nothing changed
+commands := test lint format
+test: $(makelib)/test venv
+lint: $(makelib)/lint format
+format: $(makelib)/format venv
 
-lint: ./lib/make/lint venv format
-	./lib/make/lint
+### dependencies: it's important that these properly report "already done"
+venv: $(makelib)/venv .python-version requirements-dev.txt .done/pyenv
+requirements-dev.txt: $(makelib)/pip-compile requirements-dev.in
+.done/pyenv: $(makelib)/pyenv .python-version .done/brew
+.done/brew: $(makelib)/brew Brewfile
+
+### test coverage
+# coverage commands
+commands += coverage-report coverage-server
+coverage-report: $(makelib)/coverage-report .coverage
+coverage-server: $(makelib)/coverage-server coverage-html
+
+# coverage deps
+coverage-html: $(makelib)/coverage-html .coverage
+.coverage: $(makelib)/coverage venv $(python_files)
 
 
-# this makes `make -d` output readable:
+### one recipe for all: run the target's first dependency, with zero args
+$(commands) %:
+	@set -x; $<
+
+
+### incidental complexity: you might stop reading here :)
+# commands: ignore any coincidental files with the same name:
+# TODO: maybe our "commands" should (be able to) report "already done", too?
+.PHONY: $(commands)
+# help debug (make -d) output be readable:
 .SUFFIXES:
 MAKEFLAGS:=--no-builtin-rules --no-builtin-variables

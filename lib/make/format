@@ -1,11 +1,14 @@
 #!/bin/bash
-set -euxo pipefail
+set -euo pipefail
+exec >&2  # all output is logging
+
+set -x
 
 git ls-files '**/*.py' |
-  xargs black
+  xargs -r black
 
 git ls-files '**/*.py' |
-  xargs isort
+  xargs -r isort
 
 git ls-files |
-  xargs prettier --write --ignore-unknown
+  xargs -r prettier --write --ignore-unknown

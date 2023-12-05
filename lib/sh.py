@@ -1,21 +1,18 @@
 from __future__ import annotations
 
 import contextlib
-import os
+from os import environ
 from os import getenv
 from typing import TYPE_CHECKING
-from typing import Dict
 from typing import Iterable
 from typing import Iterator
-from typing import List
 from typing import MutableMapping
-from typing import Union
 
 US_ASCII = "US-ASCII"  # the least-ambiguous encoding
-JSONPrimitive = Union[str, int, float, bool, None]
-JSONObject = Dict[str, JSONPrimitive]
-JSONArray = List[JSONPrimitive]
-JSONValue = Union[JSONPrimitive, JSONArray, JSONObject]
+JSONPrimitive = str | int | float | bool | None
+JSONObject = dict[str, JSONPrimitive]
+JSONArray = list[JSONPrimitive]
+JSONValue = JSONPrimitive | JSONArray | JSONObject
 
 if TYPE_CHECKING:
     # strict encapsulation: limit run-time access to just one function each
@@ -47,14 +44,13 @@ def xtrace(cmd: Command) -> None:
 
 
 def cd(
-    dirname: str,
-    env: MutableMapping[str, str] = os.environ,
-    direnv: bool = True,
+    dirname: str, direnv: bool = True, env: MutableMapping[str, str] = environ
 ) -> None:
     from os import chdir
 
     xtrace(("cd", dirname))
     chdir(dirname)
+    # TODO: set env[PWD] to absolute path
     if direnv:
         direnv_json: JSONValue = json(("direnv", "export", "json"))
         if not isinstance(direnv_json, dict):
