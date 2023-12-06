@@ -14,4 +14,4 @@ fi
 unset COVERAGE_PROCESS_START
 
 : create .coverage data file:
-coverage collect
+coverage combine
