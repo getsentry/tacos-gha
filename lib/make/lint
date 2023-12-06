@@ -26,8 +26,10 @@ fi
 
 if ! git ls-files |
   file --mime-type --no-pad --files-from=- |
-    sed 's@: text/x-shellscript$@@; t; d' |
-    xargs -r shellcheck
+    grep ': text/x-shellscript$' |
+    sed 's@: text/x-shellscript$@@' |
+    xargs -r shellcheck \
+  ;
 then
   fail+=(shellcheck)
 fi
