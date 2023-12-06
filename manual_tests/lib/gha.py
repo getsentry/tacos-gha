@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from typing import Iterable
+from typing import Optional
 from typing import cast
 
 from lib import sh
@@ -48,6 +49,13 @@ def get_check(check: Check) -> dict[str, object]:
             return cast(dict[str, object], c)
     else:
         raise AssertionError(f"No such check found: {check}")
+
+
+def wait_for_check(check: Check, since: datetime) -> dict[str, object]:
+    sh.info((f"waiting for {check}...",))
+    wait.for_(lambda: assert_ran(check, since))
+    sh.banner(f"{check} ran")
+    return get_check(check)
 
 
 def assert_success(check: Check) -> None:
