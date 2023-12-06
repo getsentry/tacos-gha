@@ -3,17 +3,17 @@
 from __future__ import annotations
 
 import functools
+import typing
 from contextlib import AbstractContextManager as ContextManager
+from typing import Callable
+from typing import ParamSpec
+from typing import TypeVar
 
 import pytest
-import typing_extensions
-from typing_extensions import Callable
-from typing_extensions import ParamSpec
-from typing_extensions import TypeVar
 
 T = TypeVar("T")
 
-Generator = typing_extensions.Generator[T, None, None]  # shim python3.13
+Generator = typing.Generator[T, None, None]  # shim py313/PEP696
 Params = ParamSpec("Params")
 Return = TypeVar("Return")
 

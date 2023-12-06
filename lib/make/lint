@@ -11,11 +11,15 @@ fi
 if ! mypy .; then
   fail+=(mypy)
 fi
-if ! git ls-files './*/__init__.py' |
+if ! git ls-files '*/py.typed' |
     xargs dirname |
     xargs -n1 -tr \
       env PYTHONPATH="$PWD" \
-      pyright --verifytypes
+        pyright \
+        --ignoreexternal \
+        --verifytypes \
+      \
+    ;
 then
   fail+=(pyright-verifytypes)
 fi

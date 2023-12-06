@@ -17,8 +17,7 @@ def for_(
 ) -> None:
     while limit >= sleep:
         try:
-            with sh.quiet():
-                result = assertion()
+            result = assertion()
         except AssertionError:
             result = False
 
