@@ -31,8 +31,10 @@ class TacosDemoPR(gh.PR):
         return cls(**vars(pr), slices=slices)
 
     @classmethod
-    def for_test(cls, test_name: str, slices: slice.Slices) -> Self:
-        branch = commit_changes_to(slices, test_name)
+    def for_test(
+        cls, test_name: str, slices: slice.Slices, branch: object = None
+    ) -> Self:
+        branch = commit_changes_to(slices, test_name, branch=branch)
 
         pr = cls.open(branch, slices=slices)
 
@@ -43,10 +45,10 @@ class TacosDemoPR(gh.PR):
     @classmethod
     @contextmanager
     def opened_for_test(
-        cls, test_name: str, slices: slice.Slices
+        cls, test_name: str, slices: slice.Slices, branch: object = None
     ) -> Generator[Self]:
         clone()
-        tacos_demo_pr = cls.for_test(test_name, slices)
+        tacos_demo_pr = cls.for_test(test_name, slices, branch)
         yield tacos_demo_pr
         tacos_demo_pr.close()
 
@@ -58,19 +60,29 @@ def clone() -> None:
 
 
 def commit_changes_to(
-    slices: slice.Slices, test_name: str, postfix: str = ""
+    slices: slice.Slices,
+    test_name: str,
+    commit: str = "",
+    branch: object = None,
 ) -> Branch:
-    branch = f"test/{USER}/{test_name}/{NOW.isoformat().replace(':', '_')}"
+    if branch is None:
+        branch = ""
+    else:
+        branch = f"/{branch}"
+
+    branch = (
+        f"test/{USER}/{NOW.isoformat().replace(':', '_')}/{test_name}{branch}"
+    )
 
     # NB: setting an upstream tracking branch makes `gh pr` stop working well
     sh.run(("git", "checkout", "-B", branch))
 
     for s in slices:
         slice.edit(s)
-    if postfix:
-        postfix = " - " + postfix
 
-    sh.run(("git", "commit", "-m", f"test: {test_name} ({NOW}){postfix}"))
+    if commit:
+        commit = " - " + commit
+    sh.run(("git", "commit", "-m", f"test: {test_name} ({NOW}){commit}"))
     sh.run(("git", "push", "origin", f"{branch}:{branch}"))
 
     return branch

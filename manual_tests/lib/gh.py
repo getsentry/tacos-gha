@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
+from typing import Iterable
 from typing import Self
 from typing import Sequence
 
@@ -112,3 +113,19 @@ class PR:
             if created_at >= since:
                 result.append(comment["body"])
         return tuple(result)
+
+    def checks(self) -> Iterable[json.Value]:
+        """get the most recent run of the named check"""
+        return sh.jq(
+            (
+                "gh",
+                "pr",
+                "view",
+                self.url,
+                "--json",
+                "statusCheckRollup",
+                "--jq",
+                # TODO: where are these fields documented??
+                ".statusCheckRollup[]",
+            )
+        )

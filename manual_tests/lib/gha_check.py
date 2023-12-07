@@ -7,6 +7,8 @@ from typing import Self
 from lib import json
 from lib.json import assert_dict_of_strings
 
+from .gh import PR
+
 # TODO: centralize reused type aliases
 # FIXME: use a more specific type than str
 URL = str
@@ -42,7 +44,7 @@ class Check:
         attrs = assert_dict_of_strings(json).copy()
         return cls(
             typename=attrs.pop("__typename"),
-            startedAt=datetime.fromisoformat(attrs.pop("completedAt")),
+            startedAt=datetime.fromisoformat(attrs.pop("startedAt")),
             completedAt=datetime.fromisoformat(attrs.pop("completedAt")),
             **attrs,
         )

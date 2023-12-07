@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Iterable
 
 from lib import json
 from lib import sh
@@ -12,23 +11,6 @@ from .gha_check import Check as Check
 
 # TODO: centralize reused type aliases
 CheckName = str
-
-
-def get_checks(pr: PR) -> Iterable[json.Value]:
-    """get the most recent run of the named check"""
-    return sh.jq(
-        (
-            "gh",
-            "pr",
-            "view",
-            pr.url,
-            "--json",
-            "statusCheckRollup",
-            "--jq",
-            # TODO: where are these fields documented??
-            ".statusCheckRollup[]",
-        )
-    )
 
 
 def assert_ran(
@@ -45,7 +27,7 @@ def assert_ran(
 def get_check(pr: PR, check_name: CheckName) -> Check:
     """Return the _most recent_ status of the named check."""
     checks: list[Check] = []
-    for obj in get_checks(pr):
+    for obj in pr.checks():
         check = json.assert_dict_of_strings(obj)
         if check["name"] == check_name:
             # https://github.com/microsoft/pyright/discussions/6577
@@ -63,6 +45,13 @@ def get_check(pr: PR, check_name: CheckName) -> Check:
         return checks[-1]
     else:
         raise AssertionError(f"No such check found: {check_name}")
+
+
+def wait_for_check(pr: PR, check: CheckName, since: datetime) -> Check:
+    sh.info(f"waiting for {check}...")
+    wait.for_(lambda: assert_ran(pr, check, since))
+    sh.banner(f"{check} ran")
+    return get_check(pr, check)
 
 
 def assert_success(pr: PR, check_name: CheckName) -> None:
