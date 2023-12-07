@@ -101,3 +101,8 @@ def approve_pr(pr_url: URL) -> None:
 def add_label(pr_url: URL, label: str) -> None:
     sh.banner(f"adding label {label} to PR:")
     sh.run(("gh", "pr", "edit", "--add-label", label, pr_url))
+
+
+def checkout(branch: Branch) -> None:
+    sh.banner(f"checking out branch {branch}:")
+    sh.run(("git", "checkout", branch))
