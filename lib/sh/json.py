@@ -21,7 +21,7 @@ def json(cmd: Command) -> JSON.Value:
     return result
 
 
-def jq(cmd: Command, encoding: str = US_ASCII) -> Generator[JSON.Value]:
+def jq(cmd: Command, *, encoding: str = US_ASCII) -> Generator[JSON.Value]:
     """Yield each object from newline-delimited json on a subprocess' stdout.
 
     >>> tuple(jq(("seq", 3)))
@@ -33,6 +33,6 @@ def jq(cmd: Command, encoding: str = US_ASCII) -> Generator[JSON.Value]:
         try:
             result: JSON.Value = json.loads(line)
         except Exception as error:
-            raise ValueError(f"bad JSON:\n    {line}") from error
+            raise ValueError(f"bad JSON: {line!r}") from error
         else:
             yield result

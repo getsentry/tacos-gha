@@ -46,8 +46,8 @@ def stdout(cmd: Command) -> str:
 def lines(cmd: Command, *, encoding: str = US_ASCII) -> Generator[Line]:
     """Yield each object from newline-delimited json on a subprocess' stdout.
 
-    >>> tuple(jq(("seq", 3)))
-    (1, 2, 3)
+    >>> list(lines(("seq", 3, -1, 1)))
+    ['3', '2', '1']
     """
     process = _popen(cmd, encoding=encoding, capture_output=True)
     assert process.stdout, process.stdout
@@ -55,6 +55,7 @@ def lines(cmd: Command, *, encoding: str = US_ASCII) -> Generator[Line]:
         line = line.strip()
         if not line or line.startswith("#"):
             continue
+
         yield line
 
 

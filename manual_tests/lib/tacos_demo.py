@@ -23,7 +23,7 @@ URL = str
 
 
 @dataclass(frozen=True)
-class TacosDemoPR(gh.PR):
+class PR(gh.PR):
     slices: slice.Slices
 
     @classmethod

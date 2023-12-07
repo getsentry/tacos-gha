@@ -1,3 +1,4 @@
+#!/usr/bin/env py.test
 from __future__ import annotations
 
 import pytest
@@ -18,4 +19,4 @@ class DescribeJq:
         with pytest.raises(ValueError) as raised:
             tuple(json.jq(("echo", "wut")))
 
-        assert raised.value.args == ("bad JSON:\n    wut",)
+        assert raised.value.args == ("bad JSON: 'wut'",)

@@ -7,7 +7,8 @@ set -x
 export COVERAGE_PROCESS_START="$REPO_TOP/.coveragerc"
 
 # disable the cache plugin to ensure we get data from all tests
-if ! ./lib/make/test -p no:cache "$@"; then
+# otherwise, by default, we only run the "last failed" tests
+if ! ./lib/make/test -p no:cacheprovider "$@"; then
   : 'some tests failed :('
 fi
 

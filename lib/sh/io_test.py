@@ -1,3 +1,4 @@
+#!/usr/bin/env py.test
 from __future__ import annotations
 
 import pytest

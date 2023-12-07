@@ -73,7 +73,7 @@ class PR:
 
     def labels(self) -> Sequence[Label]:
         result: list[Label] = []
-        for obj in sh.jq(
+        for label in sh.lines(
             (
                 "gh",
                 "pr",
@@ -85,8 +85,7 @@ class PR:
                 self.url,
             )
         ):
-            assert isinstance(obj, str), (self, obj)
-            result.append(obj)
+            result.append(label)
         return tuple(result)
 
     def comments(self, since: datetime) -> Sequence[Comment]:

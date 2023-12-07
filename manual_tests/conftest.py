@@ -25,6 +25,6 @@ def slices() -> slice.Slices:
 @fixture
 def pr(
     test_name: str, slices: slice.Slices
-) -> Generator[tacos_demo.TacosDemoPR, None, None]:
-    with tacos_demo.TacosDemoPR.opened_for_test(test_name, slices) as result:
+) -> Generator[tacos_demo.PR, None, None]:
+    with tacos_demo.PR.opened_for_test(test_name, slices) as result:
         yield result

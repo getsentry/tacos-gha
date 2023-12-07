@@ -1,6 +1,8 @@
 #!/usr/bin/env py.test
 from __future__ import annotations
 
+import pytest
+
 from lib.functions import now
 from manual_tests.lib import gha
 from manual_tests.lib import slice
@@ -12,10 +14,9 @@ TEST_NAME = __name__
 Branch = int
 
 
+@pytest.mark.xfail(reason="apply not yet implemented")
 def test() -> None:
-    with tacos_demo.TacosDemoPR.opened_for_test(
-        TEST_NAME, slice.random()
-    ) as pr:
+    with tacos_demo.PR.opened_for_test(TEST_NAME, slice.random()) as pr:
         gha.assert_eventual_success(pr, "terraform_lock")
 
         pr.approve()
