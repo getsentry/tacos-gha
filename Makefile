@@ -2,7 +2,7 @@
 makelib ?= ./lib/make
 
 # a nicer-looking xtrace: (one intentional trailing space)
-export PS4 ?= + \033[31;1m$$\033[m\ 
+export PS4 ?= + \033[31;1m$$\033[m 
 
 # listing of all python-relevant inputs
 python_files := $(shell git ls-files *.py requirements*.in requirements*.txt)
