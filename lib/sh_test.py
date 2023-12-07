@@ -28,7 +28,7 @@ class DescribeJq:
         with pytest.raises(ValueError) as raised:
             tuple(sh.jq(("echo", "wut")))
 
-        assert raised.value.args == ("bad JSON:\n    wut",)
+        assert raised.value.args == ("bad JSON: 'wut'",)
 
 
 _wait = sh._wait  # pyright:ignore[reportPrivateUsage]

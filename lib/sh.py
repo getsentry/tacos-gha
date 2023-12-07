@@ -1,13 +1,14 @@
 #!/usr/bin/env py.test
 from __future__ import annotations
 
+import typing
 from os import environ
 from subprocess import CalledProcessError as CalledProcessError
 from subprocess import TimeoutExpired as TimeoutExpired
 from typing import TYPE_CHECKING
-from typing import Iterable
 from typing import Iterator
 from typing import MutableMapping
+from typing import TypeVar
 
 from . import json as JSON
 from .sh_io import banner as banner
@@ -26,6 +27,9 @@ if TYPE_CHECKING:
 # TODO: centralize reused type aliases
 Command = tuple[object, ...]
 Yields = Iterator
+Line = str  # blank lines and lines starting with # are not emitted
+T = TypeVar("T")
+Generator = typing.Generator[T, None, None]  # shim py313/PEP696
 
 
 def cd(
@@ -72,14 +76,12 @@ def json(cmd: Command) -> JSON.Value:
     return result
 
 
-def jq(cmd: Command, encoding: str = US_ASCII) -> Iterable[JSON.Value]:
+def lines(cmd: Command, *, encoding: str = US_ASCII) -> Generator[Line]:
     """Yield each object from newline-delimited json on a subprocess' stdout.
 
-    >>> tuple(jq(("seq", 3)))
-    (1, 2, 3)
+    >>> list(lines(("seq", 3, -1, 1)))
+    ['3', '2', '1']
     """
-    import json
-
     process = _popen(cmd, encoding=encoding, capture_output=True)
     assert process.stdout, process.stdout
     for line in process.stdout:
@@ -87,10 +89,22 @@ def jq(cmd: Command, encoding: str = US_ASCII) -> Iterable[JSON.Value]:
         if not line or line.startswith("#"):
             continue
 
+        yield line
+
+
+def jq(cmd: Command, *, encoding: str = US_ASCII) -> Generator[JSON.Value]:
+    """Yield each object from newline-delimited json on a subprocess' stdout.
+
+    >>> tuple(jq(("seq", 3)))
+    (1, 2, 3)
+    """
+    import json
+
+    for line in lines(cmd, encoding=encoding):
         try:
             result: JSON.Value = json.loads(line)
         except Exception as error:
-            raise ValueError(f"bad JSON:\n    {line}") from error
+            raise ValueError(f"bad JSON: {line!r}") from error
         else:
             yield result
 

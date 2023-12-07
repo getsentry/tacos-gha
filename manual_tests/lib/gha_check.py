@@ -7,8 +7,6 @@ from typing import Self
 from lib import json
 from lib.json import assert_dict_of_strings
 
-from .gh import PR
-
 # TODO: centralize reused type aliases
 # FIXME: use a more specific type than str
 URL = str

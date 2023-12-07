@@ -8,24 +8,19 @@ from manual_tests.lib import gha
 from manual_tests.lib import slice
 from manual_tests.lib import tacos_demo
 
-TEST_NAME = __name__
+PLAN_MESSAGE = (
+    '<summary>Execution result of "run-all plan -out plan" in "."</summary>'
+)
 
-Branch = int
 
-
-def assert_gha_plan(pr: tacos_demo.TacosDemoPR, since: datetime) -> None:
+def assert_gha_plan(pr: tacos_demo.PR, since: datetime) -> None:
     gha.assert_eventual_success(pr, "terraform_plan", since)
-    assert "Execution result of" in pr.comments(since)
+    assert any(PLAN_MESSAGE in comment for comment in pr.comments(since))
 
 
-def test() -> None:
-    with tacos_demo.TacosDemoPR.opened_for_test(
-        TEST_NAME, slice.random()
-    ) as pr:
-        assert_gha_plan(pr, pr.since)
+def test(pr: tacos_demo.PR, test_name: str, slices: slice.Slices) -> None:
+    assert_gha_plan(pr, pr.since)
 
-        since = now()
-        tacos_demo.commit_changes_to(
-            slice.random(), TEST_NAME, postfix="more code"
-        )
-        assert_gha_plan(pr, since)
+    since = now()
+    tacos_demo.commit_changes_to(slices, test_name, commit="more code")
+    assert_gha_plan(pr, since)
