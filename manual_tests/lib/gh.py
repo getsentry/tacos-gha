@@ -98,6 +98,10 @@ def approve_pr(pr_url: URL) -> None:
     add_label(pr_url, ":taco::approve")
 
 
+def merge_pr(pr_url: URL) -> str:
+    return sh.stdout(("gh", "pr", "merge", "--squash", pr_url))
+
+
 def add_label(pr_url: URL, label: str) -> None:
     sh.banner(f"adding label {label} to PR:")
     sh.run(("gh", "pr", "edit", "--add-label", label, pr_url))
