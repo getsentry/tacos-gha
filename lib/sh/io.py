@@ -1,18 +1,15 @@
 from __future__ import annotations
 
 import contextlib
-import typing
 from os import getenv
-from typing import TypeVar
 
-from . import ansi
+from lib import ansi
+
+from .types import Command
+from .types import Generator
 
 PS4 = f"+ {ansi.TEAL}${ansi.RESET} "
 
-# TODO: centralize reused type aliases
-T = TypeVar("T")
-Command = tuple[object, ...]
-Generator = typing.Generator[T, None, None]  # shim PEP696
 
 debug: bool = bool(getenv("DEBUG", "1"))
 

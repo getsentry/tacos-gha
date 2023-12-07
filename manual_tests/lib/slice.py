@@ -4,9 +4,9 @@ from pathlib import Path
 from random import Random
 from typing import TYPE_CHECKING
 
-from lib import sh
 from lib.functions import now
 from lib.functions import one
+from lib.sh import sh
 
 if TYPE_CHECKING:
     import contextlib

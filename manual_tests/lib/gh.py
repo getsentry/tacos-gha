@@ -7,9 +7,9 @@ from typing import Self
 from typing import Sequence
 
 from lib import json
-from lib import sh
 from lib import wait
 from lib.functions import now
+from lib.sh import sh
 
 # FIXME: use a more specific type than str
 URL = str

@@ -26,6 +26,6 @@ def test() -> None:
 
         since = now()
         tacos_demo.commit_changes_to(
-            slice.random(), TEST_NAME, postfix="more code"
+            slice.random(), TEST_NAME, commit="more code"
         )
         assert_gha_plan(pr, since)

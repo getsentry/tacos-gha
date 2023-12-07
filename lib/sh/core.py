@@ -1,21 +1,17 @@
-#!/usr/bin/env py.test
+# the core private functions (_popen, _wait) plus their direct callers
+
+
 from __future__ import annotations
 
-from os import environ
-from subprocess import CalledProcessError as CalledProcessError
-from subprocess import TimeoutExpired as TimeoutExpired
 from typing import TYPE_CHECKING
-from typing import Iterable
-from typing import Iterator
-from typing import MutableMapping
 
-from . import json as JSON
-from .sh_io import banner as banner
-from .sh_io import info as info
-from .sh_io import quiet as quiet
-from .sh_io import xtrace
+from .constant import US_ASCII
+from .io import xtrace
+from .types import Command
+from .types import Generator
 
-US_ASCII = "US-ASCII"  # the least-ambiguous encoding
+# empty lines and lines beginning with '#' not returned
+Line = str
 
 
 if TYPE_CHECKING:
@@ -23,30 +19,17 @@ if TYPE_CHECKING:
     from subprocess import CompletedProcess
     from subprocess import Popen
 
-# TODO: centralize reused type aliases
-Command = tuple[object, ...]
-Yields = Iterator
 
+def run(cmd: Command) -> None:
+    """Run a command to completion. Raises on error.
 
-def cd(
-    dirname: str, direnv: bool = True, env: MutableMapping[str, str] = environ
-) -> None:
-    from os import chdir
-
-    xtrace(("cd", dirname))
-    chdir(dirname)
-    # TODO: set env[PWD] to absolute path
-    if direnv:
-        run(("direnv", "allow"))
-        direnv_json: JSON.Value = json(("direnv", "export", "json"))
-        if not isinstance(direnv_json, dict):
-            raise AssertionError(f"expected dict, got {type(direnv_json)}")
-        for key, value in direnv_json.items():
-            if value is None:
-                env.pop(key, None)
-            else:
-                assert isinstance(value, str), value
-                env[key] = value
+    >>> run(('echo', 'ok'))
+    >>> run(('false', 'not ok'))
+    Traceback (most recent call last):
+        ...
+    subprocess.CalledProcessError: Command '('false', 'not ok')' returned non-zero exit status 1.
+    """
+    _wait(_popen(cmd))
 
 
 def stdout(cmd: Command) -> str:
@@ -60,39 +43,19 @@ def stdout(cmd: Command) -> str:
     return _wait(_popen(cmd, capture_output=True)).stdout.rstrip("\n")
 
 
-def json(cmd: Command) -> JSON.Value:
-    """Parse the (singular) json on a subprocess' stdout.
-
-    >>> json(("echo", '{"a": "b", "c": 3}'))
-    {'a': 'b', 'c': 3}
-    """
-    import json
-
-    result: JSON.Value = json.loads(stdout(cmd))
-    return result
-
-
-def jq(cmd: Command, encoding: str = US_ASCII) -> Iterable[JSON.Value]:
+def lines(cmd: Command, *, encoding: str = US_ASCII) -> Generator[Line]:
     """Yield each object from newline-delimited json on a subprocess' stdout.
 
     >>> tuple(jq(("seq", 3)))
     (1, 2, 3)
     """
-    import json
-
     process = _popen(cmd, encoding=encoding, capture_output=True)
     assert process.stdout, process.stdout
     for line in process.stdout:
         line = line.strip()
         if not line or line.startswith("#"):
             continue
-
-        try:
-            result: JSON.Value = json.loads(line)
-        except Exception as error:
-            raise ValueError(f"bad JSON:\n    {line}") from error
-        else:
-            yield result
+        yield line
 
 
 def success(cmd: Command, returncode: int = 0) -> bool:
@@ -144,6 +107,8 @@ def _wait(
     check: bool = True,
 ) -> CompletedProcess[str]:
     """Stolen from the last half of stdlib subprocess.run; finish a process."""
+    import subprocess
+
     with process:
         try:
             stdout, stderr = process.communicate(input, timeout=timeout)
@@ -153,22 +118,8 @@ def _wait(
             raise
         retcode = process.poll()
         if check and retcode:
-            raise CalledProcessError(
+            raise subprocess.CalledProcessError(
                 retcode, process.args, output=stdout, stderr=stderr
             )
     assert retcode is not None, retcode
-    from subprocess import CompletedProcess
-
-    return CompletedProcess(process.args, retcode, stdout, stderr)
-
-
-def run(cmd: Command) -> None:
-    """Run a command to completion. Raises on error.
-
-    >>> run(('echo', 'ok'))
-    >>> run(('false', 'not ok'))
-    Traceback (most recent call last):
-        ...
-    subprocess.CalledProcessError: Command '('false', 'not ok')' returned non-zero exit status 1.
-    """
-    _wait(_popen(cmd))
+    return subprocess.CompletedProcess(process.args, retcode, stdout, stderr)

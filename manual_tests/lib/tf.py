@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from lib import sh
+from lib.sh import sh
 
 
 def plan_clean() -> bool:
