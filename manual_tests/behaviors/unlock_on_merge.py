@@ -1,8 +1,6 @@
 #!/usr/bin/env py.test
 from __future__ import annotations
 
-from lib.functions import now
-from manual_tests.lib import gh
 from manual_tests.lib import gha
 from manual_tests.lib import slice
 from manual_tests.lib import tacos_demo
@@ -14,15 +12,15 @@ def test() -> None:
     slices = slice.random()
 
     tacos_demo.clone()
-    since = now()
-    tacos_demo_pr = tacos_demo.new_pr(TEST_NAME, slices)
+    tacos_demo_pr = tacos_demo.PR.for_test(TEST_NAME, slices)
     try:
-        gha.assert_eventual_success("terraform_lock", since)
-        gh.approve_pr(tacos_demo_pr.url)
-        gh.assert_pr_is_approved(tacos_demo_pr.url)
-        gh.add_label(tacos_demo_pr.url, ":taco::apply")
-        gha.assert_eventual_success("terraform_apply", since)
-        gh.merge_pr(tacos_demo_pr.url)
-    except:
-        gh.close_pr(tacos_demo_pr.branch)
-    gha.assert_eventual_success("terraform_unlock", since)
+        gha.assert_eventual_success(tacos_demo_pr, "terraform_lock")
+        tacos_demo_pr.approve()
+        assert tacos_demo_pr.approved()
+        tacos_demo_pr.add_label(":taco::apply")
+        gha.assert_eventual_success(tacos_demo_pr, "terraform_apply")
+        tacos_demo_pr.merge_pr()
+    except Exception:  # If we manage to merge, we don't need to close.
+        tacos_demo_pr.close()
+        raise
+    gha.assert_eventual_success(tacos_demo_pr, "terraform_unlock")
