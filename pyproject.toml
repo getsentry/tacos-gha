@@ -35,6 +35,7 @@ norecursedirs = [
     "venv",
     "tmp*",
     "*tmp",
+    "**/bak",
 ]
 python_files = ["*.py"]
 python_classes = ["Test", "Describe"]
@@ -49,6 +50,7 @@ exclude = [
     "venv",
     "tmp*",
     "*tmp",
+    "**/bak",
 ]
 
 pythonPlatform = "Linux"
@@ -78,7 +80,10 @@ reportUnusedCallResult = "none"  # too noisy
 python_version = "3.12"
 
 files = ["."]
-exclude = ["^venv/"]
+exclude = [
+    "/venv/$",
+    "/bak/$",
+]
 
 # Strict mode; enables the following flags: (in mypy 1.7.1)
 #     --check-untyped-defs

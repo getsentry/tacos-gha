@@ -1,101 +1,72 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Iterable
-from typing import Optional
-from typing import cast
 
+from lib import json
 from lib import sh
 from lib import wait
 
-Check = dict[str, object]
+from .gh import PR
+from .gha_check import Check as Check
+
+# TODO: centralize reused type aliases
 CheckName = str
 
 
-def get_checks() -> Iterable[object]:
-    """get the most recent run of the named check"""
-    return sh.jq(
-        (
-            "gh",
-            "pr",
-            "status",
-            "--json",
-            "statusCheckRollup",
-            "--jq",
-            # TODO: where are these fields documented??
-            ".currentBranch.statusCheckRollup[]",
-        )
-    )
-
-
-def show_check(check: Check) -> None:
-    # example:
-    # {
-    #   "__typename": "CheckRun",
-    #   "completedAt": "2023-11-29T22:44:34Z",
-    #   "conclusion": "SUCCESS",
-    #   "detailsUrl": "https://github.com/getsentry/tacos-gha.test/actions/runs/7039437133/job/19158411914",
-    #   "name": "terraform_unlock",
-    #   "startedAt": "2023-11-29T22:44:24Z",
-    #   "status": "COMPLETED",
-    #   "workflowName": "Terraform Unlock"
-    # }
-    format = "{name}: {startedAt}-{completedAt} {status}({conclusion})"
-    sh.info(format.format_map(check))
-
-
-def assert_ran(check: CheckName, since: datetime) -> None:
+def assert_ran(
+    pr: PR, check_name: CheckName, since: datetime | None = None
+) -> None:
     """success if a specified github-actions job ran"""
-    c = get_check(check)
-    completed_at = c["completedAt"]
-    assert isinstance(completed_at, str), completed_at
+    c = get_check(pr, check_name)
+    if since is None:
+        since = pr.since
 
-    completed_at = datetime.fromisoformat(completed_at)
-    assert completed_at > since, (completed_at, since)
+    assert c.completedAt > since, (c, since)
 
 
-def get_check(check: CheckName) -> Check:
+def get_check(pr: PR, check_name: CheckName) -> Check:
     """Return the _most recent_ status of the named check."""
     checks: list[Check] = []
-    for c in get_checks():
-        assert isinstance(c, dict), (type(c), c)
-
-        assert isinstance(c["name"], str), c
-        name: str = c["name"]
-        if name == check:
+    for obj in pr.checks():
+        check = json.assert_dict_of_strings(obj)
+        if check["name"] == check_name:
             # https://github.com/microsoft/pyright/discussions/6577
-            checks.append(cast(Check, c))
+            checks.append(Check.from_json(check))
 
     if checks:
         checks.sort(  # chronological order
-            key=lambda check: (check["startedAt"], check["completedAt"])
+            key=lambda check: (check.startedAt, check.completedAt)
         )
         if len(checks) > 1:
             sh.info("multiple matching checks:", len(checks))
         for c in checks:
-            show_check(c)
+            sh.info(c)
 
         return checks[-1]
     else:
-        raise AssertionError(f"No such check found: {check}")
+        raise AssertionError(f"No such check found: {check_name}")
 
 
-def wait_for_check(check: CheckName, since: datetime) -> dict[str, object]:
-    sh.info((f"waiting for {check}...",))
-    wait.for_(lambda: assert_ran(check, since))
+def wait_for_check(pr: PR, check: CheckName, since: datetime) -> Check:
+    sh.info(f"waiting for {check}...")
+    wait.for_(lambda: assert_ran(pr, check, since))
     sh.banner(f"{check} ran")
-    return get_check(check)
+    return get_check(pr, check)
 
 
-def assert_success(check: CheckName) -> None:
+def assert_success(pr: PR, check_name: CheckName) -> None:
     # success if a specified github-actions job ran
-    _check = get_check(check)
-    assert _check["conclusion"] == "SUCCESS", _check
+    check = get_check(pr, check_name)
+    assert check.conclusion == "SUCCESS", check
 
 
-def assert_eventual_success(check: CheckName, since: datetime) -> None:
-    sh.info(f"waiting for {check} (since {since})...")
-    wait.for_(lambda: assert_ran(check, since))
-    sh.banner(f"{check} ran")
-    assert_success(check)
-    sh.banner(f"{check} succeeded")
+def assert_eventual_success(
+    pr: PR, check_name: CheckName, since: datetime | None = None
+) -> None:
+    if since is None:
+        since = pr.since
+    sh.info(f"waiting for {check_name} (since {since})...")
+    wait.for_(lambda: assert_ran(pr, check_name, since))
+    sh.banner(f"{check_name} ran")
+    assert_success(pr, check_name)
+    sh.banner(f"{check_name} succeeded")

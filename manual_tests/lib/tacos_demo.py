@@ -1,37 +1,56 @@
 from __future__ import annotations
 
-import datetime
+import typing
 from contextlib import contextmanager
+from dataclasses import dataclass
 from typing import Iterator
-from typing import NamedTuple
+from typing import Self
+from typing import TypeVar
 
 from lib import sh
 from lib.constants import NOW
 from lib.constants import USER
-from lib.functions import now
 from manual_tests.lib import gh
 from manual_tests.lib import slice
 
 # TODO: centralize reused type aliases
 Yields = Iterator
+T = TypeVar("T")
+Generator = typing.Generator[T, None, None]  # shim py313/PEP696
 # FIXME: use a more specific type than str
 Branch = str
 URL = str
 
 
-class TacosDemoPR(NamedTuple):
-    branch: Branch
-    url: URL
-    since: datetime.datetime
+@dataclass(frozen=True)
+class PR(gh.PR):
     slices: slice.Slices
 
+    @classmethod
+    def from_pr(cls, pr: gh.PR, slices: slice.Slices) -> Self:
+        return cls(**vars(pr), slices=slices)
 
-@contextmanager
-def tacos_demo_pr(test_name: str, slices: slice.Slices) -> Yields[TacosDemoPR]:
-    clone()
-    tacos_demo_pr = new_pr(test_name, slices)
-    yield tacos_demo_pr
-    gh.close_pr(tacos_demo_pr[1])
+    @classmethod
+    def for_test(
+        cls, test_name: str, slices: slice.Slices, branch: object = None
+    ) -> Self:
+        branch = commit_changes_to(slices, test_name, branch=branch)
+
+        pr = cls.open(branch, slices=slices)
+
+        sh.banner("PR opened:", pr.url)
+
+        return pr
+
+    @classmethod
+    @contextmanager
+    def opened_for_test(
+        cls, test_name: str, slices: slice.Slices, branch: object = None
+    ) -> Generator[Self]:
+        clone()
+        tacos_demo_pr = cls.for_test(test_name, slices, branch)
+        yield tacos_demo_pr
+        tacos_demo_pr.close()
 
 
 def clone() -> None:
@@ -41,31 +60,29 @@ def clone() -> None:
 
 
 def commit_changes_to(
-    slices: slice.Slices, test_name: str, postfix: str = ""
+    slices: slice.Slices,
+    test_name: str,
+    commit: str = "",
+    branch: object = None,
 ) -> Branch:
-    branch = f"test/{USER}/{test_name}/{NOW.isoformat().replace(':', '_')}"
+    if branch is None:
+        branch = ""
+    else:
+        branch = f"/{branch}"
 
+    branch = (
+        f"test/{USER}/{NOW.isoformat().replace(':', '_')}/{test_name}{branch}"
+    )
+
+    # NB: setting an upstream tracking branch makes `gh pr` stop working well
     sh.run(("git", "checkout", "-B", branch))
 
     for s in slices:
         slice.edit(s)
-    if postfix:
-        postfix = " - " + postfix
 
-    sh.run(("git", "commit", "-m", f"test: {test_name} ({NOW}){postfix}"))
+    if commit:
+        commit = " - " + commit
+    sh.run(("git", "commit", "-m", f"test: {test_name} ({NOW}){commit}"))
     sh.run(("git", "push", "origin", f"{branch}:{branch}"))
 
     return branch
-
-
-def new_pr(test_name: str, slices: slice.Slices) -> TacosDemoPR:
-    # NB: setting an upstream tracking branch makes `gh pr` stop working well
-
-    since = now()
-    branch = commit_changes_to(slices, test_name)
-
-    pr_url = gh.open_pr(branch)
-
-    sh.banner("PR opened:", pr_url)
-
-    return TacosDemoPR(branch, pr_url, since, slices)

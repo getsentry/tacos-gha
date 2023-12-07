@@ -11,19 +11,25 @@ fi
 if ! mypy .; then
   fail+=(mypy)
 fi
-if ! git ls-files './*/__init__.py' |
+if ! git ls-files '*/py.typed' |
     xargs dirname |
     xargs -n1 -tr \
       env PYTHONPATH="$PWD" \
-      pyright --verifytypes
+        pyright \
+        --ignoreexternal \
+        --verifytypes \
+      \
+    ;
 then
   fail+=(pyright-verifytypes)
 fi
 
 if ! git ls-files |
   file --mime-type --no-pad --files-from=- |
-    sed 's@: text/x-shellscript$@@; t; d' |
-    xargs -r shellcheck
+    grep ': text/x-shellscript$' |
+    sed 's@: text/x-shellscript$@@' |
+    xargs -r shellcheck \
+  ;
 then
   fail+=(shellcheck)
 fi
