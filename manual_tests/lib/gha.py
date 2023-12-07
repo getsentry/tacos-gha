@@ -37,12 +37,9 @@ def get_check(pr: PR, check_name: CheckName) -> Check:
         checks.sort(  # chronological order
             key=lambda check: (check.startedAt, check.completedAt)
         )
-        if len(checks) > 1:
-            sh.info("multiple matching checks:", len(checks))
-        for c in checks:
-            sh.info(c)
-
-        return checks[-1]
+        latest = checks.pop()
+        sh.info(latest)
+        return latest
     else:
         raise AssertionError(f"No such check found: {check_name}")
 

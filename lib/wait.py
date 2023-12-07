@@ -6,7 +6,7 @@ from typing import Callable
 
 from lib.sh import sh
 
-WAIT_LIMIT = int(getenv("WAIT_LIMIT", "60"))
+WAIT_LIMIT = int(getenv("WAIT_LIMIT", "180"))
 WAIT_SLEEP = int(getenv("WAIT_SLEEP", "3"))
 
 Assertion = Callable[[], None | bool]
@@ -29,7 +29,6 @@ def for_(
     assertion: Assertion, limit: int = WAIT_LIMIT, sleep: int = WAIT_SLEEP
 ) -> None:
     # log the first try noisily
-    print("LIMIT:", limit)
     if try_(assertion):
         return
 

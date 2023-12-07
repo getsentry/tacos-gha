@@ -4,15 +4,12 @@ exec >&2  # all output is logging
 
 set -x
 
-export COVERAGE_PROCESS_START="$REPO_TOP/.coveragerc"
-
 # disable the cache plugin to ensure we get data from all tests
 # otherwise, by default, we only run the "last failed" tests
-if ! ./lib/make/test -p no:cacheprovider "$@"; then
+if ! coverage-enabled ./lib/make/test \
+  -p no:cacheprovider \
+  --override-ini="addopts=--durations-min=10 -s -vv --doctest-modules" \
+  "$@" \
+; then
   : 'some tests failed :('
 fi
-
-unset COVERAGE_PROCESS_START
-
-: create .coverage data file:
-coverage combine

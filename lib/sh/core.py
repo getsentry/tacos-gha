@@ -1,6 +1,5 @@
+#!/usr/bin/env py.test
 # the core private functions (_popen, _wait) plus their direct callers
-
-
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
