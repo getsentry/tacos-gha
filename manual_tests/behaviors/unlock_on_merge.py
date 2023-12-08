@@ -1,6 +1,8 @@
 #!/usr/bin/env py.test
 from __future__ import annotations
 
+import pytest
+
 from lib.functions import now
 from manual_tests.lib import gha
 from manual_tests.lib import slice
@@ -9,6 +11,7 @@ from manual_tests.lib import tacos_demo
 TEST_NAME = __name__
 
 
+@pytest.mark.xfail(reason="Need other user's approval")
 def test() -> None:
     slices = slice.random()
 
@@ -27,4 +30,6 @@ def test() -> None:
     except Exception:  # If we manage to merge, we don't need to close.
         tacos_demo_pr.close()
         raise
-    gha.assert_eventual_success(tacos_demo_pr, "terraform_unlock", since)
+    gha.assert_eventual_success(
+        tacos_demo_pr, "terraform_unlock", since, timeout=6
+    )

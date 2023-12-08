@@ -61,12 +61,15 @@ def assert_success(pr: PR, check_name: CheckName) -> None:
 
 
 def assert_eventual_success(
-    pr: PR, check_name: CheckName, since: datetime | None = None
+    pr: PR,
+    check_name: CheckName,
+    since: datetime | None = None,
+    timeout: int | None = None,
 ) -> None:
     if since is None:
         since = pr.since
     sh.info(f"waiting for {check_name} (since {since})...")
-    wait.for_(lambda: assert_ran(pr, check_name, since))
+    wait.for_(lambda: assert_ran(pr, check_name, since), timeout=timeout)
     sh.banner(f"{check_name} ran")
     assert_success(pr, check_name)
     sh.banner(f"{check_name} succeeded")
