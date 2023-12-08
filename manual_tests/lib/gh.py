@@ -71,6 +71,9 @@ class PR:
         sh.banner(f"adding label {label} to PR:")
         sh.run(("gh", "pr", "edit", "--add-label", label, self.url))
 
+    def merge_pr(self) -> str:
+        return sh.stdout(("gh", "pr", "merge", "--squash", "--auto", self.url))
+
     def labels(self) -> Sequence[Label]:
         result: list[Label] = []
         for label in sh.lines(

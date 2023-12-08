@@ -26,13 +26,15 @@ def try_(assertion: Assertion) -> bool:
 
 
 def for_(
-    assertion: Assertion, limit: int = WAIT_LIMIT, sleep: int = WAIT_SLEEP
+    assertion: Assertion, timeout: int | None = None, sleep: int = WAIT_SLEEP
 ) -> None:
+    if timeout is None:
+        timeout = WAIT_LIMIT
     # log the first try noisily
     if try_(assertion):
         return
 
-    orig_limit = limit
+    limit = timeout
     with sh.quiet():
         while limit >= 0:
             do_sleep(sleep)
@@ -42,5 +44,5 @@ def for_(
                 return
         else:
             raise TimeoutExpired(
-                f"never succeeded, over {orig_limit} seconds: {assertion}"
+                f"never succeeded, over {timeout} seconds: {assertion}"
             )

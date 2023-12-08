@@ -10,7 +10,7 @@ from manual_tests.lib import tacos_demo
 TEST_NAME = __name__
 
 
-@pytest.mark.xfail(reason="still need to post comment during action")
+@pytest.mark.xfail(reason="Comment not implemented yet.")
 def test(pr: tacos_demo.PR) -> None:
     gha.assert_eventual_success(pr, "terraform_lock")
 
