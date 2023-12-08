@@ -11,7 +11,7 @@ from manual_tests.lib import tacos_demo
 TEST_NAME = __name__
 
 
-@pytest.mark.xfail
+@pytest.mark.xfail(reason="Comment not implemented yet.")
 def test() -> None:
     with tacos_demo.PR.opened_for_test(TEST_NAME, slice.random()) as pr:
         gha.assert_eventual_success(pr, "terraform_lock")
