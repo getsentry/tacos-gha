@@ -67,9 +67,12 @@ class PR:
         sh.banner(f"adding label {label} to PR:")
         sh.run(("gh", "pr", "edit", "--add-label", label, self.url))
 
+    def merge_pr(self) -> str:
+        return sh.stdout(("gh", "pr", "merge", "--squash", "--auto", self.url))
+
     def labels(self) -> Sequence[Label]:
         result: list[Label] = []
-        for obj in sh.jq(
+        for label in sh.lines(
             (
                 "gh",
                 "pr",
@@ -81,8 +84,7 @@ class PR:
                 self.url,
             )
         ):
-            assert isinstance(obj, str), (self, obj)
-            result.append(obj)
+            result.append(label)
         return tuple(result)
 
     def comments(self, since: datetime) -> Sequence[Comment]:

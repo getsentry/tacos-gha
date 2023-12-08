@@ -36,7 +36,7 @@ coverage-html: $(makelib)/coverage-html .coverage
 
 ### one recipe for all: run the target's first dependency, with zero args
 $(commands) %:
-	@set -x; $<
+	@set -x; "$<"
 
 
 ### incidental complexity: you might stop reading here :)

@@ -9,9 +9,7 @@ TEST_NAME = __name__
 
 
 def test() -> None:
-    with tacos_demo.TacosDemoPR.opened_for_test(
-        TEST_NAME, slice.random()
-    ) as pr:
+    with tacos_demo.PR.opened_for_test(TEST_NAME, slice.random()) as pr:
         gha.assert_eventual_success(pr, "terraform_lock")
         for s in range(3):
             locked = slice.is_locked(s)
