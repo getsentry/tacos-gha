@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
+from typing import TYPE_CHECKING
 from typing import Self
 from typing import Sequence
 
@@ -9,13 +10,15 @@ from lib import json
 from lib.functions import now
 from lib.sh import sh
 
-from .check import Check
 from .types import URL
 from .types import Branch
 from .types import CheckName
 from .types import Label
 
 Comment = str  # a PR comment
+
+if TYPE_CHECKING:
+    from .check import Check
 
 
 @dataclass(frozen=True)
@@ -114,4 +117,6 @@ class PR:
         return tuple(result)
 
     def check(self, check_name: CheckName) -> Check:
+        from .check import Check
+
         return Check(self, check_name)

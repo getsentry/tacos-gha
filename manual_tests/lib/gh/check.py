@@ -2,16 +2,19 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from lib import json
 from lib import wait
 from lib.sh import sh
 
-from .check_run import CheckRun
-from .pr import PR
 from .types import URL
 from .types import CheckName
 from .types import Generator
+
+if TYPE_CHECKING:
+    from .check_run import CheckRun
+    from .pr import PR
 
 
 class DidNotRun(Exception):
@@ -42,6 +45,8 @@ class Check:
 
     def get_runs(self) -> Generator[CheckRun]:
         """Return the all runs of this check."""
+        from .check_run import CheckRun
+
         for obj in get_runs_json(self.pr.url):
             run = CheckRun.from_json(obj)
             if run.name == self.name:
@@ -56,13 +61,11 @@ class Check:
         sh.info(result)
         return result
 
-    def get_run(self, since: datetime) -> CheckRun:
+    def assert_ran(self, since: datetime) -> CheckRun:
         """Did a specified github-actions job run, lately?"""
         c = self.latest()
-        if c.completedAt > since:
-            return c
-        else:
-            raise DidNotRun(self)
+        assert c.completedAt > since
+        return c
 
     def wait(
         self, since: datetime | None = None, timeout: int = wait.WAIT_LIMIT
@@ -71,6 +74,6 @@ class Check:
         if since is None:
             since = self.pr.since
         sh.info(f"waiting for {self.name} (since {since})...")
-        result = wait.for_(lambda: self.get_run(since), timeout=timeout)
+        result = wait.for_(lambda: self.assert_ran(since), timeout=timeout)
         sh.banner(f"{self.name} ran")
         return result
