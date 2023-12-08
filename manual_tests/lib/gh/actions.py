@@ -6,8 +6,8 @@ from lib import json
 from lib import wait
 from lib.sh import sh
 
-from .gh import PR
-from .gha_check import Check as Check
+from .check import Check
+from .pr import PR
 
 # TODO: centralize reused type aliases
 CheckName = str

@@ -7,9 +7,8 @@ from typing import Self
 from lib import json
 from lib.json import assert_dict_of_strings
 
-# TODO: centralize reused type aliases
-# FIXME: use a more specific type than str
-URL = str
+from .types import URL
+
 CheckName = str
 
 

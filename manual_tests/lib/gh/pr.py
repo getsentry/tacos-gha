@@ -11,11 +11,7 @@ from lib import wait
 from lib.functions import now
 from lib.sh import sh
 
-# FIXME: use a more specific type than str
-URL = str
-Branch = str
-Label = str
-Comment = str
+Comment = str  # a PR comment
 
 
 @dataclass(frozen=True)
