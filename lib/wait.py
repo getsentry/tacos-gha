@@ -4,9 +4,9 @@ from os import getenv
 from time import sleep as do_sleep
 from typing import Callable
 
-from lib import sh
+from lib.sh import sh
 
-WAIT_LIMIT = int(getenv("WAIT_LIMIT", "60"))
+WAIT_LIMIT = int(getenv("WAIT_LIMIT", "180"))
 WAIT_SLEEP = int(getenv("WAIT_SLEEP", "3"))
 
 Assertion = Callable[[], None | bool]

@@ -7,9 +7,9 @@ from typing import Iterator
 from typing import Self
 from typing import TypeVar
 
-from lib import sh
 from lib.constants import NOW
 from lib.constants import USER
+from lib.sh import sh
 from manual_tests.lib import gh
 from manual_tests.lib import slice
 

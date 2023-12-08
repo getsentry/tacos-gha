@@ -20,11 +20,6 @@ def test(test_name: str, slices: slice.Slices) -> None:
             pr2: gha.wait_for_check(pr2, "terraform_lock", pr2.since),
         }
 
-        assert {check.conclusion for check in checks.values()} == {
-            "SUCCESS",
-            "FAILURE",
-        }
-
         for pr, check in checks.items():
             message = "TODO: add comment about lock failure here"
             comments = pr.comments(since=check.startedAt)
@@ -34,3 +29,8 @@ def test(test_name: str, slices: slice.Slices) -> None:
                 assert message in comments
             else:
                 raise AssertionError(check)
+
+        assert {check.conclusion for check in checks.values()} == {
+            "SUCCESS",
+            "FAILURE",
+        }
