@@ -3,46 +3,45 @@ from __future__ import annotations
 from os import getenv
 from time import sleep as do_sleep
 from typing import Callable
+from typing import TypeVar
 
 from lib.sh import sh
 
 WAIT_LIMIT = int(getenv("WAIT_LIMIT", "180"))
 WAIT_SLEEP = int(getenv("WAIT_SLEEP", "3"))
 
-Assertion = Callable[[], None | bool]
+# assertion is true when it returns a non-None object (without AssertionError)
+T = TypeVar("T")
+Assertion = Callable[[], T]
 
 
-class TimeoutExpired(Exception):
+class TimeoutExpired(AssertionError):
     pass
 
 
-def try_(assertion: Assertion) -> bool:
-    try:
-        result = assertion()
-    except AssertionError:
-        return False
-
-    return result in (True, None)
-
-
 def for_(
-    assertion: Assertion, timeout: int | None = None, sleep: int = WAIT_SLEEP
-) -> None:
+    assertion: Assertion[T],
+    timeout: int | None = None,
+    sleep: int = WAIT_SLEEP,
+) -> T:
     if timeout is None:
         timeout = WAIT_LIMIT
     # log the first try noisily
-    if try_(assertion):
-        return
+    try:
+        return assertion()
+    except AssertionError:
+        pass  # let's try again
 
     limit = timeout
     with sh.quiet():
-        while limit >= 0:
+        while True:
             do_sleep(sleep)
             limit -= sleep
 
-            if try_(assertion):
-                return
-        else:
-            raise TimeoutExpired(
-                f"never succeeded, over {timeout} seconds: {assertion}"
-            )
+            try:
+                return assertion()
+            except AssertionError:
+                if limit <= 0:
+                    raise TimeoutExpired(
+                        f"never succeeded, over {timeout} seconds: {assertion}"
+                    )
