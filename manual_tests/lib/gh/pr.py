@@ -6,12 +6,14 @@ from typing import Self
 from typing import Sequence
 
 from lib import json
-from lib import wait
 from lib.functions import now
 from lib.sh import sh
 
+from .check import Check
 from .types import URL
 from .types import Branch
+from .types import CheckName
+from .types import Label
 
 Comment = str  # a PR comment
 
@@ -36,10 +38,7 @@ class PR:
 
         if sh.success(("gh", "pr", "edit", "--add-label", ":taco::unlock")):
             sh.banner("waiting for unlock...")
-            # TODO: how to break this circular import?
-            from manual_tests.lib.gha import assert_ran
-
-            wait.for_(lambda: assert_ran(self, "terraform_unlock", since))
+            self.check("terraform_unlock").wait(since)
             sh.banner("unlocked.")
 
         sh.banner("deleting branch:")
@@ -113,3 +112,6 @@ class PR:
             if created_at >= since:
                 result.append(comment["body"])
         return tuple(result)
+
+    def check(self, check_name: CheckName) -> Check:
+        return Check(self, check_name)

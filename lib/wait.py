@@ -20,12 +20,8 @@ class TimeoutExpired(AssertionError):
 
 
 def for_(
-    assertion: Assertion[T],
-    timeout: int | None = None,
-    sleep: int = WAIT_SLEEP,
+    assertion: Assertion[T], timeout: int = WAIT_LIMIT, sleep: int = WAIT_SLEEP
 ) -> T:
-    if timeout is None:
-        timeout = WAIT_LIMIT
     # log the first try noisily
     try:
         return assertion()

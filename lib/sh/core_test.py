@@ -1,6 +1,8 @@
 #!/usr/bin/env py.test
 from __future__ import annotations
 
+from typing import cast
+
 import pytest
 
 from . import sh
@@ -9,10 +11,10 @@ from .core import _wait  # pyright:ignore[reportPrivateUsage]
 
 
 class DescribeLines:
-    def it_skips_empty_lines(self):
+    def it_skips_empty_lines(self) -> None:
         assert tuple(sh.lines(("echo", "1\n\n2"))) == ("1", "2")
 
-    def it_skips_comments(self):
+    def it_skips_comments(self) -> None:
         text = """\
 3
  # I have something important to say!
@@ -23,11 +25,12 @@ class DescribeLines:
 
 
 class DescribePrivatePopen:
-    def it_can_handle_posix_colon(self):
+    def it_can_handle_posix_colon(self) -> None:
         proc = _popen((":", "ohai"))
+        # type system thinks these can't be none, but they are /shrug
         out, err = proc.communicate()
-        assert out is None
-        assert err is None
+        assert cast(object, out) is None
+        assert cast(object, err) is None
         assert proc.returncode == 0
 
 
