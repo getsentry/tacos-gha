@@ -4,7 +4,6 @@ from __future__ import annotations
 from datetime import datetime
 
 from lib.functions import now
-from manual_tests.lib import gha
 from manual_tests.lib import slice
 from manual_tests.lib import tacos_demo
 
@@ -14,7 +13,7 @@ PLAN_MESSAGE = (
 
 
 def assert_gha_plan(pr: tacos_demo.PR, since: datetime) -> None:
-    gha.assert_eventual_success(pr, "terraform_plan", since)
+    assert pr.check("terraform_plan").wait(since).success
     assert any(PLAN_MESSAGE in comment for comment in pr.comments(since))
 
 

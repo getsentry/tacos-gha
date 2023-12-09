@@ -1,7 +1,6 @@
 #!/usr/bin/env py.test
 from __future__ import annotations
 
-from manual_tests.lib import gha
 from manual_tests.lib import slice
 from manual_tests.lib import tacos_demo
 
@@ -10,7 +9,7 @@ TEST_NAME = __name__
 
 def test() -> None:
     with tacos_demo.PR.opened_for_test(TEST_NAME, slice.random()) as pr:
-        gha.assert_eventual_success(pr, "terraform_lock")
+        assert pr.check("terraform_lock").wait().success
         for s in range(3):
             locked = slice.is_locked(s)
             expected = s in pr.slices

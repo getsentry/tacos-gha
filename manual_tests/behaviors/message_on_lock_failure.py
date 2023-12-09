@@ -3,9 +3,8 @@ from __future__ import annotations
 
 import pytest
 
-from manual_tests.lib import gh
-from manual_tests.lib import gha
 from manual_tests.lib import slice
+from manual_tests.lib.gh import gh
 from manual_tests.lib.tacos_demo import PR
 
 
@@ -15,9 +14,9 @@ def test(test_name: str, slices: slice.Slices) -> None:
         PR.opened_for_test(test_name, slices, branch=1) as pr1,
         PR.opened_for_test(test_name, slices, branch=2) as pr2,
     ):
-        checks: dict[gh.PR, gha.Check] = {
-            pr1: gha.wait_for_check(pr1, "terraform_lock", pr1.since),
-            pr2: gha.wait_for_check(pr2, "terraform_lock", pr2.since),
+        checks: dict[gh.PR, gh.CheckRun] = {
+            pr1: pr1.check("terraform_lock").wait(),
+            pr2: pr2.check("terraform_lock").wait(),
         }
 
         for pr, check in checks.items():

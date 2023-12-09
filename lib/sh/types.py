@@ -1,8 +1,5 @@
 from __future__ import annotations
 
-import typing
-from typing import TypeVar
+from lib.types import Generator as Generator
 
-T = TypeVar("T")
 Command = tuple[object, ...]
-Generator = typing.Generator[T, None, None]  # py313/PEP696 shim

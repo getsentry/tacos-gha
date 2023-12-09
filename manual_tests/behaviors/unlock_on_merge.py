@@ -4,7 +4,6 @@ from __future__ import annotations
 import pytest
 
 from lib.functions import now
-from manual_tests.lib import gha
 from manual_tests.lib import slice
 from manual_tests.lib import tacos_demo
 
@@ -17,19 +16,17 @@ def test() -> None:
 
     since = now()
     tacos_demo.clone()
-    tacos_demo_pr = tacos_demo.PR.for_test(TEST_NAME, slices)
+    pr = tacos_demo.PR.for_test(TEST_NAME, slices)
     try:
-        gha.assert_eventual_success(tacos_demo_pr, "terraform_lock", since)
+        assert pr.check("terraform_lock").wait(since).success
         since = now()
-        tacos_demo_pr.approve()
-        assert tacos_demo_pr.approved()
-        tacos_demo_pr.add_label(":taco::apply")
-        gha.assert_eventual_success(tacos_demo_pr, "terraform_apply", since)
+        pr.approve()
+        assert pr.approved()
+        pr.add_label(":taco::apply")
+        assert pr.check("terraform_apply").wait(since).success
         since = now()
-        tacos_demo_pr.merge_pr()
+        pr.merge_pr()
     except Exception:  # If we manage to merge, we don't need to close.
-        tacos_demo_pr.close()
+        pr.close()
         raise
-    gha.assert_eventual_success(
-        tacos_demo_pr, "terraform_unlock", since, timeout=6
-    )
+    assert pr.check("terraform_unlock").wait(since, timeout=6).success

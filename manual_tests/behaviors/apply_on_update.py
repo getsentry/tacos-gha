@@ -4,7 +4,6 @@ from __future__ import annotations
 import pytest
 
 from lib.functions import now
-from manual_tests.lib import gha
 from manual_tests.lib import slice
 from manual_tests.lib import tacos_demo
 from manual_tests.lib import tf
@@ -17,7 +16,7 @@ Branch = int
 @pytest.mark.xfail(reason="apply not yet implemented")
 def test() -> None:
     with tacos_demo.PR.opened_for_test(TEST_NAME, slice.random()) as pr:
-        gha.assert_eventual_success(pr, "terraform_lock")
+        assert pr.check("terraform_lock").wait().success
 
         pr.approve()
         assert pr.approved()
@@ -26,5 +25,5 @@ def test() -> None:
         assert not tf.plan_clean()
         since = now()
         pr.add_label(":taco::apply")
-        gha.assert_eventual_success(pr, "terraform_apply", since)
+        assert pr.check("terraform_apply").wait(since).success
         assert tf.plan_clean()

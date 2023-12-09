@@ -7,15 +7,13 @@ from typing import Self
 from lib import json
 from lib.json import assert_dict_of_strings
 
-# TODO: centralize reused type aliases
-# FIXME: use a more specific type than str
-URL = str
-CheckName = str
+from .types import URL
+from .types import CheckName
 
 
-@dataclass(frozen=True)
-class Check:
-    typename: str  # CheckRun
+@dataclass(frozen=True, order=True)
+class CheckRun:
+    # NOTE: we want chronological ordering
     startedAt: datetime  # 2023-11-29T22:44:24Z
     completedAt: datetime  # 2023-11-29T22:44:34Z
     detailsUrl: URL  # https://github.com/getsentry/tacos-gha.test/actions/runs/7039437133/job/19158411914
@@ -40,12 +38,17 @@ class Check:
         #   "workflowName": "Terraform Unlock"
         # }
         attrs = assert_dict_of_strings(json).copy()
+        assert attrs["__typename"] == "CheckRun", attrs
+        del attrs["__typename"]
         return cls(
-            typename=attrs.pop("__typename"),
             startedAt=datetime.fromisoformat(attrs.pop("startedAt")),
             completedAt=datetime.fromisoformat(attrs.pop("completedAt")),
             **attrs,
         )
+
+    @property
+    def success(self) -> bool:
+        return (self.status, self.conclusion) == ("COMPLETED", "SUCCESS")
 
     def __str__(self) -> str:
         format = "{name}: {startedAt}-{completedAt} {status}({conclusion})"

@@ -10,8 +10,8 @@ from typing import TypeVar
 from lib.constants import NOW
 from lib.constants import USER
 from lib.sh import sh
-from manual_tests.lib import gh
 from manual_tests.lib import slice
+from manual_tests.lib.gh import gh
 
 # TODO: centralize reused type aliases
 Yields = Iterator

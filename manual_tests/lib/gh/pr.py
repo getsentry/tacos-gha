@@ -2,20 +2,23 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Iterable
+from typing import TYPE_CHECKING
 from typing import Self
 from typing import Sequence
 
 from lib import json
-from lib import wait
 from lib.functions import now
 from lib.sh import sh
 
-# FIXME: use a more specific type than str
-URL = str
-Branch = str
-Label = str
-Comment = str
+from .types import URL
+from .types import Branch
+from .types import CheckName
+from .types import Label
+
+Comment = str  # a PR comment
+
+if TYPE_CHECKING:
+    from .check import Check
 
 
 @dataclass(frozen=True)
@@ -38,10 +41,7 @@ class PR:
 
         if sh.success(("gh", "pr", "edit", "--add-label", ":taco::unlock")):
             sh.banner("waiting for unlock...")
-            # TODO: how to break this circular import?
-            from manual_tests.lib.gha import assert_ran
-
-            wait.for_(lambda: assert_ran(self, "terraform_unlock", since))
+            self.check("terraform_unlock").wait(since)
             sh.banner("unlocked.")
 
         sh.banner("deleting branch:")
@@ -116,18 +116,7 @@ class PR:
                 result.append(comment["body"])
         return tuple(result)
 
-    def checks(self) -> Iterable[json.Value]:
-        """get the most recent run of the named check"""
-        return sh.jq(
-            (
-                "gh",
-                "pr",
-                "view",
-                self.url,
-                "--json",
-                "statusCheckRollup",
-                "--jq",
-                # TODO: where are these fields documented??
-                ".statusCheckRollup[]",
-            )
-        )
+    def check(self, check_name: CheckName) -> Check:
+        from .check import Check
+
+        return Check(self, check_name)

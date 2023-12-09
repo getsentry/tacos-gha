@@ -11,7 +11,7 @@ set -x
 : lets start clean
 cleanup
 pyenv install -v --skip-existing
-pyenv exec python3 -m venv "$VIRTUAL_ENV"
+pyenv exec python3 -m venv --upgrade "$VIRTUAL_ENV"
 : should be the venv pip:
 which pip
 pip install -r requirements-dev.txt "$@"
