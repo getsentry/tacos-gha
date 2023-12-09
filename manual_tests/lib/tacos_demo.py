@@ -11,7 +11,7 @@ from lib.constants import NOW
 from lib.constants import USER
 from lib.sh import sh
 from manual_tests.lib import slice
-from manual_tests.lib.gh import gh
+from manual_tests.lib.gh import pr
 
 # TODO: centralize reused type aliases
 Yields = Iterator
@@ -23,11 +23,11 @@ URL = str
 
 
 @dataclass(frozen=True)
-class PR(gh.PR):
+class PR(pr.PR):
     slices: slice.Slices
 
     @classmethod
-    def from_pr(cls, pr: gh.PR, slices: slice.Slices) -> Self:
+    def from_pr(cls, pr: pr.PR, slices: slice.Slices) -> Self:
         return cls(**vars(pr), slices=slices)
 
     @classmethod
