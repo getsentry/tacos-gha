@@ -10,3 +10,16 @@ def plan_clean() -> bool:
     return sh.success(
         ("sudo-sac", "terragrunt", "run-all", "plan", "--detailed-exitcode")
     )
+
+
+def apply() -> None:
+    sh.run(
+        (
+            "sudo-sac",
+            "terragrunt",
+            "run-all",
+            "apply",
+            "--auto-approve",
+            "--terragrunt-non-interactive",
+        )
+    )

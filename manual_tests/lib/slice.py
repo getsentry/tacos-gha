@@ -15,7 +15,7 @@ Slice = int
 Slices = tuple[int, ...]
 
 
-def edit(slice: Slice) -> None:
+def edit(slice: Slice, git: bool = True) -> None:
     slice_path = one(Path().glob(f"slice-{slice}*/"))
     with (slice_path / "edit-me.tf").open("w") as f:
         f.write(
@@ -28,7 +28,8 @@ resource "null_resource" "edit-me" {{
 """
         )
     assert isinstance(f.name, str), f.name
-    sh.run(("git", "add", f.name))
+    if git:
+        sh.run(("git", "add", f.name))
 
 
 def random(seed: object = None) -> Slices:

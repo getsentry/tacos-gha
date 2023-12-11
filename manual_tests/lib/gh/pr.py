@@ -120,3 +120,18 @@ class PR:
         from .check import Check
 
         return Check(self, check_name)
+
+
+def wait_for_pr(branch: Branch, since: datetime, timeout: int = 150) -> PR:
+    start = now()
+    while True:
+        time_left = timeout - (now() - start).total_seconds()
+        if time_left <= 0:
+            raise TimeoutError(
+                f"Timed out waiting for PR {branch} to be created."
+            )
+
+        if sh.success(("gh", "pr", "view", branch)):
+            return PR(branch, sh.stdout(("gh", "pr", "view", branch)), since)
+
+        sh.run(("sleep", "5"))
