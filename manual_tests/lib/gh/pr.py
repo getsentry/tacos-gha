@@ -122,7 +122,7 @@ class PR:
         return Check(self, check_name)
 
 
-def wait_for_pr(branch: Branch, since: datetime, timeout: int = 150) -> PR:
+def wait_for_pr(branch: str, since: datetime, timeout: int = 150) -> PR:
     start = now()
     while True:
         time_left = timeout - (now() - start).total_seconds()
