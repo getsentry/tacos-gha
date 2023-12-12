@@ -9,6 +9,7 @@ from typing import Sequence
 from lib import json
 from lib.functions import now
 from lib.sh import sh
+from lib import wait
 
 from .types import URL
 from .types import Branch
@@ -121,17 +122,16 @@ class PR:
 
         return Check(self, check_name)
 
+    @classmethod
+    def from_branch(cls, branch: Branch, since: datetime) -> Self:
+        url = sh.stdout(("gh", "pr", "view", "--json", "url", branch))
+        return cls(branch, url, since)
 
-def wait_for_pr(branch: str, since: datetime, timeout: int = 150) -> PR:
-    start = now()
-    while True:
-        time_left = timeout - (now() - start).total_seconds()
-        if time_left <= 0:
-            raise TimeoutError(
-                f"Timed out waiting for PR {branch} to be created."
-            )
 
-        if sh.success(("gh", "pr", "view", branch)):
-            return PR(branch, sh.stdout(("gh", "pr", "view", branch)), since)
-
-        sh.run(("sleep", "5"))
+    @classmethod
+    def wait_for_pr(cls, branch: str, since: datetime, timeout: int = 150) -> PR:
+        def branch_pr() -> PR:
+            assert sh.success(("gh", "pr", "view", branch))
+            return PR.from_branch(branch, since)
+        
+        return wait.for_(branch_pr, timeout=timeout, sleep=5)
