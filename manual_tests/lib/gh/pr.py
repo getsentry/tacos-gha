@@ -21,6 +21,8 @@ Comment = str  # a PR comment
 if TYPE_CHECKING:
     from .check import Check
 
+# mypy: disable-error-code="type-var, misc"
+
 
 @dataclass(frozen=True)
 class PR:
@@ -130,9 +132,10 @@ class PR:
     @classmethod
     def wait_for_pr(
         cls, branch: str, since: datetime, timeout: int = 150
-    ) -> PR:
-        def branch_pr() -> PR:
+    ) -> Self:
+        # mypy doesn't understand closures :(
+        def branch_pr() -> Self:
             assert sh.success(("gh", "pr", "view", branch))
-            return PR.from_branch(branch, since)
+            return cls.from_branch(branch, since)
 
         return wait.for_(branch_pr, timeout=timeout, sleep=5)
