@@ -3,6 +3,7 @@ from __future__ import annotations
 import typing
 from contextlib import contextmanager
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Iterator
 from typing import Self
 from typing import TypeVar
@@ -49,14 +50,14 @@ class PR(gh.PR):
     ) -> Generator[Self]:
         clone()
         tacos_demo_pr = cls.for_test(test_name, slices, branch)
-        yield tacos_demo_pr
+        with sh.cd(Path("tacos-demo/terraform/env/prod/")):
+            yield tacos_demo_pr
         tacos_demo_pr.close()
 
 
 def clone() -> None:
     sh.run(("rm", "-rf", "tacos-demo"))
     sh.run(("git", "clone", "git@github.com:getsentry/tacos-demo"))
-    sh.cd("tacos-demo/terraform/env/prod/")
 
 
 def commit_changes_to(
