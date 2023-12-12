@@ -4,8 +4,8 @@ import pytest
 from pytest import fixture
 from typing_extensions import Generator
 
-from manual_tests.lib import slice
 from manual_tests.lib import tacos_demo
+from manual_tests.lib.slice import Slices
 
 
 @fixture
@@ -18,13 +18,11 @@ def test_name(request: pytest.FixtureRequest) -> str:
 
 
 @fixture
-def slices() -> slice.Slices:
-    return slice.random()
+def slices() -> Slices:
+    return Slices.random()
 
 
 @fixture
-def pr(
-    test_name: str, slices: slice.Slices
-) -> Generator[tacos_demo.PR, None, None]:
+def pr(test_name: str, slices: Slices) -> Generator[tacos_demo.PR, None, None]:
     with tacos_demo.PR.opened_for_test(test_name, slices) as result:
         yield result

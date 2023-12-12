@@ -8,6 +8,7 @@ from typing import Sequence
 
 from lib import json
 from lib.functions import now
+from lib.functions import one
 from lib.sh import sh
 
 from .types import URL
@@ -19,6 +20,11 @@ Comment = str  # a PR comment
 
 if TYPE_CHECKING:
     from .check import Check
+
+# we should find a better way to denote tf-plan in comments
+PLAN_MESSAGE = (
+    '<summary>Execution result of "run-all plan -out plan" in "."</summary>'
+)
 
 
 @dataclass(frozen=True)
@@ -71,7 +77,21 @@ class PR:
         sh.banner(f"adding label {label} to PR:")
         sh.run(("gh", "pr", "edit", "--add-label", label, self.url))
 
-    def merge_pr(self) -> str:
+    def get_plan(self, since: datetime | None = None) -> str:
+        """Return the body of the github PR comment containing the tf plan."""
+        if since is None:
+            since = self.since
+
+        assert self.check("terraform_plan").wait(since).success
+        plan = [
+            comment
+            for comment in self.comments(since)
+            if PLAN_MESSAGE in comment
+        ]
+        # there should be just one plan in that timeframe
+        return one(plan)
+
+    def merge(self) -> str:
         return sh.stdout(("gh", "pr", "merge", "--squash", "--auto", self.url))
 
     def labels(self) -> Sequence[Label]:

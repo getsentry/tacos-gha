@@ -4,15 +4,15 @@ from __future__ import annotations
 import pytest
 
 from lib.functions import now
-from manual_tests.lib import slice
 from manual_tests.lib import tacos_demo
+from manual_tests.lib.slice import Slices
 
 TEST_NAME = __name__
 
 
 @pytest.mark.xfail(reason="Need other user's approval")
 def test() -> None:
-    slices = slice.random()
+    slices = Slices.random()
 
     since = now()
     tacos_demo.clone()
@@ -25,7 +25,7 @@ def test() -> None:
         pr.add_label(":taco::apply")
         assert pr.check("terraform_apply").wait(since).success
         since = now()
-        pr.merge_pr()
+        pr.merge()
     except Exception:  # If we manage to merge, we don't need to close.
         pr.close()
         raise

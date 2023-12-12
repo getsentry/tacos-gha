@@ -4,18 +4,16 @@ from __future__ import annotations
 import pytest
 
 from lib.functions import now
-from manual_tests.lib import slice
 from manual_tests.lib import tacos_demo
 from manual_tests.lib import tf
+from manual_tests.lib.slice import Slices
 
 TEST_NAME = __name__
-
-Branch = int
 
 
 @pytest.mark.xfail(reason="apply not yet implemented")
 def test() -> None:
-    with tacos_demo.PR.opened_for_test(TEST_NAME, slice.random()) as pr:
+    with tacos_demo.PR.opened_for_test(TEST_NAME, Slices.random()) as pr:
         assert pr.check("terraform_lock").wait().success
 
         pr.approve()
