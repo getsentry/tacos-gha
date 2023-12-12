@@ -7,9 +7,9 @@ from typing import Self
 from typing import Sequence
 
 from lib import json
+from lib import wait
 from lib.functions import now
 from lib.sh import sh
-from lib import wait
 
 from .types import URL
 from .types import Branch
@@ -127,11 +127,12 @@ class PR:
         url = sh.stdout(("gh", "pr", "view", "--json", "url", branch))
         return cls(branch, url, since)
 
-
     @classmethod
-    def wait_for_pr(cls, branch: str, since: datetime, timeout: int = 150) -> PR:
+    def wait_for_pr(
+        cls, branch: str, since: datetime, timeout: int = 150
+    ) -> PR:
         def branch_pr() -> PR:
             assert sh.success(("gh", "pr", "view", branch))
             return PR.from_branch(branch, since)
-        
+
         return wait.for_(branch_pr, timeout=timeout, sleep=5)
