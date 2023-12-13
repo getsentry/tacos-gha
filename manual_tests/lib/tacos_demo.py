@@ -49,8 +49,8 @@ class PR(gh.PR):
         cls, test_name: str, slices: slice.Slices, branch: object = None
     ) -> Generator[Self]:
         clone()
-        tacos_demo_pr = cls.for_test(test_name, slices, branch)
         with sh.cd(Path("tacos-demo/terraform/env/prod/")):
+            tacos_demo_pr = cls.for_test(test_name, slices, branch)
             yield tacos_demo_pr
         tacos_demo_pr.close()
 
