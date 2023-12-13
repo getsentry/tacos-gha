@@ -26,7 +26,7 @@ def test() -> None:
 
     try:
         # Pretend an hour has passed
-        trigger_workflow("drift-detection")
+        trigger_workflow("terraform_detect_drift.yml")
 
         # The drift detection workflow should have opened a PR to contain the drift
         pr = PR.wait_for_pr("tacos/drift", since)
