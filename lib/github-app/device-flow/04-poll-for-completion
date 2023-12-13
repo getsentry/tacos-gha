@@ -28,5 +28,7 @@ while true; do
   if [[ "$error" ]]; then
     sleep "$interval"
   else
+    : Complete!
+    break
   fi
 done
