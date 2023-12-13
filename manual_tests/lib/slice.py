@@ -9,21 +9,13 @@ from lib.functions import now
 from lib.functions import one
 from lib.sh import sh
 
-from .types import XFails
+from .xfail import XFails
 
 
 class Slice(int):
-    EDIT = """\
-resource "null_resource" "edit-me" {{
-  triggers = {{
-    now = "{now()}"
-  }}
-}}
-"""
-
     @property
     def directory(self) -> Path:
-        return one(Path().glob(f"slice-{self}*/"))
+        return one(Path.cwd().glob(f"slice-{self}*/"))
 
     def chdir(self) -> ContextManager[Path]:
         return sh.cd(self.directory)
@@ -34,8 +26,14 @@ resource "null_resource" "edit-me" {{
 
     def edit(self) -> None:
         tf_path = self.directory / "edit-me.tf"
+        tf = f"""\
+resource "null_resource" "edit-me" {{
+  triggers = {{
+    now = "{now()}"
+  }}
+}}
+"""
         with tf_path.open("w") as f:
-            tf = self.EDIT.format(now=now, self=self)
             f.write(tf)
         sh.run(("git", "add", tf_path))
 
