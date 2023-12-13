@@ -27,6 +27,7 @@ skip_covered = false
 [tool.pytest.ini_options]
 minversion = "6.0"
 markers = []
+xfail_strict = true
 addopts = "--durations-min=10 --last-failed -s -vv --doctest-modules"
 testpaths = ["."]
 norecursedirs = [
