@@ -1,10 +1,13 @@
 #!/usr/bin/env py.test
 from __future__ import annotations
 
+import contextlib
 from os import environ
+from pathlib import Path
 from typing import MutableMapping
 
 from lib import json as JSON
+from lib.types import Generator
 
 from .core import run
 from .io import banner as banner
@@ -17,22 +20,22 @@ from .json import json
 Command = tuple[object, ...]
 
 
+@contextlib.contextmanager
 def cd(
-    dirname: str, direnv: bool = True, env: MutableMapping[str, str] = environ
-) -> None:
-    from os import chdir
-
+    dirname: Path, direnv: bool = True, env: MutableMapping[str, str] = environ
+) -> Generator[Path]:
     xtrace(("cd", dirname))
-    chdir(dirname)
-    # TODO: set env[PWD] to absolute path
-    if direnv:
-        run(("direnv", "allow"))
-        direnv_json: JSON.Value = json(("direnv", "export", "json"))
-        if not isinstance(direnv_json, dict):
-            raise AssertionError(f"expected dict, got {type(direnv_json)}")
-        for key, value in direnv_json.items():
-            if value is None:
-                env.pop(key, None)
-            else:
-                assert isinstance(value, str), value
-                env[key] = value
+    with contextlib.chdir(dirname):
+        # TODO: set env[PWD] to absolute path
+        if direnv:
+            run(("direnv", "allow"))
+            direnv_json: JSON.Value = json(("direnv", "export", "json"))
+            if not isinstance(direnv_json, dict):
+                raise AssertionError(f"expected dict, got {type(direnv_json)}")
+            for key, value in direnv_json.items():
+                if value is None:
+                    env.pop(key, None)
+                else:
+                    assert isinstance(value, str), value
+                    env[key] = value
+        yield dirname
