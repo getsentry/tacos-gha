@@ -55,13 +55,26 @@ class PR(gh.PR):
         tacos_demo_pr.close()
 
 
-def clone() -> None:
-    sh.run(("rm", "-rf", "tacos-demo"))
-    sh.run(("git", "clone", "git@github.com:getsentry/tacos-demo"))
+def clone(cwd: Path | None = None) -> Path:
+    if cwd is None:
+        cwd = Path.cwd()
+
+    result = cwd / 'tacos-demo'
+    sh.run(("rm", "-rf", result))
+    sh.run(("git", "clone", "git@github.com:getsentry/tacos-demo", result))
+    retur result
+    
+
+
+def commit(branch: Branch, test_name: str, message: str = "") -> None:
+    if message:
+        message = " - " + message
+    sh.run(("git", "commit", "-m", f"test: {test_name} ({NOW}){message}"))
+    sh.run(("git", "push", "origin", f"{branch}:{branch}"))
 
 
 def commit_changes_to(
-    slices: Slices, test_name: str, commit: str = "", branch: object = None
+    slices: Slices, test_name: str, message: str = "", branch: object = None
 ) -> Branch:
     if branch is None:
         branch = ""
@@ -78,9 +91,6 @@ def commit_changes_to(
     for slice in slices:
         slice.edit()
 
-    if commit:
-        commit = " - " + commit
-    sh.run(("git", "commit", "-m", f"test: {test_name} ({NOW}){commit}"))
-    sh.run(("git", "push", "origin", f"{branch}:{branch}"))
+    commit(branch, test_name, message)
 
     return branch
