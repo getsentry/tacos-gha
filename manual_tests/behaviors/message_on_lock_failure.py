@@ -3,13 +3,13 @@ from __future__ import annotations
 
 import pytest
 
-from manual_tests.lib import slice
 from manual_tests.lib.gh import gh
+from manual_tests.lib.slice import Slices
 from manual_tests.lib.tacos_demo import PR
 
 
 @pytest.mark.xfail(reason="locking not yet implemented")
-def test(test_name: str, slices: slice.Slices) -> None:
+def test(test_name: str, slices: Slices) -> None:
     with (
         PR.opened_for_test(test_name, slices, branch=1) as pr1,
         PR.opened_for_test(test_name, slices, branch=2) as pr2,
