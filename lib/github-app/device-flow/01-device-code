@@ -1,0 +1,17 @@
+#!/bin/bash
+set -euxo pipefail
+
+app="${1:-./tacos-gha-author}"
+
+client_id="$(cat "$app/client-id")"
+
+set -x
+curl -sSL \
+    -v \
+    --fail-with-body \
+    https://github.com/login/device/code \
+    --data client_id="$client_id" \
+    --header Accept:application/vnd.github+json |
+  jq . |
+  tee "$0.result.json" \
+;

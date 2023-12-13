@@ -1,0 +1,32 @@
+#!/bin/bash
+set -euxo pipefail
+
+app="${1:-./tacos-gha-author}"
+client_id="$(cat "$app/client-id")"
+
+response="${2:-./01-device-code.result.json}"
+device_code="$(jq -r .device_code < "$response")"
+grant_type="urn:ietf:params:oauth:grant-type:device_code"
+interval="$(jq -r .interval < "$response")"
+resultfile="$0".result.json
+
+set -x
+while true; do
+  curl \
+      -sSL \
+      -v \
+      --fail-with-body \
+      https://github.com/login/oauth/access_token \
+      --header Accept:application/vnd.github+json \
+      --data client_id="$client_id" \
+      --data device_code="$device_code" \
+      --data grant_type="$grant_type" |
+    jq . |
+    tee "$resultfile" \
+  ;
+  error="$(jq .error < "$resultfile")"
+  if [[ "$error" ]]; then
+    sleep "$interval"
+  else
+  fi
+done
