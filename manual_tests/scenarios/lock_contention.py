@@ -21,7 +21,6 @@ def test() -> None:
     sh.banner(f"User 1 opens a PR for slices: {slices}")
     pr1 = tacos_demo.PR.for_test(TEST_NAME, slices)
 
-    pr1_open = True
     pr2 = None
     try:
         sh.banner("User 1 acquires the lock")
@@ -37,7 +36,6 @@ def test() -> None:
 
         sh.banner("User 1 closes their PR")
         pr1.close()
-        pr1_open = False
 
         sh.banner("User 2 adds the :taco::acquire-lock label")
         pr2.add_label(":taco::acquire-lock")
@@ -46,7 +44,6 @@ def test() -> None:
         sh.banner("User 2 acquires the lock")
         assert pr2.check("terraform_lock").wait(since).success
     finally:
-        if pr1_open:
-            pr1.close()
+        pr1.close()
         if pr2 is not None:
             pr2.close()
