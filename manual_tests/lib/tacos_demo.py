@@ -3,6 +3,7 @@ from __future__ import annotations
 import typing
 from contextlib import contextmanager
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Iterator
 from typing import Self
 from typing import TypeVar
@@ -10,8 +11,8 @@ from typing import TypeVar
 from lib.constants import NOW
 from lib.constants import USER
 from lib.sh import sh
-from manual_tests.lib import slice
 from manual_tests.lib.gh import gh
+from manual_tests.lib.slice import Slices
 
 # TODO: centralize reused type aliases
 Yields = Iterator
@@ -24,15 +25,15 @@ URL = str
 
 @dataclass(frozen=True)
 class PR(gh.PR):
-    slices: slice.Slices
+    slices: Slices
 
     @classmethod
-    def from_pr(cls, pr: gh.PR, slices: slice.Slices) -> Self:
+    def from_pr(cls, pr: gh.PR, slices: Slices) -> Self:
         return cls(**vars(pr), slices=slices)
 
     @classmethod
     def for_test(
-        cls, test_name: str, slices: slice.Slices, branch: object = None
+        cls, test_name: str, slices: Slices, branch: object = None
     ) -> Self:
         branch = commit_changes_to(slices, test_name, branch=branch)
 
@@ -45,25 +46,22 @@ class PR(gh.PR):
     @classmethod
     @contextmanager
     def opened_for_test(
-        cls, test_name: str, slices: slice.Slices, branch: object = None
+        cls, test_name: str, slices: Slices, branch: object = None
     ) -> Generator[Self]:
         clone()
-        tacos_demo_pr = cls.for_test(test_name, slices, branch)
-        yield tacos_demo_pr
+        with sh.cd(Path("tacos-demo/terraform/env/prod/")):
+            tacos_demo_pr = cls.for_test(test_name, slices, branch)
+            yield tacos_demo_pr
         tacos_demo_pr.close()
 
 
 def clone() -> None:
     sh.run(("rm", "-rf", "tacos-demo"))
     sh.run(("git", "clone", "git@github.com:getsentry/tacos-demo"))
-    sh.cd("tacos-demo/terraform/env/prod/")
 
 
 def commit_changes_to(
-    slices: slice.Slices,
-    test_name: str,
-    commit: str = "",
-    branch: object = None,
+    slices: Slices, test_name: str, commit: str = "", branch: object = None
 ) -> Branch:
     if branch is None:
         branch = ""
@@ -77,8 +75,8 @@ def commit_changes_to(
     # NB: setting an upstream tracking branch makes `gh pr` stop working well
     sh.run(("git", "checkout", "-B", branch))
 
-    for s in slices:
-        slice.edit(s)
+    for slice in slices:
+        slice.edit()
 
     if commit:
         commit = " - " + commit
