@@ -19,7 +19,7 @@ def test() -> None:
 
     since = now()
     for s in slices:
-        slice.edit(s, False)
+        slice.edit(s)
 
     # Make infrastructure changes out-of-band
     tf.apply()
@@ -35,5 +35,5 @@ def test() -> None:
         assert pr.check("terraform_plan").wait(since).success
     finally:
         # Cleanup: roll back the infrastructure changes
-        sh.run(("git", "checkout", "main"))
+        sh.run(("git", "reset", "--hard", "origin/main"))
         tf.apply()

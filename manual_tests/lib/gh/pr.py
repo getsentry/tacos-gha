@@ -131,7 +131,7 @@ class PR:
 
     @classmethod
     def wait_for_pr(
-        cls, branch: str, since: datetime, timeout: int = 150
+        cls, branch: str, since: datetime, timeout: int = 60
     ) -> Self:
         # mypy doesn't understand closures :(
         def branch_pr() -> Self:
