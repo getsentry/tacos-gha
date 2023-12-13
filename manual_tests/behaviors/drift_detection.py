@@ -5,21 +5,21 @@ import pytest
 
 from lib.functions import now
 from lib.sh import sh
-from manual_tests.lib import slice
 from manual_tests.lib import tacos_demo
 from manual_tests.lib import tf
 from manual_tests.lib.gh.pr import PR
 from manual_tests.lib.gh.workflow import trigger_workflow
+from manual_tests.lib.slice import Slices
 
 
 @pytest.mark.xfail(reason="drift detection not yet implemented")
 def test() -> None:
     tacos_demo.clone()
-    slices = slice.random()
+    slices = Slices.random()
 
     since = now()
-    for s in slices:
-        slice.edit(s)
+    for slice in slices:
+        slice.edit()
 
     # Make infrastructure changes out-of-band
     tf.apply()
