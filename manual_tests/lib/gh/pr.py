@@ -7,6 +7,7 @@ from typing import Self
 from typing import Sequence
 
 from lib import json
+from lib import wait
 from lib.functions import now
 from lib.functions import one
 from lib.sh import sh
@@ -21,6 +22,7 @@ Comment = str  # a PR comment
 if TYPE_CHECKING:
     from .check import Check
 
+# mypy: disable-error-code="type-var, misc"
 # we should find a better way to denote tf-plan in comments
 PLAN_MESSAGE = (
     '<summary>Execution result of "run-all plan -out plan" in "."</summary>'
@@ -140,3 +142,19 @@ class PR:
         from .check import Check
 
         return Check(self, check_name)
+
+    @classmethod
+    def from_branch(cls, branch: Branch, since: datetime) -> Self:
+        url = sh.stdout(("gh", "pr", "view", "--json", "url", branch))
+        return cls(branch, url, since)
+
+    @classmethod
+    def wait_for_pr(
+        cls, branch: str, since: datetime, timeout: int = 60
+    ) -> Self:
+        # mypy doesn't understand closures :(
+        def branch_pr() -> Self:
+            assert sh.success(("gh", "pr", "view", branch))
+            return cls.from_branch(branch, since)
+
+        return wait.for_(branch_pr, timeout=timeout, sleep=5)
