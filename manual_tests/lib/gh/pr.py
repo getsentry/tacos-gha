@@ -36,11 +36,12 @@ class PR:
     since: datetime
 
     @classmethod
-    def open(cls, branch: Branch, **attrs: object) -> Self:
+    def open(cls, branch: Branch, draft: bool = False, **attrs: object) -> Self:
         since = now()
-        url = sh.stdout(
-            ("gh", "pr", "create", "--fill-first", "--head", branch)
-        )
+        command = list(("gh", "pr", "create", "--fill-first", "--head", branch))
+        if draft:
+            command.append("--draft",)
+        url = sh.stdout(tuple(command))
         return cls(branch, url, since, **attrs)
 
     def close(self) -> None:

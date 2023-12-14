@@ -33,11 +33,11 @@ class PR(gh.PR):
 
     @classmethod
     def for_test(
-        cls, test_name: str, slices: Slices, branch: object = None
+        cls, test_name: str, slices: Slices, branch: object = None, draft: bool = False
     ) -> Self:
         branch = commit_changes_to(slices, test_name, branch=branch)
 
-        pr = cls.open(branch, slices=slices)
+        pr = cls.open(branch, slices=slices, draft=draft)
 
         sh.banner("PR opened:", pr.url)
 
@@ -46,11 +46,11 @@ class PR(gh.PR):
     @classmethod
     @contextmanager
     def opened_for_test(
-        cls, test_name: str, slices: Slices, branch: object = None
+        cls, test_name: str, slices: Slices, branch: object = None, draft: bool = False
     ) -> Generator[Self]:
         clone()
         with sh.cd(Path("tacos-demo/terraform/env/prod/")):
-            tacos_demo_pr = cls.for_test(test_name, slices, branch)
+            tacos_demo_pr = cls.for_test(test_name, slices, branch, draft)
             yield tacos_demo_pr
         tacos_demo_pr.close()
 
