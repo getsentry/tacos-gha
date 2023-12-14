@@ -3,7 +3,6 @@ from __future__ import annotations
 import typing
 from contextlib import contextmanager
 from dataclasses import dataclass
-from pathlib import Path
 from typing import Iterator
 from typing import Self
 from typing import TypeVar
@@ -19,7 +18,6 @@ Yields = Iterator
 T = TypeVar("T")
 Generator = typing.Generator[T, None, None]  # shim py313/PEP696
 # FIXME: use a more specific type than str
-Branch = str
 URL = str
 
 
@@ -27,70 +25,41 @@ URL = str
 class PR(gh.PR):
     slices: Slices
 
-    @classmethod
-    def from_pr(cls, pr: gh.PR, slices: Slices) -> Self:
-        return cls(**vars(pr), slices=slices)
-
-    @classmethod
-    def for_test(
-        cls, test_name: str, slices: Slices, branch: object = None
-    ) -> Self:
-        branch = commit_changes_to(slices, test_name, branch=branch)
-
-        pr = cls.open(branch, slices=slices)
-
-        sh.banner("PR opened:", pr.url)
-
-        return pr
-
-    @classmethod
     @contextmanager
+    @classmethod
     def opened_for_test(
-        cls, test_name: str, slices: Slices, branch: object = None
+        cls,
+        slices: Slices,
+        test_name: str,
+        branch: gh.Branch = None,
+        message: gh.Message = None,
     ) -> Generator[Self]:
-        clone()
-        with sh.cd(Path("tacos-demo/terraform/env/prod/")):
-            tacos_demo_pr = cls.for_test(test_name, slices, branch)
-            yield tacos_demo_pr
-        tacos_demo_pr.close()
+        with gh.PR.opened(
+            slices.workdir,
+            edit=lambda: edit(slices, test_name, branch, message),
+        ) as pr:
+            yield cls(**vars(pr), slices=slices)
 
 
-def clone(cwd: Path | None = None) -> Path:
-    if cwd is None:
-        cwd = Path.cwd()
-
-    result = cwd / 'tacos-demo'
-    sh.run(("rm", "-rf", result))
-    sh.run(("git", "clone", "git@github.com:getsentry/tacos-demo", result))
-    retur result
-    
-
-
-def commit(branch: Branch, test_name: str, message: str = "") -> None:
-    if message:
-        message = " - " + message
-    sh.run(("git", "commit", "-m", f"test: {test_name} ({NOW}){message}"))
-    sh.run(("git", "push", "origin", f"{branch}:{branch}"))
-
-
-def commit_changes_to(
-    slices: Slices, test_name: str, message: str = "", branch: object = None
-) -> Branch:
-    if branch is None:
-        branch = ""
-    else:
+def edit(
+    slices: Slices,
+    test_name: str,
+    branch: gh.Branch = None,
+    message: gh.Message = None,
+) -> tuple[gh.Branch, gh.Message]:
+    if branch:
         branch = f"/{branch}"
 
     branch = (
         f"test/{USER}/{NOW.isoformat().replace(':', '_')}/{test_name}{branch}"
     )
 
+    if message:
+        message = f" - {message}"
+    message = f"test: {test_name} ({NOW}){message}"
+
     # NB: setting an upstream tracking branch makes `gh pr` stop working well
     sh.run(("git", "checkout", "-B", branch))
 
-    for slice in slices:
-        slice.edit()
-
-    commit(branch, test_name, message)
-
-    return branch
+    slices.edit()
+    return branch, message

@@ -1,8 +1,12 @@
 from __future__ import annotations
 
+from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime
+from pathlib import Path
 from typing import TYPE_CHECKING
+from typing import Callable
+from typing import ParamSpec
 from typing import Self
 from typing import Sequence
 
@@ -11,13 +15,16 @@ from lib import wait
 from lib.functions import now
 from lib.functions import one
 from lib.sh import sh
+from lib.types import Generator
 
 from .types import URL
 from .types import Branch
 from .types import CheckName
 from .types import Label
+from .types import Message
 
 Comment = str  # a PR comment
+P = ParamSpec("P")
 
 if TYPE_CHECKING:
     from .check import Check
@@ -38,12 +45,28 @@ class PR:
     since: datetime
 
     @classmethod
-    def open(cls, branch: Branch, **attrs: object) -> Self:
+    def open(cls, workdir: Path, branch: Branch) -> Self:
         since = now()
-        url = sh.stdout(
-            ("gh", "pr", "create", "--fill-first", "--head", branch)
-        )
-        return cls(branch, url, since, **attrs)
+        with sh.cd(workdir):
+            url = sh.stdout(
+                ("gh", "pr", "create", "--fill-first", "--head", branch)
+            )
+        return cls(branch, url, since)
+
+    @contextmanager
+    @classmethod
+    def opened(
+        cls, workdir: Path, edit: Callable[[], tuple[Branch, Message]]
+    ) -> Generator[Self]:
+        with sh.cd(workdir):
+            branch, message = edit()
+            commit(workdir, branch, message)
+            pr = cls.open(workdir, branch)
+
+            sh.banner("PR opened:", pr.url)
+
+            yield pr
+            pr.close()
 
     def close(self) -> None:
         sh.banner("cleaning up:")
@@ -161,3 +184,9 @@ class PR:
             return cls.from_branch(branch, since, **attrs)
 
         return wait.for_(branch_pr, timeout=timeout, sleep=5)
+
+
+def commit(workdir: Path, branch: Branch, message: object = None) -> None:
+    with sh.cd(workdir):
+        sh.run(("git", "commit", "-m", message))
+        sh.run(("git", "push", "origin", f"{branch}:{branch}"))

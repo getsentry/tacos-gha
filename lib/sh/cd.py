@@ -4,9 +4,9 @@ from __future__ import annotations
 import contextlib
 from os import environ
 from pathlib import Path
-from typing import MutableMapping
 
 from lib import json as JSON
+from lib.types import Environ
 from lib.types import Generator
 
 from .core import run
@@ -22,11 +22,11 @@ Command = tuple[object, ...]
 
 @contextlib.contextmanager
 def cd(
-    dirname: Path, direnv: bool = True, env: MutableMapping[str, str] = environ
+    dirname: Path, direnv: bool = True, env: Environ = environ
 ) -> Generator[Path]:
     xtrace(("cd", dirname))
     with contextlib.chdir(dirname):
-        # TODO: set env[PWD] to absolute path
+        env["PWD"] = str(Path(env["PWD"]) / dirname)
         if direnv:
             run(("direnv", "allow"))
             direnv_json: JSON.Value = json(("direnv", "export", "json"))
