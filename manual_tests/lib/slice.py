@@ -10,6 +10,7 @@ from lib.functions import now
 from lib.sh import sh
 from lib.types import Generator
 
+from .xfail import XFailed
 from .xfail import XFails
 
 
@@ -32,7 +33,8 @@ resource "null_resource" "edit-me" {{
         with sh.cd(workdir):
             with tf_path.open("w") as f:
                 f.write(tf)
-                sh.run(("git", "add", tf_path))
+            # NB: file is empty if added before close
+            sh.run(("git", "add", tf_path))
 
 
 @dataclass(frozen=True)
@@ -65,7 +67,7 @@ class Slices:
         for slice in self:
             slice.edit(self.workdir)
 
-    def assert_locked(self, xfail: XFails | None = None) -> None:
+    def assert_locked(self, xfails: XFails | None = None) -> None:
         cls = type(self)
         for slice in cls.from_path(self.workdir):
             locked = slice.is_locked(self.workdir)
@@ -74,14 +76,17 @@ class Slices:
             try:
                 assert locked == should_lock, (locked, slice)
             except AssertionError:
-                if xfail is None:
-                    raise
-
-                # FIXME: actually do locking in our GHA "Obtain Lock" job
-                assert locked == False
-                xfail.append(
-                    ("assert locked == False", (locked, should_lock, slice))
-                )
+                if xfails is None:
+                    raise XFailed("locking not yet implemented")
+                else:
+                    # FIXME: actually do locking in our GHA "Obtain Lock" job
+                    assert locked == False
+                    xfails.append(
+                        (
+                            "assert locked == False",
+                            (locked, should_lock, slice),
+                        )
+                    )
 
     def paths(self) -> Generator[Path]:
         for slice in self.slices:

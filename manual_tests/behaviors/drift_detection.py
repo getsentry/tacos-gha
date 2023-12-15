@@ -13,7 +13,7 @@ from manual_tests.lib.slice import Slices
 from manual_tests.lib.xfail import XFailed
 
 
-@pytest.mark.xfail(reason="tacos/drift branch not created", raises=XFailed)
+@pytest.mark.xfail(raises=XFailed)
 def test(slices: Slices) -> None:
     sh.banner("Make infrastructure changes out-of-band")
     since = now()
@@ -28,7 +28,7 @@ def test(slices: Slices) -> None:
         try:
             pr = PR.wait_for("tacos/drift", since, timeout=6)
         except wait.TimeoutExpired:
-            raise XFailed
+            raise XFailed("tacos/drift branch not created")
 
         sh.banner("TODO: check that the plan matches what we expect")
         assert pr.check("terraform_plan").wait(since).success

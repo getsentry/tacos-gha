@@ -1,3 +1,4 @@
+#!/usr/bin/env py.test
 from __future__ import annotations
 
 import typing
@@ -26,6 +27,10 @@ class PR(gh.PR):
     slices: Slices
 
     @classmethod
+    def from_pr(cls, pr: gh.PR, slices: Slices) -> Self:
+        return cls(**vars(pr), slices=slices)
+
+    @classmethod
     def for_slices(
         cls,
         slices: Slices,
@@ -37,14 +42,14 @@ class PR(gh.PR):
         branch, message = edit(slices, test_name, branch, message)
         gh.commit_and_push(workdir, branch, message)
 
-        pr = cls.open(workdir, branch)
+        pr = cls.open(workdir, branch, slices=slices)
 
         sh.banner("PR opened:", pr.url)
 
         return pr
 
-    @contextmanager
     @classmethod
+    @contextmanager
     def opened_for_slices(
         cls,
         slices: Slices,
@@ -66,6 +71,8 @@ def edit(
 ) -> tuple[gh.Branch, gh.Message]:
     if branch:
         branch = f"/{branch}"
+    else:
+        branch = ""
 
     branch = (
         f"test/{USER}/{NOW.isoformat().replace(':', '_')}/{test_name}{branch}"
@@ -73,6 +80,8 @@ def edit(
 
     if message:
         message = f" - {message}"
+    else:
+        message = ""
     message = f"test: {test_name} ({NOW}){message}"
 
     # NB: setting an upstream tracking branch makes `gh pr` stop working well

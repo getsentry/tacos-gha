@@ -36,7 +36,7 @@ def assert_merged(xfails: XFails) -> None:
         xfails.append(("assert lines", lines))
 
 
-@pytest.mark.xfail(reason="apply not yet implemented", raises=XFailed)
+@pytest.mark.xfail(raises=XFailed)
 def test(pr: tacos_demo.PR) -> None:
     xfails: XFails = []
 
@@ -70,4 +70,4 @@ def test(pr: tacos_demo.PR) -> None:
         xfails.append(("assert tf.plan_clean()", "plan not clean"))
 
     if xfails:
-        raise XFailed(xfails)
+        raise XFailed(str(xfails))

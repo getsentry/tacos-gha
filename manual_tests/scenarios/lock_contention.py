@@ -7,9 +7,11 @@ from lib.functions import now
 from lib.sh import sh
 from manual_tests.lib import tacos_demo
 from manual_tests.lib.slice import Slices
+from manual_tests.lib.xfail import XFailed
 
 
-@pytest.mark.xfail(reason="Locking not yet implemented")
+# reason="Locking not yet implemented"
+@pytest.mark.xfail(raises=XFailed)
 def test(slices: Slices, test_name: str) -> None:
     since = now()
 

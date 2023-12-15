@@ -41,13 +41,13 @@ class PR:
     since: datetime
 
     @classmethod
-    def open(cls, workdir: Path, branch: Branch) -> Self:
+    def open(cls, workdir: Path, branch: Branch, **attrs: object) -> Self:
         since = now()
         with sh.cd(workdir):
             url = sh.stdout(
                 ("gh", "pr", "create", "--fill-first", "--head", branch)
             )
-        return cls(branch, url, since)
+        return cls(branch, url, since, **attrs)
 
     @contextmanager
     @classmethod

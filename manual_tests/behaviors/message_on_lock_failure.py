@@ -6,9 +6,11 @@ import pytest
 from manual_tests.lib import tacos_demo
 from manual_tests.lib.gh import gh
 from manual_tests.lib.slice import Slices
+from manual_tests.lib.xfail import XFailed
 
 
-@pytest.mark.xfail(reason="locking not yet implemented")
+# reason="locking not yet implemented"
+@pytest.mark.xfail(raises=XFailed)
 def test(test_name: str, slices: Slices) -> None:
     with (
         tacos_demo.PR.opened_for_slices(slices, test_name, branch=1) as pr1,

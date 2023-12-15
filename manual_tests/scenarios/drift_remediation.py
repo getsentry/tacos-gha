@@ -25,6 +25,7 @@ def create_drift(slices: Slices) -> datetime:
     return since
 
 
+@pytest.mark.xfail(raises=XFailed)
 def test_roll_forward(slices: Slices) -> None:
     since = create_drift(slices)
 
