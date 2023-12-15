@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 from random import Random
+from typing import Iterator
 from typing import Self
 
 from lib.functions import now
@@ -86,7 +87,7 @@ class Slices:
         for slice in self.slices:
             yield self.workdir / slice
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[Slice]:
         return iter(self.slices)
 
     def __contains__(self, other: Slice) -> bool:

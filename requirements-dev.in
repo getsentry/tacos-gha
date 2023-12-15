@@ -1,5 +1,6 @@
-# typing
-pyright
+## typing
+# https://github.com/microsoft/pyright/issues/6722
+pyright!=1.1.340
 mypy
 
 # auto-formatting
