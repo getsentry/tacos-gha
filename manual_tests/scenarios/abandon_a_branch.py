@@ -7,11 +7,12 @@ from lib.functions import now
 from lib.sh import sh
 from manual_tests.lib import tacos_demo
 from manual_tests.lib.slice import Slices
+from manual_tests.lib.xfail import XFailed
 
 TEST_NAME = __name__
 
 
-@pytest.mark.xfail(reason="Locking not yet implemented")
+@pytest.mark.xfail(raises=XFailed)
 def test() -> None:
     slices = Slices.random()
 
@@ -36,7 +37,10 @@ def test() -> None:
         pr.add_label(":taco::stale")
 
         sh.banner("An attempt is made to notify the PR owner")
-        assert pr.check("notify_owner").wait(since).success
+        try:
+            assert pr.check("notify_owner").wait(since).success
+        except AssertionError:
+            raise XFailed("notify_owner action does not exist")
         since = now()
 
         sh.banner("More time passes")
