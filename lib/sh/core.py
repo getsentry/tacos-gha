@@ -58,7 +58,20 @@ def lines(cmd: Command, *, encoding: str = US_ASCII) -> Generator[Line]:
         yield line
 
 
-def success(cmd: Command, returncode: int = 0) -> bool:
+def returncode(cmd: Command) -> int:
+    """Run a command and report its exit code.
+
+    >>> returncode(('true',))
+    0
+    >>> returncode(('sh', '-c', 'exit 33'))
+    33
+    """
+    # any non-ascii bytes are ambiguous, here:
+    result = _wait(_popen(cmd), check=False)
+    return result.returncode
+
+
+def success(cmd: Command, expected_returncode: int = 0) -> bool:
     """Run a command and report whether it was successful.
 
     >>> success(('true',))
@@ -71,9 +84,7 @@ def success(cmd: Command, returncode: int = 0) -> bool:
     >>> success(('false',), returncode=1)
     True
     """
-    # any non-ascii bytes are ambiguous, here:
-    result = _wait(_popen(cmd), check=False)
-    return result.returncode == returncode
+    return returncode(cmd) == expected_returncode
 
 
 def _popen(

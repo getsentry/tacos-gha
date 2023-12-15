@@ -1,6 +1,8 @@
 #!/usr/bin/env py.test
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 
 from lib.functions import now
@@ -11,17 +13,19 @@ from manual_tests.lib.xfail import XFailed
 TEST_NAME = __name__
 
 
-# reason="apply not yet implemented"
 @pytest.mark.xfail(raises=XFailed)
-def test(pr: tacos_demo.PR) -> None:
+def test(pr: tacos_demo.PR, workdir: Path) -> None:
     assert pr.check("terraform_lock").wait().success
 
     pr.approve()
     assert pr.approved()
 
     # the taco-apply label causes the plan to become clean:
-    assert not tf.plan_clean()
+    assert tf.plan_dirty(workdir)
     since = now()
     pr.add_label(":taco::apply")
     assert pr.check("terraform_apply").wait(since).success
-    assert tf.plan_clean()
+    try:
+        assert tf.plan_clean(workdir)
+    except AssertionError:
+        raise XFailed("apply not yet implemented")

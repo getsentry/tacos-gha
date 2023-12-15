@@ -13,15 +13,15 @@ from manual_tests.lib.xfail import XFailed
 from manual_tests.lib.xfail import XFails
 
 
-def apply(pr: gh.PR, xfails: XFails) -> None:
+def apply(pr: tacos_demo.PR, xfails: XFails) -> None:
     # the taco-apply label causes the plan to become clean:
-    assert not tf.plan_clean()
+    assert tf.plan_dirty(pr.slices.workdir)
     since = now()
     pr.add_label(":taco::apply")
     assert pr.check("terraform_apply").wait(since).success
 
     try:
-        assert tf.plan_clean()
+        assert tf.plan_clean(pr.slices.workdir)
     except AssertionError:
         xfails.append(("assert tf.plan_clean()", "plan not clean"))
 
@@ -65,7 +65,7 @@ def test(pr: tacos_demo.PR) -> None:
 
     sh.banner("show terraform-plan really is clean")
     try:
-        assert tf.plan_clean()
+        assert tf.plan_clean(pr.slices.workdir)
     except AssertionError:
         xfails.append(("assert tf.plan_clean()", "plan not clean"))
 

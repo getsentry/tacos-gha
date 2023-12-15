@@ -5,6 +5,7 @@ from pathlib import Path
 
 from pytest import fixture
 
+from lib import json
 from lib.sh import sh
 from lib.sh.cd import cd
 from lib.types import Generator
@@ -50,25 +51,43 @@ def pr(slices: Slices, test_name: str) -> Generator[tacos_demo.PR]:
 GCLOUD_CONFIG = Path(".config/gcloud/configurations")
 
 
-# TODO: convert to `gcloud` fixture, setting GCLOUD_AUTH_TOKEN
-@fixture
-def home(home: tuple[Path, Path]) -> tuple[Path, Path]:
-    old, new = home
-
-    # let gcloud see its config still, though
-    # it doesn't respect XDG, apparently
-    src = old / GCLOUD_CONFIG
-    dst = new / GCLOUD_CONFIG
-
-    dst.parent.mkdir(parents=True, exist_ok=True)
-    dst.symlink_to(src)
-
-    return home
-
-
-# TODO: refactor gh module to take token as an argument
+# TODO: refactor to an object that takes token in constructor, remove autouse
 @fixture(autouse=True, scope="session")
-def gh_token() -> None:
+def cli_auth_gcloud() -> None:
+    from os import environ
+
+    # https://fig.io/manual/gcloud/config/config-helper
+    gcloud_config = sh.json(
+        (
+            "gcloud",
+            "config",
+            "config-helper",
+            "--format",
+            "json(configuration.properties.core.account,credential.access_token)",
+        )
+    )
+    gcloud_token = json.deepget(
+        gcloud_config, str, "credential", "access_token"
+    )
+
+    # for the gcloud CLI
+    # https://cloud.google.com/sdk/docs/authorizing#auth-login
+    environ["CLOUDSDK_AUTH_ACCESS_TOKEN"] = gcloud_token
+
+    # for the gcloud terraform provider
+    # https://registry.terraform.io/providers/hashicorp/google/latest/docs/guides/provider_reference#access_token
+    environ["GOOGLE_OAUTH_ACCESS_TOKEN"] = gcloud_token
+
+    # this is here mostly to help gcloud generate valid error messages
+    # https://stackoverflow.com/a/44824175/146821
+    environ["CLOUDSDK_CORE_ACCOUNT"] = json.deepget(
+        gcloud_config, str, "configuration", "properties", "core", "account"
+    )
+
+
+# TODO: refactor to an object that takes token in constructor, remove autouse
+@fixture(autouse=True, scope="session")
+def cli_auth_gh() -> None:
     from os import environ
 
     environ["GH_TOKEN"] = sh.stdout(("gh", "auth", "token"))
