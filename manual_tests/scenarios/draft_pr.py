@@ -11,7 +11,7 @@ from manual_tests.lib.slice import Slices
 TEST_NAME = __name__
 
 
-@pytest.mark.xfail(reason="Draft PRs still try to lock")
+@pytest.mark.xfail(reason="Running apply will grab the lock anyway", raises=AssertionError)
 def test() -> None:
     slices = Slices.random()
     with tacos_demo.PR.opened_for_test(
@@ -21,18 +21,18 @@ def test() -> None:
 
         # The terraform_plan check should run automatically when the PR is opened
         sh.banner("Wait for the terraform_plan check to complete")
-        pr.check("terraform_plan").wait(pr.since).success
+        assert pr.check("terraform_plan").wait(pr.since).success
 
         # The terraform_lock check should not run automatically when the PR is a draft
         sh.banner("Make sure the terraform_lock check did not run")
-        pr.check("terraform_lock").assert_not_ran(pr.since)
+        assert pr.check("terraform_lock").wait(pr.since).skipped
 
-        # Since the lock was not aquired, applying the plan should fail
+        # Since this PR is a draft, it should not be able to apply the plan
         sh.banner("Apply the plan")
         pr.add_label(":taco::apply")
 
-        # The terraform_apply check should fail
-        assert not pr.check("terraform_apply").wait(pr.since).success
+        # The terraform_apply check should not run automatically when the PR is a draft
+        assert pr.check("terraform_apply").wait(pr.since).skipped
 
         # Another user should be able to aquire the lock(s)
         sh.banner("Open a second PR for the same slices")

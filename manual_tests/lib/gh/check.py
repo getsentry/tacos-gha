@@ -67,14 +67,6 @@ class Check:
         assert c.completedAt > since
         return c
 
-    def assert_not_ran(self, since: datetime) -> None:
-        """Did a specified github-actions job not run, lately?"""
-        try:
-            self.assert_ran(since)
-        except AssertionError:
-            return
-        raise AssertionError(f"Check ran: {self}")
-
     def wait(
         self, since: datetime | None = None, timeout: int = wait.WAIT_LIMIT
     ) -> CheckRun:
