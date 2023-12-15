@@ -11,8 +11,8 @@ from manual_tests.lib.slice import Slices
 @pytest.mark.xfail(reason="locking not yet implemented")
 def test(test_name: str, slices: Slices) -> None:
     with (
-        tacos_demo.PR.opened_for_test(slices, test_name, branch=1) as pr1,
-        tacos_demo.PR.opened_for_test(slices, test_name, branch=2) as pr2,
+        tacos_demo.PR.opened_for_slices(slices, test_name, branch=1) as pr1,
+        tacos_demo.PR.opened_for_slices(slices, test_name, branch=2) as pr2,
     ):
         checks: dict[tacos_demo.PR, gh.CheckRun] = {
             pr1: pr1.check("terraform_lock").wait(),

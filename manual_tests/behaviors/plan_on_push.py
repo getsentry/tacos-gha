@@ -5,6 +5,7 @@ from datetime import datetime
 
 from lib.functions import now
 from manual_tests.lib import tacos_demo
+from manual_tests.lib.gh import gh
 from manual_tests.lib.slice import Slices
 
 PLAN_MESSAGE = (
@@ -20,6 +21,9 @@ def assert_gha_plan(pr: tacos_demo.PR, since: datetime) -> None:
 def test(pr: tacos_demo.PR, test_name: str, slices: Slices) -> None:
     assert_gha_plan(pr, pr.since)
 
+    branch, message = tacos_demo.edit(slices, test_name, message="more code")
+
     since = now()
-    tacos_demo.commit_changes_to(slices, test_name, commit="more code")
+    gh.commit_and_push(slices.workdir, branch, message)
     assert_gha_plan(pr, since)
+    # TODO: assert the plan is what we expect

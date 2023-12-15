@@ -29,7 +29,8 @@ class Remote:
     def cloned(self, dest: Path | None = None) -> Generator[Local]:
         repo = self.clone(dest)
         yield repo
-        sh.run(("rm", "-rf", repo.path))
+        # cleanup makes debugging harder, plus pytest's tmp_path handles it
+        # sh.run(("rm", "-rf", repo.path))
 
     @property
     def name(self) -> str:

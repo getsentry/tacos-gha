@@ -15,9 +15,13 @@ def json(cmd: Command) -> JSON.Value:
     >>> json(("echo", '{"a": "b", "c": 3}'))
     {'a': 'b', 'c': 3}
     """
+    text = stdout(cmd)
+    if not text:
+        return None
+
     import json
 
-    result: JSON.Value = json.loads(stdout(cmd))
+    result: JSON.Value = json.loads(text)
     return result
 
 

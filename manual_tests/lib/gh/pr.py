@@ -5,8 +5,6 @@ from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING
-from typing import Callable
-from typing import ParamSpec
 from typing import Self
 from typing import Sequence
 
@@ -21,10 +19,8 @@ from .types import URL
 from .types import Branch
 from .types import CheckName
 from .types import Label
-from .types import Message
 
 Comment = str  # a PR comment
-P = ParamSpec("P")
 
 if TYPE_CHECKING:
     from .check import Check
@@ -55,18 +51,11 @@ class PR:
 
     @contextmanager
     @classmethod
-    def opened(
-        cls, workdir: Path, edit: Callable[[], tuple[Branch, Message]]
-    ) -> Generator[Self]:
-        with sh.cd(workdir):
-            branch, message = edit()
-            commit(workdir, branch, message)
-            pr = cls.open(workdir, branch)
-
-            sh.banner("PR opened:", pr.url)
-
-            yield pr
-            pr.close()
+    def opened(cls, workdir: Path, branch: Branch) -> Generator[Self]:
+        pr = cls.open(workdir, branch)
+        sh.banner("PR opened:", pr.url)
+        yield pr
+        pr.close()
 
     def close(self) -> None:
         sh.banner("cleaning up:")
@@ -119,7 +108,8 @@ class PR:
         return one(plan)
 
     def merge(self) -> str:
-        return sh.stdout(("gh", "pr", "merge", "--squash", "--auto", self.url))
+        sh.banner("merging PR")
+        return sh.stdout(("gh", "pr", "merge", "--squash", self.url))
 
     def labels(self) -> Sequence[Label]:
         result: list[Label] = []
@@ -169,24 +159,22 @@ class PR:
         return Check(self, check_name)
 
     @classmethod
-    def from_branch(
-        cls, branch: Branch, since: datetime, **attrs: object
-    ) -> Self:
+    def from_branch(cls, branch: Branch, since: datetime) -> Self:
         url = sh.stdout(("gh", "pr", "view", "--json", "url", branch))
-        return cls(branch, url, since, **attrs)
+        return cls(branch, url, since)
 
     @classmethod
-    def wait_for(
-        cls, branch: str, since: datetime, timeout: int = 60, **attrs: object
-    ) -> Self:
+    def wait_for(cls, branch: str, since: datetime, timeout: int = 60) -> Self:
         def branch_pr() -> Self:
             assert sh.success(("gh", "pr", "view", branch))
-            return cls.from_branch(branch, since, **attrs)
+            return cls.from_branch(branch, since)
 
         return wait.for_(branch_pr, timeout=timeout, sleep=5)
 
 
-def commit(workdir: Path, branch: Branch, message: object = None) -> None:
+def commit_and_push(
+    workdir: Path, branch: Branch, message: object = None
+) -> None:
     with sh.cd(workdir):
         sh.run(("git", "commit", "-m", message))
         sh.run(("git", "push", "origin", f"{branch}:{branch}"))

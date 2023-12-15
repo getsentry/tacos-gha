@@ -12,6 +12,13 @@ from lib.types import Generator
 
 
 @fixture
+def user() -> str:
+    from lib.constants import USER
+
+    return USER
+
+
+@fixture
 def environ() -> Generator[Environ]:
     """prevent cross-test pollution of environ"""
     from os import environ
@@ -39,8 +46,19 @@ def test_name(request: pytest.FixtureRequest) -> str:
 @fixture
 def cwd(tmp_path: Path, environ: Environ) -> Generator[Path]:
     """prevent cross-test pollution of cwd"""
-    with sh.cd(tmp_path, env=environ):
+    with sh.cd(tmp_path, env=environ, direnv=False):
         yield tmp_path
+
+
+@fixture
+def home(cwd: Path, environ: Environ) -> Generator[tuple[Path, Path]]:
+    home = cwd / "home"
+    orig_home = Path(environ["HOME"])
+    environ["HOME"] = str(home)
+
+    yield orig_home, home
+
+    environ["HOME"] = str(orig_home)
 
 
 @fixture(autouse=True)
@@ -52,8 +70,6 @@ def xdg(cwd: Path, environ: Environ) -> None:
     reference:
         https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html
     """
-    environ["HOME"] = str(cwd / "home")
-
     for xdg_var in (
         "CACHE_HOME",
         "CONFIG_HOME",
@@ -64,4 +80,6 @@ def xdg(cwd: Path, environ: Environ) -> None:
         "DATA_DIRS",
     ):
         xdg_var = "XDG_" + xdg_var
-        environ[xdg_var] = str(cwd / xdg_var)
+        xdg_val = cwd / xdg_var
+        xdg_val.mkdir()
+        environ[xdg_var] = str(xdg_val)

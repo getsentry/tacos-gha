@@ -24,18 +24,27 @@ Command = tuple[object, ...]
 def cd(
     dirname: Path, direnv: bool = True, env: Environ = environ
 ) -> Generator[Path]:
+    oldpwd = Path(env["PWD"])
+    newpwd = oldpwd / dirname
+    if newpwd == oldpwd:  # we're already there
+        yield newpwd
+        return
+
     xtrace(("cd", dirname))
     with contextlib.chdir(dirname):
-        env["PWD"] = str(Path(env["PWD"]) / dirname)
+        env["PWD"] = str(newpwd)
         if direnv:
             run(("direnv", "allow"))
             direnv_json: JSON.Value = json(("direnv", "export", "json"))
-            if not isinstance(direnv_json, dict):
+            if direnv_json is None:
+                pass  # nothing to do
+            elif isinstance(direnv_json, dict):
+                for key, value in direnv_json.items():
+                    if value is None:
+                        env.pop(key, None)
+                    else:
+                        assert isinstance(value, str), value
+                        env[key] = value
+            else:
                 raise AssertionError(f"expected dict, got {type(direnv_json)}")
-            for key, value in direnv_json.items():
-                if value is None:
-                    env.pop(key, None)
-                else:
-                    assert isinstance(value, str), value
-                    env[key] = value
         yield dirname

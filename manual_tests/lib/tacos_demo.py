@@ -25,20 +25,37 @@ URL = str
 class PR(gh.PR):
     slices: Slices
 
+    @classmethod
+    def for_slices(
+        cls,
+        slices: Slices,
+        test_name: str,
+        branch: object = None,
+        message: object = None,
+    ) -> Self:
+        workdir = slices.workdir
+        branch, message = edit(slices, test_name, branch, message)
+        gh.commit_and_push(workdir, branch, message)
+
+        pr = cls.open(workdir, branch)
+
+        sh.banner("PR opened:", pr.url)
+
+        return pr
+
     @contextmanager
     @classmethod
-    def opened_for_test(
+    def opened_for_slices(
         cls,
         slices: Slices,
         test_name: str,
         branch: gh.Branch = None,
         message: gh.Message = None,
     ) -> Generator[Self]:
-        with gh.PR.opened(
-            slices.workdir,
-            edit=lambda: edit(slices, test_name, branch, message),
-        ) as pr:
-            yield cls(**vars(pr), slices=slices)
+        with sh.cd(slices.workdir):
+            pr = cls.for_slices(slices, test_name, branch, message)
+            yield pr
+            pr.close()
 
 
 def edit(

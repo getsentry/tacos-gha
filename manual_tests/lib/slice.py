@@ -20,7 +20,7 @@ class Slice(Path):
             return sh.success(("terraform", "plan", "--lock=true"))
 
     def edit(self, workdir: Path) -> None:
-        tf_path = workdir / self / "edit-me.tf"
+        tf_path = self / "edit-me.tf"
         tf = f"""\
 resource "null_resource" "edit-me" {{
   triggers = {{
@@ -28,9 +28,10 @@ resource "null_resource" "edit-me" {{
   }}
 }}
 """
-        with tf_path.open("w") as f:
-            f.write(tf)
-        sh.run(("git", "add", tf_path))
+        with sh.cd(workdir):
+            with tf_path.open("w") as f:
+                f.write(tf)
+                sh.run(("git", "add", tf_path))
 
 
 @dataclass(frozen=True)

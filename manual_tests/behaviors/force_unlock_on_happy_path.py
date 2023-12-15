@@ -5,11 +5,12 @@ import pytest
 
 from lib.functions import now
 from manual_tests.lib import tacos_demo
+from manual_tests.lib.xfail import XFailed
 
 TEST_NAME = __name__
 
 
-@pytest.mark.xfail(reason="Comment not implemented yet.")
+@pytest.mark.xfail(raises=XFailed)
 def test(pr: tacos_demo.PR) -> None:
     assert pr.check("terraform_lock").wait().success
 
@@ -17,6 +18,9 @@ def test(pr: tacos_demo.PR) -> None:
     pr.add_label(":taco::unlock")
     assert pr.check("terraform_unlock").wait(since).success
 
-    assert "INFO: Main branch clean, unlock successful." in pr.comments(
-        since=since
-    )
+    try:
+        assert "INFO: Main branch clean, unlock successful." in pr.comments(
+            since=since
+        )
+    except AssertionError:
+        raise XFailed("still need to post message from unlock")

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from pathlib import Path
+
 from lib.sh import sh
 
 
@@ -12,14 +14,15 @@ def plan_clean() -> bool:
     )
 
 
-def apply() -> None:
-    sh.run(
-        (
-            "sudo-sac",
-            "terragrunt",
-            "run-all",
-            "apply",
-            "--auto-approve",
-            "--terragrunt-non-interactive",
+def apply(workdir: Path) -> None:
+    with sh.cd(workdir):
+        sh.run(
+            (
+                "sudo-sac",
+                "terragrunt",
+                "run-all",
+                "apply",
+                "--auto-approve",
+                "--terragrunt-non-interactive",
+            )
         )
-    )
