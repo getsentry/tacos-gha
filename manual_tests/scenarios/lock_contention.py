@@ -19,7 +19,7 @@ def test() -> None:
     tacos_demo.clone()
 
     sh.banner(f"User 1 opens a PR for slices: {slices}")
-    pr1 = tacos_demo.PR.for_test(TEST_NAME, slices)
+    pr1 = tacos_demo.PR.for_test(TEST_NAME, slices, branch=1)
 
     pr2 = None
     try:
@@ -27,7 +27,7 @@ def test() -> None:
         assert pr1.check("terraform_lock").wait(since).success
 
         sh.banner("User 2 opens a PR for the same slices")
-        pr2 = tacos_demo.PR.for_test(TEST_NAME, slices)
+        pr2 = tacos_demo.PR.for_test(TEST_NAME, slices, branch=2)
 
         sh.banner("User 2 recieves a comment about the locking failure")
         assert "TODO: add comment about lock failure here" in pr2.comments(
