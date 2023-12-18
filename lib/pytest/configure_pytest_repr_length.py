@@ -12,7 +12,6 @@ def configure_pytest_repr_length(
     pytestconfig: pytest.Config,
 ) -> Generator[None]:
     verbose = pytestconfig.getoption("verbose")
-    print("VERBOSE:", verbose)
     assert isinstance(verbose, int), verbose
 
     def saferepr(

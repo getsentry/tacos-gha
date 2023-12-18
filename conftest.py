@@ -7,6 +7,8 @@ import pytest
 from pytest import fixture
 
 import lib.pytest.configure_pytest_repr_length
+import lib.pytest.doctest
+import lib.pytest.hook
 from lib.sh import sh
 from lib.types import Environ
 from lib.types import Generator
@@ -91,3 +93,7 @@ def xdg(cwd: Path, environ: Environ) -> None:
         xdg_val = cwd / xdg_var
         xdg_val.mkdir()
         environ[xdg_var] = str(xdg_val)
+
+
+pytest_configure = lib.pytest.doctest.pytest_configure
+pytest_unconfigure = lib.pytest.doctest.pytest_unconfigure

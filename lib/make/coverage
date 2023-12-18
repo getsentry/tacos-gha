@@ -10,7 +10,7 @@ cmd=(
   # TODO: add pytest-xdist
   #-n $((NPROC))
 
-  # matches what we have in pyproject.toml, minus --last-failed and --capture=no
+  # matches what we have in pyproject.toml, minus: --capture=no --last-failed
   --override-ini="addopts=--durations-min=10 -vv --doctest-modules"
   "$@"
 )
