@@ -26,7 +26,7 @@ def test() -> None:
 
         # Since this PR is a draft, it should not be able to apply the plan
         since = now()
-        sh.banner("Apply the plan")
+        sh.banner("Try to apply the plan for a draft PR")
         pr.add_label(":taco::apply")
 
         # The terraform_apply check should not run automatically when the PR is a draft
@@ -44,3 +44,13 @@ def test() -> None:
             # This PR should aquire the lock
             sh.banner("Make sure the terraform_lock check ran successfully")
             pr2.check("terraform_lock").wait(pr2.since).success
+
+            # Since this is not a draft PR, it should be able to apply the plan
+            since = now()
+            sh.banner("Apply the plan for the second PR")
+            pr2.add_label(":taco::apply")
+            pr2.check("terraform_apply").wait(since).success
+
+            # Merge the second PR
+            sh.banner("Merge the second PR")
+            pr2.merge()
