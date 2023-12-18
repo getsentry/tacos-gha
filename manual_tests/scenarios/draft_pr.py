@@ -11,7 +11,6 @@ from manual_tests.lib.slice import Slices
 TEST_NAME = __name__
 
 
-@pytest.mark.xfail(reason="Running apply will grab the lock anyway", raises=AssertionError)
 def test() -> None:
     slices = Slices.random()
     with tacos_demo.PR.opened_for_test(
@@ -37,7 +36,7 @@ def test() -> None:
         # Another user should be able to aquire the lock(s)
         sh.banner("Open a second PR for the same slices")
         with tacos_demo.PR.opened_for_test(
-            TEST_NAME, slices, draft=False # This one is not a draft
+            f"{TEST_NAME}-2", slices, draft=False # This one is not a draft
         ) as pr2:
             sh.banner("Non-draft PR opened:", pr2.url)
 

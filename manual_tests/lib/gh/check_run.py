@@ -56,7 +56,7 @@ class CheckRun:
 
     @property
     def skipped(self) -> bool:
-        return (self.status, self.conclusion) == ("SKIPPED", "NEUTRAL")
+        return (self.status, self.conclusion) == ("COMPLETED", "NEUTRAL")
 
     def __str__(self) -> str:
         format = "{name}: {startedAt}-{completedAt} {status}({conclusion})"

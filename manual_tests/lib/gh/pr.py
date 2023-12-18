@@ -48,7 +48,7 @@ class PR:
         sh.banner("cleaning up:")
         since = now()
 
-        if sh.success(("gh", "pr", "edit", "--add-label", ":taco::unlock")):
+        if sh.success(("gh", "pr", "edit", self.branch, "--add-label", ":taco::unlock")):
             sh.banner("waiting for unlock...")
             self.check("terraform_unlock").wait(since)
             sh.banner("unlocked.")
