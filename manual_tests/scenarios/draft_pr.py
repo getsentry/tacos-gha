@@ -33,7 +33,7 @@ def test() -> None:
         assert pr.check("terraform_apply").wait(pr.since).skipped
 
         # Another user should be able to aquire the lock(s)
-        sh.banner("Open a second PR for the same slices")
+        sh.banner("Open a second, non-draft PR for the same slices")
         with tacos_demo.PR.opened_for_test(
             f"{TEST_NAME}-2", slices, draft=False  # This one is not a draft
         ) as pr2:
