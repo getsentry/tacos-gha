@@ -6,6 +6,7 @@ from pathlib import Path
 import pytest
 from pytest import fixture
 
+import lib.pytest.configure_pytest_repr_length
 from lib.sh import sh
 from lib.types import Environ
 from lib.types import Generator
@@ -16,6 +17,13 @@ def user() -> str:
     from lib.constants import USER
 
     return USER
+
+
+configure_pytest_repr_length = fixture(
+    lib.pytest.configure_pytest_repr_length.configure_pytest_repr_length,
+    autouse=True,
+    scope="session",
+)
 
 
 @fixture

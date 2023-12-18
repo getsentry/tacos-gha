@@ -11,7 +11,6 @@ from typing import Sequence
 from lib import json
 from lib import wait
 from lib.functions import now
-from lib.functions import one
 from lib.sh import sh
 from lib.types import Generator
 from manual_tests.lib.xfail import XFailed
@@ -28,14 +27,6 @@ if TYPE_CHECKING:
 
 # mypy doesn't understand closures :(
 # mypy: disable-error-code="type-var, misc"
-
-# FIXME: we need a better way to demarcate tf-plan in comments
-PLAN_MESSAGE = """\
-<details>
-<summary>Execution result of "run-all plan" in "."</summary>
-
-```terraform
-"""
 
 
 @dataclass(frozen=True)
@@ -62,17 +53,7 @@ class PR:
         pr.close()
 
     def close(self) -> None:
-        sh.banner("cleaning up:")
-        since = now()
-
-        if sh.success(
-            ("gh", "pr", "edit", self.url, "--add-label", ":taco::unlock")
-        ):
-            sh.banner("waiting for unlock...")
-            self.check("terraform_unlock").wait(since)
-            sh.banner("unlocked.")
-
-        sh.banner("deleting branch:")
+        sh.banner("deleting branch")
         sh.run(
             (
                 "gh",
@@ -80,7 +61,7 @@ class PR:
                 "close",
                 self.url,
                 "--comment",
-                "test cleanup",
+                "automatic test cleanup",
                 "--delete-branch",
             )
         )
@@ -98,20 +79,6 @@ class PR:
     def add_label(self, label: Label) -> None:
         sh.banner(f"adding label {label} to PR:")
         sh.run(("gh", "pr", "edit", self.url, "--add-label", label))
-
-    def get_plan(self, since: datetime | None = None) -> str:
-        """Return the body of the github PR comment containing the tf plan."""
-        if since is None:
-            since = self.since
-
-        assert self.check("terraform_plan").wait(since).success
-        plan = [
-            comment
-            for comment in self.comments(since)
-            if comment.startswith(PLAN_MESSAGE)
-        ]
-        # there should be just one plan in that timeframe
-        return one(plan)
 
     def merge(self) -> str:
         sh.banner("merging PR")

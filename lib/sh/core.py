@@ -84,7 +84,7 @@ def success(cmd: Command, returncode: int = 0) -> bool:
 
     Optionally, specify an expected return code:
 
-    >>> success(('false',), expected_returncode=1)
+    >>> success(('false',), returncode=1)
     True
     """
     return _returncode(cmd) == returncode

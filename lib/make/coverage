@@ -2,14 +2,24 @@
 set -euo pipefail
 exec >&2  # all output is logging
 
+
+cmd=(
+  coverage-enabled
+  ./lib/make/test
+  -p no:cacheprovider
+  # TODO: add pytest-xdist
+  #-n $((NPROC))
+
+  # matches what we have in pyproject.toml, minus --last-failed and --capture=no
+  --override-ini="addopts=--durations-min=10 -vv --doctest-modules"
+  "$@"
+)
+
 set -x
+
 
 # disable the cache plugin to ensure we get data from all tests
 # otherwise, by default, we only run the "last failed" tests
-if ! coverage-enabled ./lib/make/test \
-  -p no:cacheprovider \
-  --override-ini="addopts=--durations-min=10 -s -vv --doctest-modules" \
-  "$@" \
-; then
+if ! "${cmd[@]}"; then
   : 'some tests failed :('
 fi
