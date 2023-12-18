@@ -37,8 +37,6 @@ def test() -> None:
         with tacos_demo.PR.opened_for_test(
             f"{TEST_NAME}-2", slices, draft=False  # This one is not a draft
         ) as pr2:
-            sh.banner("Non-draft PR opened:", pr2.url)
-
             # The terraform_plan check should run automatically when the PR is opened
             sh.banner("Wait for the terraform_plan check to complete")
             pr2.check("terraform_plan").wait(pr2.since).success
