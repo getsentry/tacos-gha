@@ -95,6 +95,11 @@ class Slices:
     def __iter__(self) -> Iterator[Slice]:
         return iter(self.slices)
 
+    def __sub__(self, other: Self) -> Self:
+        assert self.workdir == other.workdir, (self, other)
+        cls = type(self)
+        return cls(self.workdir, self.slices - other.slices)
+
     def __contains__(self, other: Slice) -> bool:
         return other in self.slices
 

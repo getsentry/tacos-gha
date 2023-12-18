@@ -47,12 +47,13 @@ class PR(gh.PR):
         test_name: str,
         branch: object = None,
         message: object = None,
+        draft: bool = False,
     ) -> Self:
         workdir = slices.workdir
         branch, message = edit(slices, test_name, branch, message)
         gh.commit_and_push(workdir, branch, message)
 
-        pr = cls.open(workdir, branch, slices=slices)
+        pr = cls.open(workdir, branch, slices=slices, draft=draft)
 
         sh.banner("PR opened:", pr.url)
 
@@ -66,9 +67,10 @@ class PR(gh.PR):
         test_name: str,
         branch: gh.Branch = None,
         message: gh.Message = None,
+        draft: bool = False,
     ) -> Generator[Self]:
         with sh.cd(slices.workdir):
-            pr = cls.for_slices(slices, test_name, branch, message)
+            pr = cls.for_slices(slices, test_name, branch, message, draft)
             yield pr
             pr.close()
 

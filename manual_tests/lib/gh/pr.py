@@ -36,11 +36,19 @@ class PR:
     since: datetime
 
     @classmethod
-    def open(cls, workdir: Path, branch: Branch, **attrs: object) -> Self:
+    def open(
+        cls,
+        workdir: Path,
+        branch: Branch,
+        *,
+        draft: bool = False,
+        **attrs: object,
+    ) -> Self:
         since = now()
         with sh.cd(workdir):
             url = sh.stdout(
                 ("gh", "pr", "create", "--fill-first", "--head", branch)
+                + (("--draft",) if draft else ())
             )
         return cls(branch, url, since, **attrs)
 
