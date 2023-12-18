@@ -13,9 +13,7 @@ TEST_NAME = __name__
 
 def test() -> None:
     slices = Slices.random()
-    with tacos_demo.PR.opened_for_test(
-        TEST_NAME, slices, draft=True
-    ) as pr:
+    with tacos_demo.PR.opened_for_test(TEST_NAME, slices, draft=True) as pr:
         sh.banner("Draft PR opened:", pr.url)
 
         # The terraform_plan check should run automatically when the PR is opened
@@ -36,7 +34,7 @@ def test() -> None:
         # Another user should be able to aquire the lock(s)
         sh.banner("Open a second PR for the same slices")
         with tacos_demo.PR.opened_for_test(
-            f"{TEST_NAME}-2", slices, draft=False # This one is not a draft
+            f"{TEST_NAME}-2", slices, draft=False  # This one is not a draft
         ) as pr2:
             sh.banner("Non-draft PR opened:", pr2.url)
 
