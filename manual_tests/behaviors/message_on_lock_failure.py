@@ -8,6 +8,8 @@ from manual_tests.lib.gh import gh
 from manual_tests.lib.slice import Slices
 from manual_tests.lib.xfail import XFailed
 
+MESSAGE = "lock failed, on slice prod/slice-3-vm, due to user1, PR #334 "
+
 
 # reason="locking not yet implemented"
 @pytest.mark.xfail(raises=XFailed)
@@ -22,16 +24,21 @@ def test(test_name: str, slices: Slices) -> None:
         }
 
         for pr, check in checks.items():
-            message = "TODO: add comment about lock failure here"
             comments = pr.comments(since=check.startedAt)
             if check.conclusion == "SUCCESS":
-                assert message not in comments
+                assert MESSAGE not in comments
             elif check.conclusion == "FAILURE":
-                assert message in comments
+                assert MESSAGE in comments
             else:
                 raise AssertionError(check)
 
-        assert {check.conclusion for check in checks.values()} == {
-            "SUCCESS",
-            "FAILURE",
-        }
+        try:
+            assert {check.conclusion for check in checks.values()} == {
+                "SUCCESS",
+                "FAILURE",
+            }
+        except AssertionError:
+            assert {check.conclusion for check in checks.values()} == {
+                "SUCCESS"
+            }
+            raise XFailed("locking not yet implemented")

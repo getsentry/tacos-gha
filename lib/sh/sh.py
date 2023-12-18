@@ -7,6 +7,7 @@ from subprocess import TimeoutExpired as TimeoutExpired
 from .cd import cd as cd
 from .core import *
 from .io import banner as banner
+from .io import debug as debug
 from .io import info as info
 from .io import quiet as quiet
 from .io import quote as quote

@@ -14,6 +14,7 @@ from lib.functions import now
 from lib.functions import one
 from lib.sh import sh
 from lib.types import Generator
+from manual_tests.lib.xfail import XFailed
 
 from .types import URL
 from .types import Branch
@@ -28,10 +29,13 @@ if TYPE_CHECKING:
 # mypy doesn't understand closures :(
 # mypy: disable-error-code="type-var, misc"
 
-# we should find a better way to denote tf-plan in comments
-PLAN_MESSAGE = (
-    '<summary>Execution result of "run-all plan -out plan" in "."</summary>'
-)
+# FIXME: we need a better way to demarcate tf-plan in comments
+PLAN_MESSAGE = """\
+<details>
+<summary>Execution result of "run-all plan" in "."</summary>
+
+```terraform
+"""
 
 
 @dataclass(frozen=True)
@@ -61,7 +65,9 @@ class PR:
         sh.banner("cleaning up:")
         since = now()
 
-        if sh.success(("gh", "pr", "edit", "--add-label", ":taco::unlock")):
+        if sh.success(
+            ("gh", "pr", "edit", self.url, "--add-label", ":taco::unlock")
+        ):
             sh.banner("waiting for unlock...")
             self.check("terraform_unlock").wait(since)
             sh.banner("unlocked.")
@@ -72,10 +78,10 @@ class PR:
                 "gh",
                 "pr",
                 "close",
+                self.url,
                 "--comment",
                 "test cleanup",
                 "--delete-branch",
-                self.url,
             )
         )
 
@@ -91,7 +97,7 @@ class PR:
 
     def add_label(self, label: Label) -> None:
         sh.banner(f"adding label {label} to PR:")
-        sh.run(("gh", "pr", "edit", "--add-label", label, self.url))
+        sh.run(("gh", "pr", "edit", self.url, "--add-label", label))
 
     def get_plan(self, since: datetime | None = None) -> str:
         """Return the body of the github PR comment containing the tf plan."""
@@ -102,14 +108,25 @@ class PR:
         plan = [
             comment
             for comment in self.comments(since)
-            if PLAN_MESSAGE in comment
+            if comment.startswith(PLAN_MESSAGE)
         ]
         # there should be just one plan in that timeframe
         return one(plan)
 
     def merge(self) -> str:
         sh.banner("merging PR")
-        return sh.stdout(("gh", "pr", "merge", "--squash", self.url))
+        try:
+            result = sh.stdout(("gh", "pr", "merge", self.url, "--squash"))
+        except sh.CalledProcessError:
+            # + $ gh pr merge --squash https://github.com/getsentry/tacos-gha.demo/pull/363
+            # X Pull request #363 is not mergeable: the base branch policy prohibits the merge.
+            # To have the pull request merged after all the requirements have been met, add the `--auto` flag.
+            # To use administrator privileges to immediately merge the pull request, add the `--admin` flag.
+            raise XFailed("terraform changes not yet mergeable")
+        else:
+            raise AssertionError(
+                f"this shouldn't work, yet... result: {result}"
+            )
 
     def labels(self) -> Sequence[Label]:
         result: list[Label] = []
@@ -118,11 +135,11 @@ class PR:
                 "gh",
                 "pr",
                 "view",
+                self.url,
                 "--json",
                 "labels",
                 "--jq",
                 ".labels.[] | .name",
-                self.url,
             )
         ):
             result.append(label)
@@ -135,6 +152,7 @@ class PR:
                 "gh",
                 "pr",
                 "view",
+                self.url,
                 "--json",
                 "comments",
                 "--jq",
@@ -143,7 +161,6 @@ class PR:
             encoding="UTF-8",
         )
 
-        # Parse the comments and their creation times
         result: list[Comment] = []
         for comment in comments:
             comment = json.assert_dict_of_strings(comment)
@@ -160,7 +177,7 @@ class PR:
 
     @classmethod
     def from_branch(cls, branch: Branch, since: datetime) -> Self:
-        url = sh.stdout(("gh", "pr", "view", "--json", "url", branch))
+        url = sh.stdout(("gh", "pr", "view", branch, "--json", "url"))
         return cls(branch, url, since)
 
     @classmethod

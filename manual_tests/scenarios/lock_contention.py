@@ -10,37 +10,50 @@ from manual_tests.lib.slice import Slices
 from manual_tests.lib.xfail import XFailed
 
 
-# reason="Locking not yet implemented"
 @pytest.mark.xfail(raises=XFailed)
 def test(slices: Slices, test_name: str) -> None:
     since = now()
 
-    sh.banner(f"User 1 opens a PR for slices: {slices}")
-    pr1 = tacos_demo.PR.for_slices(slices, test_name)
+    sh.banner(
+        f"Winner and Loser race to open a PR for the same slices: {slices}"
+    )
+    with (
+        tacos_demo.PR.opened_for_slices(slices, test_name, branch=1) as pr1,
+        tacos_demo.PR.opened_for_slices(slices, test_name, branch=2) as pr2,
+    ):
+        winner = loser = None
+        for pr in (pr1, pr2):
+            conclusion = pr.check("terraform_lock").wait().conclusion
+            if conclusion == "SUCCESS":
+                winner = pr
+                sh.banner("Winner acquires the lock")
+                print(winner)
+            elif conclusion == "FAILURE":
+                loser = pr
+                sh.banner("Loser does not acquire the lock")
+                print(winner)
+            else:
+                raise AssertionError(f"Unexpected conclusion: {conclusion}")
 
-    pr2 = None
-    try:
-        sh.banner("User 1 acquires the lock")
-        assert pr1.check("terraform_lock").wait(since).success
+        assert winner is not None, winner
+        assert winner.check("terraform_lock").wait(since).success
 
-        sh.banner("User 2 opens a PR for the same slices")
-        pr2 = tacos_demo.PR.for_slices(slices, test_name)
-
-        sh.banner("User 2 recieves a comment about the locking failure")
-        assert "TODO: add comment about lock failure here" in pr2.comments(
-            since=since
+        sh.banner("Loser recieves a comment about the locking failure")
+        try:
+            assert loser is not None
+        except AssertionError:
+            raise XFailed("locking not yet implemented")
+        assert (
+            "lock failed, on slice prod/slice-3-vm, due to user1, PR #334 "
+            in loser.comments(since=since)
         )
 
-        sh.banner("User 1 closes their PR")
-        pr1.close()
+        sh.banner("Winner closes their PR")
+        winner.close()
 
-        sh.banner("User 2 adds the :taco::acquire-lock label")
-        pr2.add_label(":taco::acquire-lock")
+        sh.banner("Loser adds the :taco::acquire-lock label")
+        loser.add_label(":taco::acquire-lock")
         since = now()
 
-        sh.banner("User 2 acquires the lock")
-        assert pr2.check("terraform_lock").wait(since).success
-    finally:
-        pr1.close()
-        if pr2 is not None:
-            pr2.close()
+        sh.banner("Loser acquires the lock")
+        assert loser.check("terraform_lock").wait(since).success

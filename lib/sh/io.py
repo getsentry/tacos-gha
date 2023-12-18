@@ -11,7 +11,11 @@ from .types import Generator
 PS4 = f"+ {ansi.TEAL}${ansi.RESET} "
 
 
-debug: bool = bool(getenv("DEBUG", "1"))
+# TODO: use logging module? probs not...
+# 0 - info only
+# 1 - debug
+# 2+ - trace
+debug: bool = int(getenv("DEBUG", "1"))
 
 
 def info(*msg: object) -> None:

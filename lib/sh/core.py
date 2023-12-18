@@ -71,7 +71,10 @@ def returncode(cmd: Command) -> int:
     return result.returncode
 
 
-def success(cmd: Command, expected_returncode: int = 0) -> bool:
+_returncode = returncode
+
+
+def success(cmd: Command, returncode: int = 0) -> bool:
     """Run a command and report whether it was successful.
 
     >>> success(('true',))
@@ -81,10 +84,10 @@ def success(cmd: Command, expected_returncode: int = 0) -> bool:
 
     Optionally, specify an expected return code:
 
-    >>> success(('false',), returncode=1)
+    >>> success(('false',), expected_returncode=1)
     True
     """
-    return returncode(cmd) == expected_returncode
+    return _returncode(cmd) == returncode
 
 
 def _popen(

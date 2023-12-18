@@ -97,3 +97,6 @@ class Slices:
 
     def __contains__(self, other: Slice) -> bool:
         return other in self.slices
+
+    def __str__(self) -> str:
+        return ", ".join(str(slice) for slice in sorted(self.slices))

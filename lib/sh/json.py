@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from lib import json as JSON
 
+from . import io
 from .constant import US_ASCII
 from .core import lines
 from .core import stdout
@@ -22,6 +23,8 @@ def json(cmd: Command) -> JSON.Value:
     import json
 
     result: JSON.Value = json.loads(text)
+    if io.debug >= 2:
+        io.info("Got JSON:", json.dumps(result))
     return result
 
 
@@ -39,4 +42,6 @@ def jq(cmd: Command, *, encoding: str = US_ASCII) -> Generator[JSON.Value]:
         except Exception as error:
             raise ValueError(f"bad JSON: {line!r}") from error
         else:
+            if io.debug >= 2:
+                io.info("Got ndJSON:", json.dumps(result))
             yield result

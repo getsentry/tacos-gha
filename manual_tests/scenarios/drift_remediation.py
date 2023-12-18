@@ -5,6 +5,7 @@ from datetime import datetime
 
 import pytest
 
+from lib import wait
 from lib.functions import now
 from lib.sh import sh
 from manual_tests.lib import tacos_demo
@@ -30,7 +31,10 @@ def test_roll_forward(slices: Slices) -> None:
     since = create_drift(slices)
 
     sh.banner("check out automatically-created PR")
-    pr = tacos_demo.PR.wait_for("tacos/drift", since)
+    try:
+        pr = tacos_demo.PR.wait_for("tacos/drift", since, timeout=6)
+    except wait.TimeoutExpired:
+        raise XFailed("tacos/drift branch not created")
 
     sh.banner("commit out-of-band changes so plan is clean")
     # Cleanup: roll back the infrastructure changes
@@ -49,7 +53,7 @@ def test_roll_forward(slices: Slices) -> None:
     pr.add_label(":taco::apply")
     assert pr.check("terraform_apply").wait(since).success
 
-    pr.merge()  # TODO: needs an xfail, but i'm not sure what or why
+    pr.merge()
 
 
 @pytest.mark.xfail(raises=XFailed)
@@ -62,12 +66,13 @@ def test_roll_back(slices: Slices) -> None:
     tf.apply(slices.workdir)
 
     sh.banner("request unlock")
-    pr = tacos_demo.PR.wait_for("tacos/drift", since)
+    try:
+        pr = tacos_demo.PR.wait_for("tacos/drift", since, timeout=6)
+    except wait.TimeoutExpired:
+        raise XFailed("tacos/drift branch not created")
+
     pr.add_label(":taco::unlock")
     assert pr.check("terraform_unlock").wait(since).success
-    try:
-        assert "INFO: Main branch clean, unlock successful." in pr.comments(
-            since=since
-        )
-    except AssertionError:
-        raise XFailed("still need to post message from unlock")
+    assert "INFO: Main branch clean, unlock successful." in pr.comments(
+        since=since
+    )

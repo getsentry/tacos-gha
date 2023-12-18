@@ -19,6 +19,5 @@ def test(pr: tacos_demo.PR) -> None:
 
     since = now()
     pr.merge()
-    # fixme: raise XFailed(reason="Need other user's approval")
 
     assert pr.check("terraform_unlock").wait(since, timeout=6).success
