@@ -25,6 +25,7 @@ def test() -> None:
         assert pr.check("terraform_lock").wait(pr.since).skipped
 
         # Since this PR is a draft, it should not be able to apply the plan
+        since = now()
         sh.banner("Apply the plan")
         pr.add_label(":taco::apply")
 
