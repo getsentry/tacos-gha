@@ -36,18 +36,19 @@ class PR:
     since: datetime
 
     @classmethod
-    def open(cls, branch: Branch, **attrs: object) -> Self:
+    def open(cls, branch: Branch, draft: bool = False, **attrs: object) -> Self:
         since = now()
-        url = sh.stdout(
-            ("gh", "pr", "create", "--fill-first", "--head", branch)
-        )
+        command = list(("gh", "pr", "create", "--fill-first", "--head", branch))
+        if draft:
+            command.append("--draft",)
+        url = sh.stdout(tuple(command))
         return cls(branch, url, since, **attrs)
 
     def close(self) -> None:
         sh.banner("cleaning up:")
         since = now()
 
-        if sh.success(("gh", "pr", "edit", "--add-label", ":taco::unlock")):
+        if sh.success(("gh", "pr", "edit", self.branch, "--add-label", ":taco::unlock")):
             sh.banner("waiting for unlock...")
             self.check("terraform_unlock").wait(since)
             sh.banner("unlocked.")

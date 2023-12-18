@@ -50,6 +50,14 @@ class CheckRun:
     def success(self) -> bool:
         return (self.status, self.conclusion) == ("COMPLETED", "SUCCESS")
 
+    @property
+    def failure(self) -> bool:
+        return (self.status, self.conclusion) == ("COMPLETED", "FAILURE")
+
+    @property
+    def skipped(self) -> bool:
+        return (self.status, self.conclusion) == ("COMPLETED", "NEUTRAL")
+
     def __str__(self) -> str:
         format = "{name}: {startedAt}-{completedAt} {status}({conclusion})"
         return format.format_map(vars(self))
