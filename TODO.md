@@ -28,3 +28,19 @@ onboard preexisting users:
 - getsentry/terraform-sandbox/.github/workflow/{ci,cd}
 - getsentry/eng-pipes
 - getsentry/devenv-deployment-service
+
+known bugs:
+
+- need to retry this kind of failure:
+  https://github.com/getsentry/tacos-gha.demo/actions/runs/7241524637/job/19725734049#step:8:834
+  ```
+  Plan: 2 to add, 0 to change, 0 to destroy.
+  time=2023-12-17T23:01:47Z level=info msg=╷
+  │ Error: Failed to query available provider packages
+  │
+  │ Could not retrieve the list of available versions for provider
+  │ hashicorp/null: could not query provider registry for
+  │ registry.terraform.io/hashicorp/null: stream error: stream ID 1;
+  │ INTERNAL_ERROR; received from peer
+  ╵
+  ```

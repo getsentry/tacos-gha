@@ -1,8 +1,6 @@
 #!/usr/bin/env py.test
 from __future__ import annotations
 
-import pytest
-
 from lib.functions import now
 from lib.sh import sh
 from manual_tests.lib import tacos_demo
@@ -11,9 +9,8 @@ from manual_tests.lib.slice import Slices
 TEST_NAME = __name__
 
 
-def test() -> None:
-    slices = Slices.random()
-    with tacos_demo.PR.opened_for_test(TEST_NAME, slices, draft=True) as pr:
+def test(slices: Slices) -> None:
+    with tacos_demo.PR.opened_for_slices(slices, TEST_NAME, draft=True) as pr:
         sh.banner("Draft PR opened:", pr.url)
 
         # The terraform_plan check should run automatically when the PR is opened
@@ -34,16 +31,16 @@ def test() -> None:
 
         # Another user should be able to aquire the lock(s)
         sh.banner("Open a second, non-draft PR for the same slices")
-        with tacos_demo.PR.opened_for_test(
-            f"{TEST_NAME}-2", slices, draft=False  # This one is not a draft
+        with tacos_demo.PR.opened_for_slices(
+            slices, f"{TEST_NAME}-2", draft=False  # This one is not a draft
         ) as pr2:
             # The terraform_plan check should run automatically when the PR is opened
             sh.banner("Wait for the terraform_plan check to complete")
-            pr2.check("terraform_plan").wait(pr2.since).success
+            pr2.check("terraform_plan").wait().success
 
             # This PR should aquire the lock
             sh.banner("Make sure the terraform_lock check ran successfully")
-            pr2.check("terraform_lock").wait(pr2.since).success
+            pr2.check("terraform_lock").wait().success
 
             # Since this is not a draft PR, it should be able to apply the plan
             since = now()

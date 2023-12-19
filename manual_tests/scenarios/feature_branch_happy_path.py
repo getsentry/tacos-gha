@@ -13,32 +13,32 @@ from manual_tests.lib.xfail import XFailed
 from manual_tests.lib.xfail import XFails
 
 
-def apply(pr: gh.PR, xfail: XFails) -> None:
+def apply(pr: tacos_demo.PR, xfails: XFails) -> None:
     # the taco-apply label causes the plan to become clean:
-    assert not tf.plan_clean()
+    assert tf.plan_dirty(pr.slices.workdir)
     since = now()
     pr.add_label(":taco::apply")
     assert pr.check("terraform_apply").wait(since).success
 
     try:
-        assert tf.plan_clean()
+        assert tf.plan_clean(pr.slices.workdir)
     except AssertionError:
-        xfail.append(("assert tf.plan_clean()", "plan not clean"))
+        xfails.append(("assert tf.plan_clean()", "plan not clean"))
 
 
-def assert_merged(xfail: XFails) -> None:
+def assert_merged(xfails: XFails) -> None:
     sh.run(("git", "remote", "update"))
     merged_sha = sh.stdout(("git", "log", "-1", "--format=%H"))
     lines = sh.lines(("git", "branch", "--remotes", "--contains", merged_sha))
     try:
         assert lines
     except AssertionError:
-        xfail.append(("assert lines", lines))
+        xfails.append(("assert lines", lines))
 
 
-@pytest.mark.xfail(reason="apply not yet implemented", raises=XFailed)
-def test(pr: tacos_demo.PR, test_name: str) -> None:
-    xfail: XFails = []
+@pytest.mark.xfail(raises=XFailed)
+def test(pr: tacos_demo.PR) -> None:
+    xfails: XFails = []
 
     sh.banner("look at your plan")
     plan = pr.get_plan()
@@ -47,25 +47,27 @@ def test(pr: tacos_demo.PR, test_name: str) -> None:
     sh.banner("apply")
     pr.approve()  # needs at least one approval
     assert pr.approved()
-    apply(pr, xfail)
+    apply(pr, xfails)
 
     sh.banner("edit, more")
-    tacos_demo.commit_changes_to(Slices.random(), test_name, pr.branch)
+    slices = Slices.from_path(pr.slices.workdir).random()
+    slices.edit()
+    gh.commit_and_push(slices.workdir, pr.branch, "more changes")
 
     sh.banner("apply, again")
-    apply(pr, xfail)
+    apply(pr, xfails)
 
     sh.banner("merge")
     pr.merge()
 
     sh.banner("show it really did merge")
-    assert_merged(xfail)
+    assert_merged(xfails)
 
     sh.banner("show terraform-plan really is clean")
     try:
-        assert tf.plan_clean()
+        assert tf.plan_clean(pr.slices.workdir)
     except AssertionError:
-        xfail.append(("assert tf.plan_clean()", "plan not clean"))
+        xfails.append(("assert tf.plan_clean()", "plan not clean"))
 
-    if xfail:
-        raise XFailed(xfail)
+    if xfails:
+        raise XFailed(str(xfails))

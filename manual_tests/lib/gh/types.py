@@ -4,6 +4,7 @@ from lib.types import Generator as Generator
 
 # FIXME: use a more specific type than str
 URL = str
-Branch = str
+Branch = object
+Message = object
 Label = str
 CheckName = str
