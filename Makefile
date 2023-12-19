@@ -5,7 +5,7 @@ makelib ?= ./lib/make
 export PS4 ?= + \033[31;1m$$\033[m 
 
 # listing of all python-relevant inputs
-python_files := $(shell git ls-files *.py requirements*.in requirements*.txt)
+python_files := $(shell git ls-files '*.py' 'requirements*.in' 'requirements*.txt')
 
 .PHONY: all
 all: venv
