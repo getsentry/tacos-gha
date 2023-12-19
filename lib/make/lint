@@ -1,6 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 exec >&2  # all output is logging
+HERE="$(cd "$(dirname "$0")"; pwd)"
 
 set -x
 
@@ -11,26 +12,15 @@ fi
 if ! mypy .; then
   fail+=(mypy)
 fi
+
 if ! git ls-files '*/py.typed' |
     xargs dirname |
-    xargs -n1 -tr \
-      env PYTHONPATH="$PWD" \
-        pyright \
-        --ignoreexternal \
-        --verifytypes \
-      \
-    ;
+    xargs -n1 -tr "$HERE/"bin/pyright-verifytypes
 then
   fail+=(pyright-verifytypes)
 fi
 
-if ! git ls-files |
-  file --mime-type --no-pad --files-from=- |
-    grep ': text/x-shellscript$' |
-    sed 's@: text/x-shellscript$@@' |
-    xargs -r shellcheck \
-  ;
-then
+if ! git ls-files | "$HERE/"bin/shellcheck; then
   fail+=(shellcheck)
 fi
 
