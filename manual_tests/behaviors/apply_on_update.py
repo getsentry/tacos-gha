@@ -5,7 +5,6 @@ from pathlib import Path
 
 import pytest
 
-from lib.functions import now
 from manual_tests.lib import tacos_demo
 from manual_tests.lib import tf
 from manual_tests.lib.xfail import XFailed
@@ -22,8 +21,7 @@ def test(pr: tacos_demo.PR, workdir: Path) -> None:
 
     # the taco-apply label causes the plan to become clean:
     assert tf.plan_dirty(workdir)
-    since = now()
-    pr.add_label(":taco::apply")
+    since = pr.add_label(":taco::apply")
     assert pr.check("terraform_apply").wait(since).success
     try:
         assert tf.plan_clean(workdir)

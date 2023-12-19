@@ -3,49 +3,33 @@ from __future__ import annotations
 
 import pytest
 
-from lib.functions import now
 from lib.sh import sh
 from manual_tests.lib import tacos_demo
-from manual_tests.lib.slice import Slices
 from manual_tests.lib.xfail import XFailed
-
-TEST_NAME = __name__
 
 
 @pytest.mark.xfail(raises=XFailed)
-def test() -> None:
-    slices = Slices.random()
+def test(pr: tacos_demo.PR) -> None:
+    sh.banner("PR is approved and applied")
+    pr.approve()
+    assert pr.approved()
 
-    since = now()
-    tacos_demo.clone()
+    since = pr.add_label(":taco::apply")
+    assert pr.check("terraform_apply").wait(since).success
 
-    sh.banner(f"User 2 opens a PR for slices: {slices}")
-    with tacos_demo.PR.opened_for_test(TEST_NAME, slices) as pr:
-        sh.banner("User 1 acquires the lock")
-        assert pr.check("terraform_lock").wait(since).success
-        since = now()
+    sh.banner("For various reasons, the PR is not merged. Time passes")
+    # TODO: there should be a better way of simulating the PR being marked as stale.
+    since = pr.add_label(":taco::stale")
 
-        sh.banner("PR is aproved and applied")
-        pr.approve()
-        assert pr.approved()
-        pr.add_label(":taco::apply")
-        assert pr.check("terraform_apply").wait(since).success
-        since = now()
+    sh.banner("An attempt is made to notify the PR owner")
+    try:
+        assert pr.check("notify_owner").wait(since).success
+    except AssertionError:
+        raise XFailed("notify_owner action does not exist")
 
-        sh.banner("For various reasons, the PR is not merged. Time passes")
-        # TODO: there should be a better way of simulating the PR being marked as stale.
-        pr.add_label(":taco::stale")
+    sh.banner("More time passes")
+    # TODO: there should be a better way of simulating the PR being marked as abandoned.
+    since = pr.add_label(":taco::abandoned")
 
-        sh.banner("An attempt is made to notify the PR owner")
-        try:
-            assert pr.check("notify_owner").wait(since).success
-        except AssertionError:
-            raise XFailed("notify_owner action does not exist")
-        since = now()
-
-        sh.banner("More time passes")
-        # TODO: there should be a better way of simulating the PR being marked as abandoned.
-        pr.add_label(":taco::abandoned")
-
-        sh.banner("An attempt is made to notify other users of the repo")
-        assert pr.check("notify_collaborators").wait(since).success
+    sh.banner("An attempt is made to notify other users of the repo")
+    assert pr.check("notify_collaborators").wait(since).success

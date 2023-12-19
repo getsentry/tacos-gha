@@ -1,7 +1,6 @@
 #!/usr/bin/env py.test
 from __future__ import annotations
 
-from lib.functions import now
 from lib.sh import sh
 from manual_tests.lib import tacos_demo
 from manual_tests.lib.slice import Slices
@@ -22,9 +21,8 @@ def test(slices: Slices) -> None:
         assert pr.check("terraform_lock").wait(pr.since).skipped
 
         # Since this PR is a draft, it should not be able to apply the plan
-        since = now()
         sh.banner("Try to apply the plan for a draft PR")
-        pr.add_label(":taco::apply")
+        since = pr.add_label(":taco::apply")
 
         # The terraform_apply check should not run automatically when the PR is a draft
         assert pr.check("terraform_apply").wait(pr.since).skipped
@@ -43,9 +41,8 @@ def test(slices: Slices) -> None:
             pr2.check("terraform_lock").wait().success
 
             # Since this is not a draft PR, it should be able to apply the plan
-            since = now()
             sh.banner("Apply the plan for the second PR")
-            pr2.add_label(":taco::apply")
+            since = pr2.add_label(":taco::apply")
             pr2.check("terraform_apply").wait(since).success
 
             # Merge the second PR

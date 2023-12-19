@@ -74,19 +74,22 @@ class PR:
             )
         )
 
-    def approve(self) -> None:
+    def approve(self) -> datetime:
         sh.banner("approving PR:")
         # TODO: find a way to approve with a separate service account
-        self.add_label(":taco::approve")
+        return self.add_label(":taco::approve")
 
     def approved(self) -> bool:
         # TODO: use a separate service account to approve the PR
         # TODO: actually check that the PR is approved
         return ":taco::approve" in self.labels()
 
-    def add_label(self, label: Label) -> None:
+    def add_label(self, label: Label) -> datetime:
+        """Returns a timestamp from *just before* the label was added."""
         sh.banner(f"adding label {label} to PR:")
+        since = now()
         sh.run(("gh", "pr", "edit", self.url, "--add-label", label))
+        return since
 
     def merge(self) -> str:
         sh.banner("merging PR")

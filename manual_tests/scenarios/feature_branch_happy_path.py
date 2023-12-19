@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import pytest
 
-from lib.functions import now
 from lib.sh import sh
 from manual_tests.lib import tacos_demo
 from manual_tests.lib import tf
@@ -16,8 +15,7 @@ from manual_tests.lib.xfail import XFails
 def apply(pr: tacos_demo.PR, xfails: XFails) -> None:
     # the taco-apply label causes the plan to become clean:
     assert tf.plan_dirty(pr.slices.workdir)
-    since = now()
-    pr.add_label(":taco::apply")
+    since = pr.add_label(":taco::apply")
     assert pr.check("terraform_apply").wait(since).success
 
     try:
