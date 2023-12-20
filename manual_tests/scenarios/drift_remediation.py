@@ -6,7 +6,6 @@ from datetime import datetime
 import pytest
 
 from lib import wait
-from lib.functions import now
 from lib.sh import sh
 from manual_tests.lib import tacos_demo
 from manual_tests.lib import tf
@@ -21,9 +20,7 @@ def create_drift(slices: Slices) -> datetime:
     tf.apply(slices.workdir)
 
     sh.banner("pretend an hour passed: trigger the drift-scan job")
-    since = now()
-    workflow.run("terraform_detect_drift.yml")
-    return since
+    return workflow.run("terraform_detect_drift.yml")
 
 
 @pytest.mark.xfail(raises=XFailed)
@@ -49,8 +46,7 @@ def test_roll_forward(slices: Slices) -> None:
     pr.approve()
 
     sh.banner("user merges and closes pr")
-    since = now()
-    pr.add_label(":taco::apply")
+    since = pr.add_label(":taco::apply")
     assert pr.check("terraform_apply").wait(since).success
 
     pr.merge()
@@ -71,7 +67,7 @@ def test_roll_back(slices: Slices) -> None:
     except wait.TimeoutExpired:
         raise XFailed("tacos/drift branch not created")
 
-    pr.add_label(":taco::unlock")
+    since = pr.add_label(":taco::unlock")
     assert pr.check("terraform_unlock").wait(since).success
     assert "INFO: Main branch clean, unlock successful." in pr.comments(
         since=since

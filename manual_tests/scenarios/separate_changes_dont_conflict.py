@@ -5,7 +5,6 @@ from pathlib import Path
 
 import pytest
 
-from lib.functions import now
 from lib.sh import sh
 from manual_tests.lib import tacos_demo
 from manual_tests.lib.slice import Slices
@@ -17,7 +16,6 @@ def test(workdir: Path, test_name: str) -> None:
     slices1 = all_slices.random()
     slices2 = all_slices - slices1
 
-    since = now()
     sh.banner(f"User 1 opens a PR for some slices: {slices1}")
     sh.banner(f"User 2 opens a PR for separate slices: {slices2}")
     with (
@@ -25,7 +23,7 @@ def test(workdir: Path, test_name: str) -> None:
         tacos_demo.PR.opened_for_slices(slices2, test_name) as pr2,
     ):
         sh.banner("User 1 acquires the lock")
-        assert pr1.check("terraform_lock").wait(since).success
+        assert pr1.check("terraform_lock").wait().success
 
         sh.banner("User 2 acquires the lock")
-        assert pr2.check("terraform_lock").wait(since).success
+        assert pr2.check("terraform_lock").wait().success

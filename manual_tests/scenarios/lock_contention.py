@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import pytest
 
-from lib.functions import now
 from lib.sh import sh
 from manual_tests.lib import tacos_demo
 from manual_tests.lib.slice import Slices
@@ -12,8 +11,6 @@ from manual_tests.lib.xfail import XFailed
 
 @pytest.mark.xfail(raises=XFailed)
 def test(slices: Slices, test_name: str) -> None:
-    since = now()
-
     sh.banner(
         f"Winner and Loser race to open a PR for the same slices: {slices}"
     )
@@ -36,7 +33,7 @@ def test(slices: Slices, test_name: str) -> None:
                 raise AssertionError(f"Unexpected conclusion: {conclusion}")
 
         assert winner is not None, winner
-        assert winner.check("terraform_lock").wait(since).success
+        assert winner.check("terraform_lock").wait().success
 
         sh.banner("Loser recieves a comment about the locking failure")
         try:
@@ -45,15 +42,14 @@ def test(slices: Slices, test_name: str) -> None:
             raise XFailed("locking not yet implemented")
         assert (
             "lock failed, on slice prod/slice-3-vm, due to user1, PR #334 "
-            in loser.comments(since=since)
+            in loser.comments()
         )
 
         sh.banner("Winner closes their PR")
         winner.close()
 
         sh.banner("Loser adds the :taco::acquire-lock label")
-        loser.add_label(":taco::acquire-lock")
-        since = now()
+        since = loser.add_label(":taco::acquire-lock")
 
         sh.banner("Loser acquires the lock")
         assert loser.check("terraform_lock").wait(since).success
