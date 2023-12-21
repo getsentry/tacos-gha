@@ -26,8 +26,7 @@ class Slice(Path):
         tf = f"""\
 resource "null_resource" "edit-me" {{
   triggers = {{
-    now   = "{now()}"
-    slice = "{workdir/self}"
+    now = "{now()}"
   }}
 }}
 """
