@@ -27,6 +27,8 @@ def test(pr: tacos_demo.PR, test_name: str, slices: Slices, user: str) -> None:
 \[[^\]]+\]     \}
 """
     found_slices: set[Slice] = set()
+    # for every change found, make sure it's by the right user, that it covers
+    # all the slices and has no extra.
     for match in re.finditer(pattern, plan):
         parts = match.group(1).split("/")
         w = "/".join(parts[-4:-1])
@@ -35,4 +37,6 @@ def test(pr: tacos_demo.PR, test_name: str, slices: Slices, user: str) -> None:
         found_slices.add(Slice(s))
         t = datetime.datetime.fromisoformat(match.group(2))
         assert t > NOW
-    assert not slices.slices - found_slices
+    assert (
+        not slices.slices - found_slices and not found_slices - slices.slices
+    )
