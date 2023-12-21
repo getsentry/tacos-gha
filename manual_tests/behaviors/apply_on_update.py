@@ -7,12 +7,10 @@ import pytest
 
 from manual_tests.lib import tacos_demo
 from manual_tests.lib import tf
-from manual_tests.lib.xfail import XFailed
 
 TEST_NAME = __name__
 
 
-@pytest.mark.xfail(raises=XFailed)
 def test(pr: tacos_demo.PR, workdir: Path) -> None:
     assert pr.check("terraform_lock").wait().success
 
@@ -23,7 +21,4 @@ def test(pr: tacos_demo.PR, workdir: Path) -> None:
     assert tf.plan_dirty(workdir)
     since = pr.add_label(":taco::apply")
     assert pr.check("terraform_apply").wait(since).success
-    try:
-        assert tf.plan_clean(workdir)
-    except AssertionError:
-        raise XFailed("apply not yet implemented")
+    assert tf.plan_clean(workdir)
