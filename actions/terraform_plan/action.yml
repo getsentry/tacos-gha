@@ -1,0 +1,50 @@
+name: terraform_plan
+description: github custom action to run terraform plan
+
+inputs:
+  tf_version:
+    default: "CALL:1.6.4"
+  tg_version:
+    default: "CALL:0.53.5"
+  working_dir:
+    default: "."
+  deploy_environ:
+    default: "dev"
+  GITHUB_TOKEN:
+    default: ${{ secrets.GITHUB_TOKEN }}
+
+runs:
+  using: composite
+  steps:
+    - name: show event
+      run: |
+        : <<'EOF'
+          ${{toJSON(github.event)}}
+        EOF
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: set workload identity provider
+      id: set-workload-identity-provider
+      run: ./lib/ci/set-workload-identity-provider "$deploy_environ"
+
+    - name: set terraformer
+      id: set-terraformer
+      working-directory: ${{ env.working_dir }}
+      run: ./lib/ci/set-terraformer
+
+    - name: gcp auth
+      id: auth
+      uses: google-github-actions/auth@v1
+      with:
+        workload_identity_provider: ${{steps.set-workload-identity-provider.outputs.workload_identity_provider}}
+        service_account: ${{steps.set-terraformer.outputs.terraformer}}
+
+    - name: Plan
+      uses: gruntwork-io/terragrunt-action@v2
+      with:
+        tf_version: ${{ env.tf_version }}
+        tg_version: ${{ env.tg_version }}
+        tg_dir: ${{ env.working_dir }}
+        tg_command: "run-all plan"
+        tg_comment: 1
