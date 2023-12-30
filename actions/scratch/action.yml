@@ -26,6 +26,9 @@ runs:
         env:      ${{ toJSON(env) }},
         job:      ${{ toJSON(job) }},
         jobs:     # for reusable workflows only
+        # removed vars, secrets, needs
+        # they were causing issues as custom actions doesn't
+        # recognize them.
         steps:    ${{ toJSON(steps) }},
         runner:   ${{ toJSON(runner) }},
         strategy: ${{ toJSON(strategy) }},

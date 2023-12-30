@@ -22,7 +22,7 @@ runs:
           ${{toJSON(github.event)}}
         EOF
     - name: Checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: set workload identity provider
       id: set-workload-identity-provider
