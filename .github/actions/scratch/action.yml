@@ -1,0 +1,79 @@
+name: scratch
+description: test custom action
+inputs:
+  tf_version:
+    default: "CALL:1.6.4"
+  tg_version:
+    default: "CALL:0.53.5"
+runs:
+  using: composite
+  steps:
+    - name: ok
+      shell: bash
+      run: echo ok
+
+    - name: show env
+      shell: bash
+      run: |
+        sort -z /proc/self/environ |
+        tr '\0' '\n'
+
+    - name: show full context
+      shell: bash
+      run: |
+        : <<'EOF'
+        github:   ${{ toJSON(github) }},
+        env:      ${{ toJSON(env) }},
+        job:      ${{ toJSON(job) }},
+        jobs:     # for reusable workflows only
+        # removed vars, secrets, needs
+        # they were causing issues as custom actions doesn't
+        # recognize them.
+        steps:    ${{ toJSON(steps) }},
+        runner:   ${{ toJSON(runner) }},
+        strategy: ${{ toJSON(strategy) }},
+        matrix:   ${{ toJSON(matrix) }},
+        inputs:   ${{ toJSON(inputs) }},
+        EOF
+
+    - name: show unix infos (before)
+      shell: bash
+      run: |
+        whoami
+        id
+        hostname
+        hostname -f
+        uname --nodename
+        uname --kernel-release
+        uname --kernel-version
+        uname --machine
+        uname --processor
+        uname --hardware-platform
+        uname --operating-system
+        tail -v /etc/hosts
+        sudo find /etc/sudoers* -type f | xargs -tr sudo tail
+
+    - name: "add user: ${{env.USER}}"
+      shell: bash
+      run: |
+        : show defaults
+        useradd -D
+        sudo useradd -g "$(id -g)" -G "$(id -G | tr ' ' ,)" "$USER"
+        getent passwd "$USER"
+        sudo getent shadow "$USER"
+        id "$USER"
+
+    - name: show unix infos (after)
+      shell: bash
+      run: |-
+        sh -c "
+          : prevent out-of-order interleaving of stdout vs stderr
+          exec >&2
+          sudo -u "$USER" bash --noprofile --norc -euxo pipefail "$@" || : code $?
+        " - {0}
+
+    - name: show environ vars
+      shell: bash
+      run: |
+        sort -z /proc/self/environ |
+          tr '\0' '\n'
