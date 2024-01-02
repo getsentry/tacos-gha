@@ -1,14 +1,20 @@
 #!/usr/bin/env py.test
 from __future__ import annotations
 
+import pytest
+
 from lib.sh import sh
 from manual_tests.lib import tacos_demo
+from manual_tests.lib.gh import gh
 from manual_tests.lib.slice import Slices
+from manual_tests.lib.xfail import XFailed
+from pathlib import Path
 
 TEST_NAME = __name__
 
 
-def test(slices: Slices) -> None:
+@pytest.mark.xfail(raises=XFailed)
+def test(slices: Slices, git_clone: gh.repo.Local) -> None:
     with tacos_demo.PR.opened_for_slices(slices, TEST_NAME, draft=True) as pr:
         sh.banner("Draft PR opened:", pr.url)
 
@@ -33,12 +39,21 @@ def test(slices: Slices) -> None:
             slices, f"{TEST_NAME}-2", draft=False  # This one is not a draft
         ) as pr2:
             # The terraform_plan check should run automatically when the PR is opened
-            sh.banner("Wait for the terraform_plan check to complete")
+            sh.banner(
+                "Wait for the terraform_plan check to complete successfully"
+            )
             pr2.check("terraform_plan").wait().success
 
             # This PR should aquire the lock
-            sh.banner("Make sure the terraform_lock check ran successfully")
-            pr2.check("terraform_lock").wait().success
+            sh.banner("Make sure the terraform_lock checks ran successfully")
+            for s in slices:
+                assert (
+                    pr2.check(
+                        f"terraform_lock ({(slices.workdir / s).relative_to(git_clone.path)})"
+                    )
+                    .wait()
+                    .success
+                )
 
             # Since this is not a draft PR, it should be able to apply the plan
             sh.banner("Apply the plan for the second PR")
