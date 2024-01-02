@@ -4,12 +4,12 @@
 set -euo pipefail
 
 ( set -x; "$@" ) |& tee >(
-    # I can't find a way to convince step summary to handle ansi colors the same
-    # way github logging does...
-    uncolor |
+  # I can't find a way to convince step summary to handle ansi colors the same
+  # way github logging does...
+  uncolor |
       (
         cat <<< '```console'
-        # make xtrace output match `console` syntax highlighting
+    # make xtrace output match `console` syntax highlighting
         sed -r 's/^\++ \$ /$ /'
         cat <<< '```'
       ) |
@@ -20,5 +20,5 @@ set -euo pipefail
           jq -sR
       ) \
       >> "$GITHUB_OUTPUT" \
-    ;
-  )
+  ;
+)

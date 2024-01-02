@@ -1,55 +1,49 @@
 name: Scratch
 
+#
+#
+#
+
 on:
   workflow_call:
     inputs:
-      working_dir:
-        default: "CALL:."
-        type: "string"
-
-      # NOTE: Please keep these in sync with ../../.terra*-version files.
-      tf_version:
-        default: "CALL:1.6.4"
-        type: "string"
-      tg_version:
-        default: "CALL:0.53.5"
-        type: "string"
-  workflow_dispatch:
-    inputs:
-      working_dir: { default: "DISPATCH:." }
-
-      # NOTE: Please keep these in sync with ../../.terra*-version files.
-      tf_version: { default: "DISPATCH:1.6.4" }
-      tg_version: { default: "DISPATCH:0.53.5" }
-
-  schedule:
-    - cron: "0 0 * * *"
-
-  pull_request:
-    types:
-      - opened
-      - synchronize
-      - reopened
-      - labeled
-      - closed
+      tacos_gha_repo:
+        type: string
+        default: getsentry/tacos-gha
+      tacos_gha_ref:
+        type: string
+        default: refs/heads/stable
 
 defaults:
   run:
-    shell: env ./lib/ci/default-shell {0}
+    shell: env ./tacos-gha/lib/ci/default-shell {0}
 
-env:
-  working_dir: "ENV:./terraform/env"
-  tf_version: "ENV:1.6.4"
-  tg_version: "ENV:0.53.5"
+# Cancel in progress workflows on pull_requests.
+# https://docs.github.com/en/actions/using-jobs/using-concurrency#example-using-a-fallback-value
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
 
 jobs:
-  scratch:
+  main:
     runs-on: ubuntu-latest
     permissions:
       contents: read
       pull-requests: write
+
     steps:
       - uses: actions/checkout@v4
+        with:
+          repository: ${{inputs.tacos_gha_repo}}
+          ref: ${{inputs.tacos_gha_ref}}
+          path: tacos-gha
+
+      - name: basic info (main job)
+        run: |
+          echo "$USER@$HOSTNAME"
+          id
+          hostname -f
+
       - name: show env (orig)
         shell: bash
         run: |

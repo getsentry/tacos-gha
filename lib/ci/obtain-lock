@@ -2,11 +2,14 @@
 set -euo pipefail
 
 HERE="$(cd "$(dirname "$0")"; pwd)"
+set-env() {
+  "$HERE/"../github/set-env "$@"
+}
 
-if "$HERE/"set-output lock_id "$HERE/"../tf-lock/tf-lock-acquire "$@"; then
-  "$HERE/"set-output lock_obtained echo false
+if set-env TF_LOCK_ID "$HERE/"../tf-lock/tf-lock-acquire "$@"; then
+  set-env TF_LOCK echo true
 else
   status="$?"
-  "$HERE/"set-output lock_obtained echo false
+  set-env TF_LOCK echo false
   exit "$status"
 fi

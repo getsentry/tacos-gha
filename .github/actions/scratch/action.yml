@@ -2,12 +2,9 @@ name: scratch
 description: test custom action
 
 inputs:
-  tf_version:
-    default: "CALL:1.6.4"
-  tg_version:
-    default: "CALL:0.53.5"
   shell:
-    default: env ./lib/ci/default-shell {0}
+    #default: env ./lib/ci/default-shell {0}
+    default: bash -euxo pipefail {0}
 
 runs:
   using: composite

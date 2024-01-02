@@ -9,7 +9,7 @@ inputs:
     default: |-
       ${{github.event.pull_request.number}}.${{github.event.pull_request.base.repo.name}}.${{github.repository_owner}}.github.invalid
   shell:
-    default: env ./lib/ci/default-shell {0}
+    default: env ./tacos-gha/lib/ci/default-shell {0}
 
 runs:
   using: composite

@@ -2,4 +2,4 @@
 set -euo pipefail
 HERE="$(cd "$(dirname "$0")"; pwd)"
 
-exec "$HERE/"set-output terraformer sac-terraformer
+exec "$HERE/"../github/set-env GETSENTRY_SAC_TERRAFORMER sac-terraformer

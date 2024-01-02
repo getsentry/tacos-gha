@@ -2,4 +2,9 @@
 set -euo pipefail
 HERE="$(cd "$(dirname "$0")"; pwd)"
 
-exec "$HERE/"set-output workload_identity_provider "$REPO_TOP/"lib/getsentry-sac/oidc-provider "$@"
+exec \
+  "$HERE/"../github/set-env \
+  GETSENTRY_SAC_OIDC \
+  "$HERE/"../getsentry-sac/oidc-provider \
+  "$@" \
+;

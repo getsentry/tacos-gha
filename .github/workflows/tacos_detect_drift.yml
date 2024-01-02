@@ -1,19 +1,22 @@
-name: Terraform Detect Drift
+name: TACOS Detect Drift
+
+# downstream projects should use events:
+###schedule:
+###  - cron: "0 0 * * *"
 
 on:
-  workflow_dispatch:
-  schedule:
-    - cron: "0 0 * * *"
+  workflow_call:
+    inputs:
+      tacos_gha_repo:
+        type: string
+        default: getsentry/tacos-gha
+      tacos_gha_ref:
+        type: string
+        default: refs/heads/stable
 
 defaults:
   run:
-    shell: env ./lib/ci/default-shell {0}
-
-env:
-  # NOTE: please keep these in sync with ../../.terra*-version
-  tf_version: "1.6.4"
-  tg_version: "0.53.5"
-  working_dir: "."
+    shell: env ./tacos-gha/lib/ci/default-shell {0}
 
 # Cancel in progress workflows on pull_requests.
 # https://docs.github.com/en/actions/using-jobs/using-concurrency#example-using-a-fallback-value
@@ -22,10 +25,21 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  terraform_detect_drift:
+  main:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      id-token: write
+
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: ${{inputs.tacos_gha_repo}}
+          ref: ${{inputs.tacos_gha_ref}}
+          path: tacos-gha
+      - run: echo 'source_env tacos-gha' >> .envrc
       - uses: HatsuneMiku3939/direnv-action@v1
 
       - name: show event
@@ -36,16 +50,20 @@ jobs:
 
       # We don't want to run this job if someone has already obtained the lock
       - name: Obtain the lock
-        id: obtain_lock
-        run: ./lib/ci/obtain-lock
+        run: ./tacos-gha/lib/ci/obtain-lock
+
+      # this should really be default behavior:
+      - run: |
+          ./tacos-gha/lib/github/set-env 'TF_VERSION' cat .terraform-version
+          ./tacos-gha/lib/github/set-env 'TERRAGRUNT_VERSION' cat .terragrunt-version
 
       - name: Plan
         uses: gruntwork-io/terragrunt-action@v2
         continue-on-error: true
         id: plan
         with:
-          tf_version: ${{ env.tf_version }}
-          tg_version: ${{ env.tg_version }}
+          tf_version: ${{ env.TF_VERSION }}
+          tg_version: ${{ env.TERRAGRUNT_VERSION }}
           tg_dir: ${{ env.working_dir }}
           tg_command: "run-all plan -detailed-exitcode"
           tg_comment: true
