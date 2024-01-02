@@ -18,7 +18,9 @@ def test(slices: Slices) -> None:
 
         # The terraform_lock check should not run automatically when the PR is a draft
         sh.banner("Make sure the terraform_lock check did not run")
-        assert pr.check("terraform_lock").wait(pr.since).skipped
+        for s in slices:
+            print(f"Checking {s.name}")
+            assert pr.check(f"terraform_lock ({s.name})").wait().skipped
 
         # Since this PR is a draft, it should not be able to apply the plan
         sh.banner("Try to apply the plan for a draft PR")
@@ -38,7 +40,10 @@ def test(slices: Slices) -> None:
 
             # This PR should aquire the lock
             sh.banner("Make sure the terraform_lock check ran successfully")
-            pr2.check("terraform_lock").wait().success
+            for s in slices:
+                print(f"Checking {s.name}")
+                pr2.check(f"terraform_lock ({s.name})").wait().success
+            
 
             # Since this is not a draft PR, it should be able to apply the plan
             sh.banner("Apply the plan for the second PR")
