@@ -5,21 +5,20 @@ inputs:
     default: "CALL:1.6.4"
   tg_version:
     default: "CALL:0.53.5"
+  shell:
+    default: env ./lib/ci/default-shell {0}
 runs:
   using: composite
   steps:
     - name: ok
-      shell: bash -eux -o pipefail {0}
       run: echo ok
 
     - name: show env
-      shell: bash -eux -o pipefail {0}
       run: |
         sort -z /proc/self/environ |
         tr '\0' '\n'
 
     - name: show full context
-      shell: bash -eux -o pipefail {0}
       run: |
         : <<'EOF'
         github:   ${{ toJSON(github) }},
@@ -37,7 +36,6 @@ runs:
         EOF
 
     - name: show unix infos (before)
-      shell: bash -eux -o pipefail {0}
       run: |
         whoami
         id
@@ -54,7 +52,6 @@ runs:
         sudo find /etc/sudoers* -type f | xargs -tr sudo tail
 
     - name: "add user: ${{env.USER}}"
-      shell: bash -eux -o pipefail {0}
       run: |
         : show defaults
         useradd -D
@@ -64,7 +61,6 @@ runs:
         id "$USER"
 
     - name: show unix infos (after)
-      shell: bash -eux -o pipefail {0}
       run: |-
         sh -c "
           : prevent out-of-order interleaving of stdout vs stderr
@@ -73,7 +69,6 @@ runs:
         " - {0}
 
     - name: show environ vars
-      shell: bash -eux -o pipefail {0}
       run: |
         sort -z /proc/self/environ |
           tr '\0' '\n'
