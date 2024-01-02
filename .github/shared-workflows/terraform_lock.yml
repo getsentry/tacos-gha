@@ -26,7 +26,19 @@ jobs:
       slices: ${{ steps.slices.outputs.slices }}
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout shared code
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository }}
+          path: shared
+      
+      - name: Checkout PR code
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          ref: ${{ github.event.pull_request.head.ref }}
+          path: pr
+
       - uses: HatsuneMiku3939/direnv-action@v1
 
       - name: show event
@@ -47,7 +59,7 @@ jobs:
       - id: slices
         run: |
           ( echo -n slices=
-            ./lib/ci/dependent-slices  <<'EOF'
+            ./shared/lib/ci/dependent-slices  <<'EOF'
           ${{steps.files.outputs.all_files}}
           EOF
           ) | tee -a "$GITHUB_OUTPUT"
@@ -69,7 +81,19 @@ jobs:
           ${{ fromJSON(needs.determine-tf-root-modules.outputs.slices) }}
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout shared code
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository }}
+          path: shared
+      
+      - name: Checkout PR code
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          ref: ${{ github.event.pull_request.head.ref }}
+          path: pr
+
       - uses: HatsuneMiku3939/direnv-action@v1
 
       # see ./.python-version
@@ -77,12 +101,12 @@ jobs:
 
       - name: set workload identity provider
         id: set-workload-identity-provider
-        run: ./lib/ci/set-workload-identity-provider "$deploy_environ"
+        run: ./shared/lib/ci/set-workload-identity-provider "$deploy_environ"
 
       - name: set terraformer
         id: set-terraformer
         working-directory: ${{ env.working_dir }}
-        run: ./lib/ci/set-terraformer
+        run: ./shared/lib/ci/set-terraformer
 
       - name: gcp auth
         id: auth
@@ -97,11 +121,11 @@ jobs:
           terraform_wrapper: false
 
       - name: tell TF username and PR
-        uses: ./.github/actions/set-username-and-hostname
+        uses: ./shared/.github/actions/set-username-and-hostname
 
       - name: Obtain the lock
         id: lock
-        run: ./lib/ci/obtain-lock '${{matrix.tf-root-module}}' >> $GITHUB_OUTPUT
+        run: ./shared/lib/ci/obtain-lock '${{matrix.tf-root-module}}' >> $GITHUB_OUTPUT
 
       - name: Comment on PR whether lock is obtained
         if: always()
@@ -109,5 +133,5 @@ jobs:
         with:
           script: |
             const lockObtained = "${{ steps.lock.outputs.lock_obtained }}" === "true"
-            const script = require('./src/lock-acquisition-comment.js')
+            const script = require('./shared/src/lock-acquisition-comment.js')
             console.log(script({github, context, lockObtained}))
