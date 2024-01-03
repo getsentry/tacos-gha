@@ -4,13 +4,14 @@ from dataclasses import dataclass
 from pathlib import Path
 from random import Random
 from typing import Iterator
+from typing import Mapping
 from typing import Self
 
+from lib.constants import TOP
 from lib.functions import now
 from lib.sh import sh
 from lib.types import Generator
 
-from .xfail import XFailed
 from .xfail import XFails
 
 
@@ -19,7 +20,9 @@ class Slice(Path):
 
     def is_locked(self, workdir: Path) -> bool:
         with sh.cd(workdir / self):
-            return sh.success(("terraform", "plan", "--lock=true"))
+            j = sh.json(("sudo-sac", TOP / "lib/tf-lock/tf-lock-info"))
+            assert isinstance(j, Mapping)
+            return j.get("lock", False) is True
 
     def edit(self, workdir: Path) -> None:
         tf_path = self / "edit-me.tf"
@@ -73,20 +76,7 @@ class Slices:
             locked = slice.is_locked(self.workdir)
             should_lock = slice in self
 
-            try:
-                assert locked == should_lock, (locked, slice)
-            except AssertionError:
-                if xfails is None:
-                    raise XFailed("locking not yet implemented")
-                else:
-                    # FIXME: actually do locking in our GHA "Obtain Lock" job
-                    assert locked == False
-                    xfails.append(
-                        (
-                            "assert locked == False",
-                            (locked, should_lock, slice),
-                        )
-                    )
+            assert locked == should_lock, (locked, slice)
 
     def paths(self) -> Generator[Path]:
         for slice in self.slices:

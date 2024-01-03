@@ -8,7 +8,6 @@ from manual_tests.lib import tacos_demo
 from manual_tests.lib.gh import gh
 from manual_tests.lib.slice import Slices
 from manual_tests.lib.xfail import XFailed
-from pathlib import Path
 
 TEST_NAME = __name__
 
