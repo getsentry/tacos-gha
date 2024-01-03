@@ -42,7 +42,7 @@ def test(slices: Slices, test_name: str) -> None:
             raise XFailed("locking not yet implemented")
         assert (
             "lock failed, on slice prod/slice-3-vm, due to user1, PR #334 "
-            in loser.comments()
+            in loser.comments(loser.since)
         )
 
         sh.banner("Winner closes their PR")
