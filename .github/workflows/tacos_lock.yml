@@ -15,6 +15,7 @@ env:
   working_dir: "."
   deploy_environ: "dev"
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  GETSENTRY_SAC_VERB: apply
 
 jobs:
   determine-tf-root-modules:
@@ -65,7 +66,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        tf-root-module: ${{ fromJSON(needs.determine-tf-root-modules.outputs.slices) }}
+        tf-root-module:
+          ${{ fromJSON(needs.determine-tf-root-modules.outputs.slices) }}
 
     steps:
       - uses: actions/checkout@v4
@@ -100,13 +102,40 @@ jobs:
 
       - name: Obtain the lock
         id: lock
-        run: ./lib/ci/obtain-lock '${{matrix.tf-root-module}}' >> $GITHUB_OUTPUT
+        run: ./lib/ci/obtain-lock '${{matrix.tf-root-module}}'
 
-      - name: Comment on PR whether lock is obtained
-        if: always()
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const lockObtained = "${{ steps.lock.outputs.lock_obtained }}" === "true"
-            const script = require('./src/lock-acquisition-comment.js')
-            console.log(script({github, context, lockObtained}))
+  summary:
+    name: "Summarize lock state."
+    if: github.event.pull_request.draft == false && always()
+    needs:
+      - terraform_lock
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: show full context
+        run: |
+          : <<'EOF'
+          github:   ${{ toJSON(github) }},
+          env:      ${{ toJSON(env) }},
+          vars:     ${{ toJSON(vars) }},
+          job:      ${{ toJSON(job) }},
+          jobs:     # for reusable workflows only
+          steps:    ${{ toJSON(steps) }},
+          runner:   ${{ toJSON(runner) }},
+          secrets:  ${{ toJSON(secrets) }},
+          strategy: ${{ toJSON(strategy) }},
+          matrix:   ${{ toJSON(matrix) }},
+          needs:    ${{ toJSON(needs) }},
+          inputs:   ${{ toJSON(inputs) }},
+          EOF
+
+      ###- name: Comment on PR whether lock is obtained
+      ###  if: always()
+      ###  uses: actions/github-script@v7
+      ###  with:
+      ###    script: |
+      ###      const lockObtained = "${{ steps.lock.outputs.lock_obtained }}" === "true"
+      ###      const script = require('./src/lock-acquisition-comment.js')
+      ###      console.log(script({github, context, lockObtained}))

@@ -37,10 +37,9 @@ jobs:
       # We don't want to run this job if someone has already obtained the lock
       - name: Obtain the lock
         id: obtain_lock
-        run: ./lib/ci/obtain-lock >> $GITHUB_OUTPUT
+        run: ./lib/ci/obtain-lock
 
       - name: Plan
-        if: steps.obtain_lock.output.lock_obtained == 'true'
         uses: gruntwork-io/terragrunt-action@v2
         continue-on-error: true
         id: plan

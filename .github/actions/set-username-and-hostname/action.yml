@@ -1,0 +1,68 @@
+name: Set Username and Hostname
+
+inputs:
+  user:
+    description: use the PR owner, even if someone else re-triggers the job
+    default: ${{github.actor}}
+  hostname:
+    description: a fake hostname to represent the relevant PR
+    default: |-
+      ${{github.event.pull_request.number}}.${{github.event.pull_request.base.repo.name}}.${{github.repository_owner}}.github.invalid
+  shell:
+    default: env ./lib/ci/default-shell {0}
+
+runs:
+  using: composite
+
+  steps:
+    - name: "change hostname: ${{inputs.hostname}}"
+      shell: ${{inputs.shell}}
+      run: |
+        : change hostname: ${{inputs.hostname}}
+        HOSTNAME='${{inputs.hostname}}'
+        sudo tee <<< "127.0.0.1	$HOSTNAME" -a /etc/hosts
+        sudo hostname "$HOSTNAME"
+        hostname -f
+        echo "HOSTNAME=$HOSTNAME" >> "$GITHUB_ENV"
+
+    - name: "add user: ${{inputs.user}}"
+      shell: ${{inputs.shell}}
+      run: |
+        : "add user: ${{inputs.user}}"
+
+        olduser="$USER"
+        id "$olduser"
+
+        : 'set user-group ("runner") as primary group, but without losing ' \
+            'former primary group ("docker")'
+        sudo usermod -g "$olduser" "$olduser" -aG "$(id -g)"
+
+        newuser="${{inputs.user}}"
+        : show defaults
+        useradd -D
+
+        : add the requested username
+        sudo useradd -g "$olduser" -G "$(id -G | tr ' ' ,)" "$newuser"
+
+        : new user metadata:
+        getent passwd "$newuser"
+        sudo getent shadow "$newuser"
+
+        : for comparison
+        id "$olduser"
+        id "$newuser"
+
+        : "note: files not owned by me:  (I don't think this is a problem)"
+        find "$HOME" -not \( -user "$olduser" -group "$olduser" \)  -print0 |
+          xargs -0r ls -ld --
+
+        : ensure everything is equally accessible to my user-group '("runner")'
+        # the _diag/blocks directory has files being rapidly created and deleted
+        find "$HOME" \
+            -path "$HOME/runners/*/_diag/blocks" -prune \
+            -or \
+            -user "$olduser" -group "$olduser" -not -type l -print0 |
+          xargs -0r chmod g=u --
+
+        : set default user for future steps
+        echo "USER=$newuser" >> "$GITHUB_ENV"

@@ -1,0 +1,6 @@
+# https://docs.github.com/en/graphql/reference/mutations
+mutation deleteIssueComment($id: ID!) {
+  deleteIssueComment(input: { id: $id }) {
+    clientMutationId
+  }
+}

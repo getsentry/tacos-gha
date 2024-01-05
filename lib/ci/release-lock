@@ -1,0 +1,14 @@
+#!/bin/bash
+set -euo pipefail
+
+HERE="$(cd "$(dirname "$0")"; pwd)"
+
+"$HERE/"../tf-lock/tf-lock-release
+status=$?
+
+set -x
+if [ $status -eq 0 ]; then
+  exit 0
+else
+  exit 1
+fi

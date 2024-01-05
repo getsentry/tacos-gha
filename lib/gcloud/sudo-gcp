@@ -1,0 +1,21 @@
+#!/bin/bash
+set -euo pipefail
+HERE="$(dirname "$(readlink -f "$0")")"
+
+# FIXME: support `-u $USER` and/or `-u $EMAIL` to request an end-user access token
+if [[ "${1:-}" = "-u" ]]; then
+  shift 1
+  service_account=("$1")
+  shift 1
+elif ! [[ "${1:-}" || "${1:-}" =~ ^- ]]; then
+  echo >&2 'usage: sudo-gcp -u $GCP_SERVICE_ACCOUNT $COMAND'
+  exit 1
+else
+  service_account=()
+fi
+
+# NOTE: eval must be done separately to avoid gobbling exit code
+token="$("$HERE/"gcloud-auth-export-access-token "${service_account[@]}")"
+eval "$token"
+set -x
+"$@"

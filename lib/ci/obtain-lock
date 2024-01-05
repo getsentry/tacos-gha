@@ -1,0 +1,12 @@
+#!/bin/bash
+set -euo pipefail
+
+HERE="$(cd "$(dirname "$0")"; pwd)"
+
+if "$HERE/"set-output lock_id "$HERE/"../tf-lock/tf-lock-acquire "$@"; then
+  "$HERE/"set-output lock_obtained echo false
+else
+  status="$?"
+  "$HERE/"set-output lock_obtained echo false
+  exit "$status"
+fi

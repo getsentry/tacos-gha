@@ -1,0 +1,9 @@
+#!/bin/bash
+set -euo pipefail
+
+jq '.[]' --raw-output |
+  ./lib/tacos/dependent_slices.py |
+  # transform newline-delimited list into json:
+  jq -R |
+  jq -cs \
+;
