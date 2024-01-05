@@ -1,0 +1,66 @@
+name: Scratch
+
+on:
+  workflow_call:
+    inputs:
+      working_dir:
+        default: "CALL:."
+        type: "string"
+
+      # NOTE: Please keep these in sync with ../../.terra*-version files.
+      tf_version:
+        default: "CALL:1.6.4"
+        type: "string"
+      tg_version:
+        default: "CALL:0.53.5"
+        type: "string"
+  workflow_dispatch:
+    inputs:
+      working_dir: { default: "DISPATCH:." }
+
+      # NOTE: Please keep these in sync with ../../.terra*-version files.
+      tf_version: { default: "DISPATCH:1.6.4" }
+      tg_version: { default: "DISPATCH:0.53.5" }
+
+  schedule:
+    - cron: "0 0 * * *"
+
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - labeled
+      - closed
+
+defaults:
+  run:
+    shell: env ./lib/ci/default-shell {0}
+
+env:
+  working_dir: "ENV:./terraform/env"
+  tf_version: "ENV:1.6.4"
+  tg_version: "ENV:0.53.5"
+
+jobs:
+  scratch:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: show env (orig)
+        shell: bash
+        run: |
+          sort -z /proc/self/environ |
+            tr '\0\n' '\n;' |
+            tee orig.env
+
+      - name: Scratch
+        uses: ./.github/actions/scratch
+      - name: basic info (main job)
+        run: |
+          echo "$USER@$HOSTNAME"
+          id
+          hostname -f
