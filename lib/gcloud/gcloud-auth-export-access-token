@@ -1,0 +1,114 @@
+#!/bin/bash
+set -euo pipefail
+# This script emulates `gcloud auth print-access-token` except it is helpful
+# when given a service account as the argument. The original will instead
+# demand a service account key, but that's insecure and unecessary.
+
+target_identity="${1:-}"
+iam_api='https://iamcredentials.googleapis.com/v1'
+# these are the scopes used by `gcloud print-access-token`
+scopes='[
+  "openid"
+, "profile"
+, "email"
+, "https://www.googleapis.com/auth/userinfo.email"
+, "https://www.googleapis.com/auth/userinfo.profile"
+, "https://www.googleapis.com/auth/cloud-platform"
+, "https://www.googleapis.com/auth/appengine.admin"
+, "https://www.googleapis.com/auth/sqlservice.login"
+, "https://www.googleapis.com/auth/compute"
+, "https://www.googleapis.com/auth/gmail.settings.basic"
+, "https://www.googleapis.com/auth/gmail.settings.sharing"
+, "https://www.googleapis.com/auth/chrome.management.policy"
+, "https://www.googleapis.com/auth/cloud-platform"
+, "https://www.googleapis.com/auth/admin.directory.customer"
+, "https://www.googleapis.com/auth/admin.directory.domain"
+, "https://www.googleapis.com/auth/admin.directory.group"
+, "https://www.googleapis.com/auth/admin.directory.orgunit"
+, "https://www.googleapis.com/auth/admin.directory.rolemanagement"
+, "https://www.googleapis.com/auth/admin.directory.userschema"
+, "https://www.googleapis.com/auth/admin.directory.user"
+, "https://www.googleapis.com/auth/apps.groups.settings"
+]'
+
+info() { echo >&2 "$@";  }
+error() { info "$@"; exit 1; }
+
+if [[ "${DEBUG:-}" ]]; then
+  set -x
+fi
+
+export configuration_properties_core_account
+export credential_access_token
+eval "$(
+  unset CLOUDSDK_CORE_ACCOUNT
+  unset CLOUDSDK_AUTH_ACCESS_TOKEN
+  # enable interactive reauth, iff we have a controlling tty
+  if ( : < /dev/tty ) 2>/dev/null; then exec < /dev/tty; fi
+  gcloud config config-helper \
+    --format 'config[export](configuration.properties.core.account,credential.access_token)' \
+  ;
+)"
+origin_identity="${configuration_properties_core_account:-}"
+token="$credential_access_token"
+target_identity="${target_identity:-$origin_identity}"
+
+if ! [[ "$origin_identity" =~ @ ]]; then
+  info "Please authenticate by running: gcloud login"
+  exit 1
+fi
+
+if [[ "$origin_identity" = "$target_identity" ]]; then
+  : "We're already done."
+elif [[ "$target_identity" =~ \.iam\.gserviceaccount\.com$ ]]; then
+  : "Generating a token for service account $target_identity..."
+  # TODO: examine the expiry timestamp of the cached token
+  if response="$(curl \
+      --silent \
+      --show-error \
+      --fail-with-body \
+      --user "$origin_identity" \
+      --oauth2-bearer "$token" \
+      "$iam_api/projects/-/serviceAccounts/${target_identity}:generateAccessToken" \
+      --header 'Accept: application/json' \
+      --header 'Content-Type: application/json' \
+      --data '{"lifetime":"3600s","scope":'"$scopes"'}' \
+      --compressed \
+    )"; then
+    token="$(jq .accessToken --raw-output <<< "$response")"
+  else
+    error "FAILED: unable to authenticate as $target_identity
+$response"
+  fi
+else
+  error "FAILED: don't know how to authenticate as $target_identity"
+fi
+
+# NOTE: CLOUDSDK_CORE_ACCOUNT is necessary to get the right user during 
+# `gcloud compute ssh`
+if [[ "$SHELL" =~ (^|/)fish$ ]]; then
+  cat <<EOF
+set -x CLOUDSDK_CORE_ACCOUNT "$target_identity"
+set -x GOOGLE_OAUTH_ACCESS_TOKEN '$token'
+set -x CLOUDSDK_AUTH_ACCESS_TOKEN "\$GOOGLE_OAUTH_ACCESS_TOKEN"
+EOF
+else
+  cat <<EOF
+export CLOUDSDK_CORE_ACCOUNT="$target_identity"
+export GOOGLE_OAUTH_ACCESS_TOKEN='$token'
+export CLOUDSDK_AUTH_ACCESS_TOKEN="\$GOOGLE_OAUTH_ACCESS_TOKEN"
+EOF
+fi
+
+info "You are authenticated for the next hour as: $target_identity"
+
+cat <<EOF
+
+###
+# [31;1mNOTE[0m: If you're seeing this message, then the above environment variables have
+#   not taken affect! You'll need to rerun your command with eval:
+#
+#     eval "\$( ((your command here)) )"
+#
+###
+EOF

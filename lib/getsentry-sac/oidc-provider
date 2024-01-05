@@ -1,0 +1,15 @@
+#!/bin/bash
+set -euo pipefail
+deploy_environ="${1:-"$GETSENTRY_SAC_DEPLOY_ENVIRON"}"
+
+if [ "$deploy_environ" = "dev" ]; then
+  echo "projects/307284466893/locations/global/workloadIdentityPools/dev-github/providers/github-oidc-pool"
+elif [ "$deploy_environ" = "prod" ]; then
+  echo "projects/868781662168/locations/global/workloadIdentityPools/prod-github/providers/github-oidc-pool"
+else
+  cat >&2 <<EOF
+deploy_environ input must be one of 'dev' or 'prod'!
+Alternatively, you can set workload_identity_provider to override the setting completely.
+EOF
+  exit 1
+fi

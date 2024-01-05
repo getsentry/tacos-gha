@@ -1,0 +1,60 @@
+name: Scratch
+
+#
+#
+#
+
+on:
+  workflow_call:
+    inputs:
+      tacos_gha_repo:
+        type: string
+        default: getsentry/tacos-gha
+      tacos_gha_ref:
+        type: string
+        default: refs/heads/stable
+
+defaults:
+  run:
+    shell: env ./tacos-gha/lib/ci/default-shell {0}
+
+# Cancel in progress workflows on pull_requests.
+# https://docs.github.com/en/actions/using-jobs/using-concurrency#example-using-a-fallback-value
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: ${{inputs.tacos_gha_repo}}
+          ref: ${{inputs.tacos_gha_ref}}
+          path: tacos-gha
+
+      - name: basic info (main job)
+        run: |
+          echo "$USER@$HOSTNAME"
+          id
+          hostname -f
+
+      - name: show env (orig)
+        shell: bash
+        run: |
+          sort -z /proc/self/environ |
+            tr '\0\n' '\n;' |
+            tee orig.env
+
+      - name: Scratch
+        uses: ./.github/actions/scratch
+      - name: basic info (main job)
+        run: |
+          echo "$USER@$HOSTNAME"
+          id
+          hostname -f

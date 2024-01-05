@@ -1,0 +1,5 @@
+#!/bin/bash
+set -euo pipefail
+HERE="$(cd "$(dirname "$0")"; pwd)"
+
+exec "$HERE/"../github/set-env GETSENTRY_SAC_TERRAFORMER sac-terraformer

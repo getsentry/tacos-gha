@@ -1,0 +1,8 @@
+#!/bin/bash
+set -euo pipefail
+var="$1"
+shift 1
+
+# NB: separate subprocess substitution, to avoid masking return values
+val="$("$@")"
+tee -a "$GITHUB_ENV" <<< "$var=$val"
