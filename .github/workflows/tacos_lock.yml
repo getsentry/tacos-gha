@@ -24,6 +24,9 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
   cancel-in-progress: true
 
+env:
+  GETSENTRY_SAC_VERB: apply
+
 jobs:
   determine-tf-root-modules:
     runs-on: ubuntu-latest
@@ -59,7 +62,11 @@ jobs:
           list-files: json
 
       # see ./.python-version
+      - run: |
+          ./tacos-gha/lib/github/set-env 'PYTHON_VERSION' grep -v '^#' tacos-gha/.python-version
       - uses: actions/setup-python@v5
+        with:
+          python-version: ${{env.PYTHON_VERSION}}
 
       - id: slices
         run: |
@@ -95,7 +102,11 @@ jobs:
       - uses: HatsuneMiku3939/direnv-action@v1
 
       # see ./.python-version
+      - run: |
+          ./tacos-gha/lib/github/set-env 'PYTHON_VERSION' grep -v '^#' tacos-gha/.python-version
       - uses: actions/setup-python@v5
+        with:
+          python-version: ${{env.PYTHON_VERSION}}
 
       - name: set workload identity provider
         id: set-workload-identity-provider
@@ -173,6 +184,3 @@ jobs:
       ###      const lockObtained = process.env.TF_LOCK === "true"
       ###      const script = require('./lib/ci/lock-acquisition-comment.js')
       ###      console.log(script({github, context, lockObtained}))
-
-env:
-  GETSENTRY_SAC_VERB: apply
