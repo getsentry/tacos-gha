@@ -135,7 +135,7 @@ jobs:
       pull-requests: write
 
     name: "Summarize lock state."
-    needs: [terraform_lock]
+    needs: [main]
     if: |
       true
       && github.event.pull_request.draft == false
