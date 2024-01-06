@@ -8,14 +8,15 @@ export PS4 ?= + \033[31;1m$$\033[m
 python_files := $(shell git ls-files '*.py' 'requirements*.in' 'requirements*.txt')
 
 .PHONY: all
-all: venv
+all: venv pre-commit-install
 
 
 ### commands: these will always run, even if nothing changed
-commands := test lint format
+commands := test lint format pre-commit-install
 test: $(makelib)/test venv
 lint: $(makelib)/lint format
 format: $(makelib)/format venv
+pre-commit-install: $(makelib)/pre-commit-install venv
 
 ### dependencies: it's important that these properly report "already done"
 venv: $(makelib)/venv .python-version requirements-dev.txt .done/pyenv
