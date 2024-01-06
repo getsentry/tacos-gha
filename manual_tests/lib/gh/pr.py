@@ -19,6 +19,7 @@ from .types import URL
 from .types import Branch
 from .types import CheckName
 from .types import Label
+from .types import WorkflowName
 
 Comment = str  # a PR comment
 
@@ -148,10 +149,10 @@ class PR:
                 result.append(comment["body"])
         return tuple(result)
 
-    def check(self, check_name: CheckName) -> Check:
+    def check(self, workflow_name: WorkflowName, check_name: CheckName) -> Check:
         from .check import Check
 
-        return Check(self, check_name)
+        return Check(self, workflow_name, check_name)
 
     @classmethod
     def from_branch(cls, branch: Branch, since: datetime) -> Self:

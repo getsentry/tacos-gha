@@ -79,7 +79,7 @@ class PR(gh.PR):
         if since is None:
             since = self.since
 
-        assert self.check("terraform_plan").wait(since).success
+        assert self.check("Terraform Plan", "tacos-gha / main").wait(since).success
         plan = [
             comment
             for comment in self.comments(since)

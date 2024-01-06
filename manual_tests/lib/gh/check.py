@@ -11,6 +11,7 @@ from lib.sh import sh
 from .types import URL
 from .types import CheckName
 from .types import Generator
+from .types import WorkflowName
 
 if TYPE_CHECKING:
     from .check_run import CheckRun
@@ -41,6 +42,7 @@ def get_runs_json(pr_url: URL) -> Generator[json.Value]:
 @dataclass(frozen=True)
 class Check:
     pr: PR
+    workflow_name: WorkflowName
     name: CheckName
 
     def get_runs(self) -> Generator[CheckRun]:
@@ -49,7 +51,7 @@ class Check:
 
         for obj in get_runs_json(self.pr.url):
             run = CheckRun.from_json(obj)
-            if run.name == self.name:
+            if run.workflowName == self.workflow_name and run.name == self.name:
                 yield run
 
     def latest(self) -> CheckRun:
