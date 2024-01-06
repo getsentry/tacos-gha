@@ -1,0 +1,16 @@
+#!/bin/bash
+set -euo pipefail
+HERE="$(cd "$(dirname "$0")"; pwd)"
+SHA1="${1:-HEAD^}"
+SHA2="${2:-HEAD}"
+
+set -x
+
+"$HERE/"dependent_slices.py <(
+    git diff  "$SHA1" "$SHA2" \
+        --name-only \
+        --diff-filter=ACMRT \
+  ) |
+  # transform newline-delimited list into json:
+  jq -R | jq -s \
+;

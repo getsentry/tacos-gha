@@ -1,0 +1,28 @@
+#!/bin/bash
+# a silly script to vary ANSI color codes between invocations
+# store a sequence of numbers in a `.prompt-color` file and  map them to PS4
+# values
+set -euo pipefail
+
+# prefix debug lines with a fancy-looking "prompt", randomly colored
+if [[ -e .prompt-color ]]; then
+  prompt_color=$(cat .prompt-color)
+else
+  prompt_color=-1
+fi
+: $((prompt_color+=1))
+
+# alternate between normal and bold bright, i.e. ANSI color codes 3x and 1;9x
+# use colors 1 through 6: red, green, yellow, blue, magenta, cyan
+hue=$(( prompt_color / 2 ))
+if (( (prompt_color % 2) == 0 )); then
+  style='3'
+else
+  style='1;9'
+  hue=$(( hue + 3 ))  # rotate color for extra constrast
+fi
+
+printf "%s%s" "$style" "$(( (hue % 6) + 1 ))"
+
+# record the sequence number
+cat <<< "$prompt_color" > .prompt-color

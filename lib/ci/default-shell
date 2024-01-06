@@ -1,0 +1,36 @@
+#!/bin/bash
+# Some presets for use in all GHA shell steps.
+set -euo pipefail
+HERE="$(cd "$(dirname "$0")"; pwd)"
+
+# combine stdout to stderr, to prevent out-of-order interleaving
+exec >&2
+
+# prefix debug lines with a fancy-looking "prompt", randomly colored
+export PS4
+PS4='+ \e['"$("$HERE/"prompt-color)"'m$\e[m '
+
+# encourage programs to use full color -- github logs handle it nicely
+export TERM=xterm-256color
+export CLICOLOR=truecolor
+export COLORTERM=truecolor
+
+: make sure github command-files are writable
+chmod -R g+rw "$(dirname "$GITHUB_OUTPUT")"
+
+shell=(
+  # switch user to "$USER" (by default this is a noop)
+  sudo --preserve-env -u "$USER"
+
+  # sudo refuses to preserve certain vars:
+  env
+    PS4="$PS4"
+    PATH="$PATH"
+
+  # the default shell (under github actions) is:
+  # bash --noprofile --norc -eo pipefail {0}
+  # added: stop on undefined variables, show all commands
+  bash --noprofile --norc -eo pipefail -ux
+)
+
+exec "${shell[@]}" "$@"
