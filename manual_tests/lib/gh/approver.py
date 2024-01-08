@@ -13,7 +13,7 @@ from lib.sh import sh
 
 APP_ID = 696623
 INSTALLATION_ID = 45043058
-PEM_PATH = "op://Private/tacos-gha-reviewer.2024-01-08.private-key/private key"
+PEM_PATH = "op://Team Tacos gha dev/tacos-gha-reviewer.2024-01-08.private-key/private key"
 
 
 def make_jwt() -> str:

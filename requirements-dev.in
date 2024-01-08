@@ -16,3 +16,6 @@ covdefaults
 
 # dependency management
 pip-tools
+
+# test dependencies
+jwt
