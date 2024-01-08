@@ -57,9 +57,9 @@ runs:
           xargs -0r ls -ld --
 
         : ensure everything is equally accessible to my user-group '("runner")'
-        # the _diag/blocks directory has files being rapidly created and deleted
+        # the _diag directory has files being rapidly created and deleted
         find "$HOME" \
-            -path "$HOME/runners/*/_diag/blocks" -prune \
+            -path "$HOME/runners/*/_diag" -prune \
             -or \
             -user "$olduser" -group "$olduser" -not -type l -print0 |
           xargs -0r chmod g=u --
