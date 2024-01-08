@@ -5,7 +5,6 @@ import pytest
 
 from lib.sh import sh
 from manual_tests.lib import tacos_demo
-from manual_tests.lib.gh import gh
 from manual_tests.lib.slice import Slices
 from manual_tests.lib.xfail import XFailed
 
@@ -13,7 +12,7 @@ TEST_NAME = __name__
 
 
 @pytest.mark.xfail(raises=XFailed)
-def test(slices: Slices, git_clone: gh.repo.Local) -> None:
+def test(slices: Slices) -> None:
     with tacos_demo.PR.opened_for_slices(slices, TEST_NAME, draft=True) as pr:
         sh.banner("Draft PR opened:", pr.url)
 
@@ -45,14 +44,8 @@ def test(slices: Slices, git_clone: gh.repo.Local) -> None:
 
             # This PR should aquire the lock
             sh.banner("Make sure the terraform_lock checks ran successfully")
-            for s in slices:
-                assert (
-                    pr2.check(
-                        f"terraform_lock ({(slices.workdir / s).relative_to(git_clone.path)})"
-                    )
-                    .wait()
-                    .success
-                )
+            for slice in slices:
+                assert pr2.check(f"terraform_lock ({slice})").wait().success
 
             # Since this is not a draft PR, it should be able to apply the plan
             sh.banner("Apply the plan for the second PR")

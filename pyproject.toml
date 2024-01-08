@@ -37,6 +37,7 @@ norecursedirs = [
     "tmp*",
     "*tmp",
     "**/bak",
+    "**/scratch",
 ]
 python_files = ["*.py"]
 python_classes = ["Test", "Describe"]
@@ -52,6 +53,7 @@ exclude = [
     "tmp*",
     "*tmp",
     "**/bak",
+    "**/scratch",
 ]
 
 pythonPlatform = "Linux"
@@ -82,9 +84,11 @@ python_version = "3.12"
 
 files = ["."]
 exclude = [
-    "/venv/$",
-    "/bak/$",
+    "(^|/)venv/$",
+    "(^|/)bak/$",
+    "(^|/)scratch/$",
 ]
+scripts_are_modules = true
 
 # Strict mode; enables the following flags: (in mypy 1.7.1)
 #     --check-untyped-defs

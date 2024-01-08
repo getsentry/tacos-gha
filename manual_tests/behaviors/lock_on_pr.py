@@ -2,18 +2,13 @@
 from __future__ import annotations
 
 from manual_tests.lib import tacos_demo
-from manual_tests.lib.gh import gh
 
 
-def test(pr: tacos_demo.PR, git_clone: gh.repo.Local) -> None:
-    slices = pr.slices
-    for s in slices:
+def test(pr: tacos_demo.PR) -> None:
+    for slice in pr.slices:
         assert (
-            pr.check(
-                "Terraform Lock",
-                f"tacos-gha / main ({(slices.workdir / s).relative_to(git_clone.path)})"
-            )
+            pr.check("Terraform Lock", f"tacos-gha / main ({slice})")
             .wait()
             .success
         )
-    slices.assert_locked()
+    pr.slices.assert_locked()

@@ -1,44 +1,61 @@
 """pytest fixtures specific to tacos-gha demo"""
 from __future__ import annotations
 
-from pathlib import Path
-
 from pytest import fixture
 
 from lib import json
+from lib.constants import REPO_TOP
 from lib.sh import sh
 from lib.sh.cd import cd
+from lib.types import Environ
 from lib.types import Generator
+from lib.types import OSPath
+from lib.types import Path
 from manual_tests.lib import tacos_demo
 from manual_tests.lib.gh import gh
 from manual_tests.lib.slice import Slices
 
 
 @fixture
-def git_remote(user: str) -> gh.repo.Remote:
+def git_remote() -> gh.repo.Remote:
     return gh.repo.Remote(
         url="git@github.com:getsentry/tacos-demo",
-        subpath=Path(f"terraform/env.{user}/prod/"),
+        # TODO: update actions for minimal slice names
+        ###subpath=Path("terraform")
     )
 
 
 @fixture
 def git_clone(
-    cwd: Path, git_remote: gh.repo.Remote
+    cwd: OSPath, git_remote: gh.repo.Remote
 ) -> Generator[gh.repo.Local]:
     with git_remote.cloned(cwd) as clone:
         yield clone
 
 
 @fixture
-def workdir(git_clone: gh.repo.Local) -> Generator[Path]:
-    with cd(git_clone.workdir):
-        yield git_clone.workdir
+def workdir(git_clone: gh.repo.Local, environ: Environ) -> Generator[OSPath]:
+    with cd(REPO_TOP, environ):
+        # disallow direnv from unloading our test environment:
+        for var in environ:
+            if var.startswith("DIRENV_"):
+                del environ[var]
+
+        with cd(git_clone.workdir, environ):
+            yield git_clone.workdir
 
 
 @fixture
-def slices(workdir: Path) -> Slices:
-    slices = Slices.from_path(workdir)
+def slice_subpath(user: str) -> Path:
+    """which subpath of workdir should we search for slices?"""
+    # TODO: update actions for minimal slice names
+    ###return Path(f"env.{user}/prod")
+    return Path(f"terraform/env.{user}/prod")
+
+
+@fixture
+def slices(workdir: OSPath, slice_subpath: Path) -> Slices:
+    slices = Slices.from_path(workdir, slice_subpath)
     return slices.random()
 
 

@@ -32,4 +32,8 @@ def test(pr: tacos_demo.PR) -> None:
     since = pr.add_label(":taco::abandoned")
 
     sh.banner("An attempt is made to notify other users of the repo")
-    assert pr.check("Notify Collaborators", "notify_collaborators").wait(since).success
+    assert (
+        pr.check("Notify Collaborators", "notify_collaborators")
+        .wait(since)
+        .success
+    )

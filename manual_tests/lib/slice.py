@@ -1,18 +1,21 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from pathlib import Path
 from random import Random
-from typing import Iterator
-from typing import Mapping
-from typing import Self
+from typing import TYPE_CHECKING
 
-from lib.constants import TOP
+from lib.constants import EMPTY_PATH
+from lib.constants import REPO_TOP
 from lib.functions import now
 from lib.sh import sh
 from lib.types import Generator
+from lib.types import OSPath
+from lib.types import Path
 
-from .xfail import XFails
+if TYPE_CHECKING:
+    from typing import Iterator
+    from typing import Mapping
+    from typing import Self
 
 
 class Slice(Path):
@@ -20,12 +23,12 @@ class Slice(Path):
 
     def is_locked(self, workdir: Path) -> bool:
         with sh.cd(workdir / self):
-            j = sh.json(("sudo-sac", TOP / "lib/tf-lock/tf-lock-info"))
+            j = sh.json(("sudo-sac", REPO_TOP / "lib/tf-lock/tf-lock-info"))
             assert isinstance(j, Mapping)
             return j.get("lock", False) is True
 
-    def edit(self, workdir: Path) -> None:
-        tf_path = self / "edit-me.tf"
+    def edit(self, workdir: OSPath) -> None:
+        tf_path = workdir / self / "edit-me.tf"
         tf = f"""\
 resource "null_resource" "edit-me" {{
   triggers = {{
@@ -42,18 +45,19 @@ resource "null_resource" "edit-me" {{
 
 @dataclass(frozen=True)
 class Slices:
-    workdir: Path
+    workdir: OSPath
     slices: frozenset[Slice]
 
     @classmethod
-    def from_path(cls, workdir: Path) -> Self:
+    def from_path(cls, workdir: OSPath, subpath: Path = EMPTY_PATH) -> Self:
         return cls(
             workdir=workdir,
             slices=frozenset(
                 Slice(slice.relative_to(workdir))
                 # TODO: search for .tf or terragrunt.hcl files
                 # for now, we assume all direct child directories are slices
-                for slice in workdir.glob(f"*/")
+                for slice in (workdir / subpath).glob(f"*/")
+                if not slice.name == "module"
             ),
         )
 
@@ -70,7 +74,7 @@ class Slices:
         for slice in self:
             slice.edit(self.workdir)
 
-    def assert_locked(self, xfails: XFails | None = None) -> None:
+    def assert_locked(self) -> None:
         cls = type(self)
         for slice in cls.from_path(self.workdir):
             locked = slice.is_locked(self.workdir)

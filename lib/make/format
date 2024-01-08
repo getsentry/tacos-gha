@@ -5,10 +5,17 @@ exec >&2  # all output is logging
 set -x
 
 git ls-files '**/*.py' |
-  xargs -r black
+  xargs -r black \
+;
 
 git ls-files '**/*.py' |
-  xargs -r isort
+  xargs -r isort \
+;
 
 git ls-files |
-  xargs -r prettier --write --ignore-unknown
+  # prettier doesn't like symlinks ¯\_(ツ)_/¯
+  file --mime-type --no-pad --files-from=- |
+  grep -v 'inode/symlink$' |
+  sed 's@: .*@@' |
+  xargs -r prettier --write --ignore-unknown \
+;

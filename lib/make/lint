@@ -5,12 +5,13 @@ exec >&2  # all output is logging
 set -x
 
 fail=()
-if ! pyright .; then
+if ! git-ls-python | xargs -r pyright; then
   fail+=(pyright)
 fi
-if ! mypy .; then
+if ! git-ls-python | xargs -r mypy; then
   fail+=(mypy)
 fi
+# get directories that contain a py.typed file:
 if ! git ls-files '*/py.typed' |
     xargs dirname |
     xargs -n1 -tr \
@@ -24,13 +25,7 @@ then
   fail+=(pyright-verifytypes)
 fi
 
-if ! git ls-files |
-  file --mime-type --no-pad --files-from=- |
-    grep ': text/x-shellscript$' |
-    sed 's@: text/x-shellscript$@@' |
-    xargs -r shellcheck \
-  ;
-then
+if ! git-ls-sh | xargs -r shellcheck; then
   fail+=(shellcheck)
 fi
 

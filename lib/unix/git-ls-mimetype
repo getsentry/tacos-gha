@@ -1,0 +1,10 @@
+#!/bin/bash
+set -euo pipefail
+# list all version-controlled files of a particular mimetype
+
+mimetype="$1"
+git ls-files |
+  file --mime-type --no-pad --files-from=- |
+  grep ': '"$mimetype"'$' |
+  sed 's@: '"$mimetype"'$@@' \
+;
