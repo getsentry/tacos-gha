@@ -33,14 +33,13 @@ jobs:
       id-token: write
 
     steps:
+      - uses: bukzor-sentryio/direnv-install@v1
       - uses: actions/checkout@v4
       - uses: actions/checkout@v4
         with:
           repository: ${{inputs.tacos_gha_repo}}
           ref: ${{inputs.tacos_gha_ref}}
           path: tacos-gha
-      - run: echo 'source_env tacos-gha' >> .envrc
-      - uses: HatsuneMiku3939/direnv-action@v1
 
       - name: show event
         run: |
