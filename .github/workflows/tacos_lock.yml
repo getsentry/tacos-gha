@@ -49,12 +49,6 @@ jobs:
       - run: echo 'source_env tacos-gha' >> .envrc
       - uses: HatsuneMiku3939/direnv-action@v1
 
-      - name: show event
-        run: |
-          : <<'EOF'
-            ${{toJSON(github.event)}}
-          EOF
-
       - id: files
         uses: getsentry/paths-filter@v2.11.1
         with:
@@ -70,6 +64,12 @@ jobs:
 
       - id: slices
         run: |
+          : determine which slices to lock
+          python -c 'import lib; print lib' || : code $?
+          echo "$PYTHONPATH"
+          tr ':' '\n' <<< "$PYTHONPATH" |
+            xargs -n1 ls -la
+
           ( echo -n slices=
             ./tacos-gha/lib/ci/dependent-slices <<'EOF'
           ${{steps.files.outputs.all_files}}
