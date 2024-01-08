@@ -177,4 +177,5 @@ def commit_and_push(
 ) -> None:
     with sh.cd(workdir):
         sh.run(("git", "commit", "-m", message))
+        sh.run(("git", "show", "--stat"))
         sh.run(("git", "push", "origin", f"{branch}:{branch}"))

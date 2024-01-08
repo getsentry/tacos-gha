@@ -28,7 +28,7 @@ class Slice(Path):
             return j.get("lock", False) is True
 
     def edit(self, workdir: OSPath) -> None:
-        tf_path = workdir / self / "edit-me.tf"
+        tf_path = self / "edit-me.tf"
         tf = f"""\
 resource "null_resource" "edit-me" {{
   triggers = {{
@@ -37,7 +37,7 @@ resource "null_resource" "edit-me" {{
 }}
 """
         with sh.cd(workdir):
-            with tf_path.open("w") as f:
+            with OSPath(tf_path).open("w") as f:
                 f.write(tf)
             # NB: file is empty if added before close
             sh.run(("git", "add", tf_path))
@@ -56,8 +56,8 @@ class Slices:
                 Slice(slice.relative_to(workdir))
                 # TODO: search for .tf or terragrunt.hcl files
                 # for now, we assume all direct child directories are slices
-                for slice in (workdir / subpath).glob(f"*/")
-                if not slice.name == "module"
+                for slice in (workdir).glob(str(subpath / "*"))
+                if slice.is_dir() and not slice.name == "module"
             ),
         )
 

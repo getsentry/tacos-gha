@@ -28,7 +28,7 @@ skip_covered = false
 minversion = "6.0"
 markers = []
 xfail_strict = true
-addopts = "--durations-min=10 -vv --doctest-modules --capture=no --last-failed"
+addopts = "--durations-min=10 -vv --doctest-modules --capture=no --showlocals --last-failed"
 testpaths = ["."]
 norecursedirs = [
     "**/__pycache__",
@@ -77,6 +77,10 @@ reportPropertyTypeMismatch = "error"
 reportUninitializedInstanceVariable = "error"
 reportUnnecessaryTypeIgnoreComment = "error"
 reportUnusedCallResult = "none"  # too noisy
+
+# maintainer has an strong anti-idomatic stance on what "constant" means
+# https://github.com/microsoft/pyright/issues/5265
+reportConstantRedefinition = false
 
 
 [tool.mypy]

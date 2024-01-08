@@ -6,31 +6,21 @@ HERE="$(cd "$(dirname "$0")"; pwd)"
 # combine stdout to stderr, to prevent out-of-order interleaving
 exec >&2
 
-# prefix debug lines with a fancy-looking "prompt", randomly colored
-export PS4
-PS4='+ \e['"$("$HERE/"prompt-color)"'m$\e[m '
-
-# encourage programs to use full color -- github logs handle it nicely
-export TERM=xterm-256color
-export CLICOLOR=truecolor
-export COLORTERM=truecolor
-
 : make sure github command-files are writable
 chmod -R g+rw "$(dirname "$GITHUB_OUTPUT")"
 
-shell=(
+sudo=(
   # switch user to "$USER" (by default this is a noop)
   sudo --preserve-env -u "$USER"
 
-  # sudo refuses to preserve certain vars:
-  env
-    PS4="$PS4"
-    PATH="$PATH"
+  # sudo refuses to preserve certain vars: https://github.com/sudo-project/sudo/blob/main/plugins/sudoers/env.c#L138
+  env PATH="$PATH"
 
-  # the default shell (under github actions) is:
-  # bash --noprofile --norc -eo pipefail {0}
-  # added: stop on undefined variables, show all commands
-  bash --noprofile --norc -eo pipefail -ux
+  # the "inner half" of this script
+ "$HERE/"default-shell-post-sudo
+
+  # pass along our arguments
+ "$@"
 )
 
-exec "${shell[@]}" "$@"
+exec "${sudo[@]}"

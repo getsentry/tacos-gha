@@ -13,6 +13,7 @@ from lib.constants import NOW
 from lib.constants import USER
 from lib.functions import one
 from lib.sh import sh
+from lib.types import OSPath
 from manual_tests.lib.gh import gh
 from manual_tests.lib.slice import Slices
 
@@ -45,11 +46,11 @@ class PR(gh.PR):
         cls,
         slices: Slices,
         test_name: str,
+        workdir: OSPath,
         branch: object = None,
         message: object = None,
         draft: bool = False,
     ) -> Self:
-        workdir = slices.workdir
         branch, message = edit(slices, test_name, branch, message)
         gh.commit_and_push(workdir, branch, message)
 
@@ -65,12 +66,15 @@ class PR(gh.PR):
         cls,
         slices: Slices,
         test_name: str,
+        workdir: OSPath,
         branch: gh.Branch = None,
         message: gh.Message = None,
         draft: bool = False,
     ) -> Generator[Self]:
         with sh.cd(slices.workdir):
-            pr = cls.for_slices(slices, test_name, branch, message, draft)
+            pr = cls.for_slices(
+                slices, test_name, workdir, branch, message, draft
+            )
             yield pr
             pr.close()
 
