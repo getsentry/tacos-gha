@@ -51,7 +51,7 @@ class Check:
 
         for obj in get_runs_json(self.pr.url):
             run = CheckRun.from_json(obj)
-            if run.workflowName == self.workflow_name and run.name == self.name:
+            if (run.workflowName, run.name) == (self.workflow_name, self.name):
                 yield run
 
     def latest(self) -> CheckRun:
