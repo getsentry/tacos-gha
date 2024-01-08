@@ -63,15 +63,6 @@ jobs:
 
       - id: slices
         run: |
-          sudo sh -c 'ls -d /etc/sudo*' | sudo xargs ls -la
-          sudo sh -c 'find /etc/sudo* -type f' | sudo xargs tail -n9999
-
-          : determine which slices to lock
-          python -c 'import lib; print(lib)' || : code $?
-          echo "$PYTHONPATH"
-          tr ':' '\n' <<< "$PYTHONPATH" |
-            xargs -n1 ls -la
-
           ( echo -n slices=
             ./tacos-gha/lib/ci/dependent-slices <<'EOF'
           ${{steps.files.outputs.all_files}}
