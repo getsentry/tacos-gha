@@ -3,7 +3,6 @@ from __future__ import annotations
 from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime
-from pathlib import Path
 from typing import TYPE_CHECKING
 from typing import Self
 from typing import Sequence
@@ -13,6 +12,7 @@ from lib import wait
 from lib.functions import now
 from lib.sh import sh
 from lib.types import Generator
+from lib.types import OSPath
 from manual_tests.lib.xfail import XFailed
 
 from .types import URL
@@ -39,7 +39,7 @@ class PR:
     @classmethod
     def open(
         cls,
-        workdir: Path,
+        workdir: OSPath,
         branch: Branch,
         *,
         draft: bool = False,
@@ -55,7 +55,7 @@ class PR:
 
     @contextmanager
     @classmethod
-    def opened(cls, workdir: Path, branch: Branch) -> Generator[Self]:
+    def opened(cls, workdir: OSPath, branch: Branch) -> Generator[Self]:
         pr = cls.open(workdir, branch)
         sh.banner("PR opened:", pr.url)
         yield pr
@@ -149,10 +149,14 @@ class PR:
                 result.append(comment["body"])
         return tuple(result)
 
-    def check(self, workflow_name: WorkflowName, check_name: CheckName) -> Check:
+    def check(
+        self,
+        workflow: WorkflowName,
+        check_name: CheckName = "tacos-gha / main",
+    ) -> Check:
         from .check import Check
 
-        return Check(self, workflow_name, check_name)
+        return Check(self, workflow, check_name)
 
     @classmethod
     def from_branch(cls, branch: Branch, since: datetime) -> Self:
@@ -169,7 +173,7 @@ class PR:
 
 
 def commit_and_push(
-    workdir: Path, branch: Branch, message: object = None
+    workdir: OSPath, branch: Branch, message: object = None
 ) -> None:
     with sh.cd(workdir):
         sh.run(("git", "commit", "-m", message))

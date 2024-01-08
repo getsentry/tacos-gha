@@ -3,10 +3,11 @@ from __future__ import annotations
 
 from contextlib import contextmanager
 from dataclasses import dataclass
-from pathlib import Path
 
 from lib.parse import after
 from lib.sh import sh
+from lib.types import OSPath
+from lib.types import Path
 
 from .types import URL
 from .types import Generator
@@ -20,13 +21,13 @@ class Remote:
     """
 
     url: URL
-    subpath: Path
+    subpath: Path = Path("")
 
     def __post_init__(self) -> None:
         assert not self.subpath.is_absolute(), self
 
     @contextmanager
-    def cloned(self, dest: Path | None = None) -> Generator[Local]:
+    def cloned(self, dest: OSPath) -> Generator[Local]:
         repo = self.clone(dest)
         yield repo
         # cleanup makes debugging harder, plus pytest's tmp_path handles it
@@ -36,10 +37,7 @@ class Remote:
     def name(self) -> str:
         return after(self.url, ":", "/")
 
-    def clone(self, dest: Path | None = None) -> Local:
-        if dest is None:
-            dest = Path.cwd()
-
+    def clone(self, dest: OSPath) -> Local:
         dest = dest / self.name
         # git will fail if the repo already exists, and that's a feature
         sh.run(("git", "clone", "git@github.com:getsentry/tacos-demo", dest))
@@ -54,11 +52,11 @@ class Local:
     """A local checkout of some remote git repository."""
 
     remote: Remote
-    path: Path
+    path: OSPath
 
     def __str__(self) -> str:
         return str(self.path)
 
     @property
-    def workdir(self) -> Path:
+    def workdir(self) -> OSPath:
         return self.path / self.remote.subpath

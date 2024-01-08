@@ -3,11 +3,11 @@ from __future__ import annotations
 
 import contextlib
 from os import environ
-from pathlib import Path
 
 from lib import json as JSON
 from lib.types import Environ
 from lib.types import Generator
+from lib.types import Path
 
 from .core import run
 from .io import banner as banner
@@ -22,7 +22,7 @@ Command = tuple[object, ...]
 
 @contextlib.contextmanager
 def cd(
-    dirname: Path, direnv: bool = True, env: Environ = environ
+    dirname: Path, env: Environ = environ, *, direnv: bool = True
 ) -> Generator[Path]:
     oldpwd = Path(env["PWD"])
     newpwd = oldpwd / dirname

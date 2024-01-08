@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+from __future__ import annotations
+
 from pathlib import Path
 from typing import NewType
 
@@ -49,11 +51,12 @@ def nearest_config_file(cwd: Path, relpath: Path) -> Path:
             curr_path = next_path
 
 
-def main():
+def main() -> int:
     from sys import argv
 
     relpath = Path(argv[1])
     print(nearest_config_file(Path.cwd(), relpath))
+    return 0
 
 
 if __name__ == "__main__":

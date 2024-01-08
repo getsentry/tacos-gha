@@ -42,7 +42,7 @@ def get_runs_json(pr_url: URL) -> Generator[json.Value]:
 @dataclass(frozen=True)
 class Check:
     pr: PR
-    workflow_name: WorkflowName
+    workflow: WorkflowName
     name: CheckName
 
     def get_runs(self) -> Generator[CheckRun]:
@@ -51,7 +51,7 @@ class Check:
 
         for obj in get_runs_json(self.pr.url):
             run = CheckRun.from_json(obj)
-            if run.workflowName == self.workflow_name and run.name == self.name:
+            if (run.workflowName, run.name) == (self.workflow, self.name):
                 yield run
 
     def latest(self) -> CheckRun:
@@ -75,7 +75,10 @@ class Check:
         """Wait for a check to run."""
         if since is None:
             since = self.pr.since
-        sh.info(f"waiting for {self.name} (since {since})...")
+        sh.info(f"waiting for {self} (since {since})...")
         result = wait.for_(lambda: self.assert_ran(since), timeout=timeout)
-        sh.banner(f"{self.name} ran")
+        sh.banner(f"{self} ran")
         return result
+
+    def __str__(self) -> str:
+        return f"{self.workflow} / {self.name}"

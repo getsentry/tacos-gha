@@ -1,17 +1,16 @@
 #!/usr/bin/env py.test
 from __future__ import annotations
 
-from pathlib import Path
-
 import pytest
 
 from lib.sh import sh
+from lib.types import OSPath
 from manual_tests.lib import tacos_demo
 from manual_tests.lib.slice import Slices
 
 
 @pytest.mark.xfail(reason="Locking not yet implemented")
-def test(workdir: Path, test_name: str) -> None:
+def test(workdir: OSPath, test_name: str) -> None:
     all_slices = Slices.from_path(workdir)
     slices1 = all_slices.random()
     slices2 = all_slices - slices1

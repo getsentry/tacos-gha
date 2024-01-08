@@ -59,5 +59,5 @@ class CheckRun:
         return (self.status, self.conclusion) == ("COMPLETED", "NEUTRAL")
 
     def __str__(self) -> str:
-        format = "{name}: {startedAt}-{completedAt} {status}({conclusion})"
+        format = "{workflowName} / {name}: {startedAt}-{completedAt} {status}({conclusion})"
         return format.format_map(vars(self))

@@ -45,14 +45,8 @@ def test(slices: Slices, git_clone: gh.repo.Local) -> None:
 
             # This PR should aquire the lock
             sh.banner("Make sure the terraform_lock checks ran successfully")
-            for s in slices:
-                assert (
-                    pr2.check(
-                        f"terraform_lock ({(slices.workdir / s).relative_to(git_clone.path)})"
-                    )
-                    .wait()
-                    .success
-                )
+            for slice in slices:
+                assert pr2.check(f"terraform_lock ({slice})").wait().success
 
             # Since this is not a draft PR, it should be able to apply the plan
             sh.banner("Apply the plan for the second PR")
