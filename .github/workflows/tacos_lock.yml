@@ -40,7 +40,7 @@ jobs:
       slices: ${{ steps.slices.outputs.slices }}
 
     steps:
-      - uses: HatsuneMiku3939/direnv-action@v1
+      - uses: bukzor-sentryio/direnv-install@main
       - uses: actions/checkout@v4
       - uses: actions/checkout@v4
         with:
