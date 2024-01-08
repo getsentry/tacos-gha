@@ -78,6 +78,10 @@ reportUninitializedInstanceVariable = "error"
 reportUnnecessaryTypeIgnoreComment = "error"
 reportUnusedCallResult = "none"  # too noisy
 
+# maintainer has an strong anti-idomatic stance on what "constant" means
+# https://github.com/microsoft/pyright/issues/5265
+reportConstantRedefinition = false
+
 
 [tool.mypy]
 python_version = "3.12"

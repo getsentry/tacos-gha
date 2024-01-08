@@ -29,6 +29,9 @@ def for_(
     except AssertionError:
         pass  # let's try again
 
+    if timeout / sleep < 10:
+        sleep = max(1, int(timeout / 10))
+
     limit = timeout
     with sh.quiet():
         while True:

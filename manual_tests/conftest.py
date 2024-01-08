@@ -20,7 +20,9 @@ from manual_tests.lib.slice import Slices
 @fixture
 def git_remote() -> gh.repo.Remote:
     return gh.repo.Remote(
-        url="git@github.com:getsentry/tacos-demo", subpath=Path("terraform")
+        url="git@github.com:getsentry/tacos-demo",
+        # TODO: update actions for minimal slice names
+        ###subpath=Path("terraform")
     )
 
 
@@ -47,7 +49,9 @@ def workdir(git_clone: gh.repo.Local, environ: Environ) -> Generator[OSPath]:
 @fixture
 def slice_subpath(user: str) -> Path:
     """which subpath of workdir should we search for slices?"""
-    return Path(f"env.{user}/*")
+    # TODO: update actions for minimal slice names
+    ###return Path(f"env.{user}/prod")
+    return Path(f"terraform/env.{user}/prod")
 
 
 @fixture

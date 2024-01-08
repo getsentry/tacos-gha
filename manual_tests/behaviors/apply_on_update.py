@@ -16,7 +16,7 @@ def assert_locked(pr: tacos_demo.PR) -> None:
     for slice in pr.slices:
         assert (
             pr.check("Terraform Lock", f"tacos-gha / main ({slice})")
-            .wait(since=lock_run.completed, timeout=10)
+            .wait(since=lock_run.completed, timeout=30)
             .success
         )
 

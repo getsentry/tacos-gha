@@ -60,6 +60,9 @@ class Check:
         if result is None:
             raise AssertionError(f"Check didn't run: {self}")
 
+        if sh.DEBUG:
+            sh.banner(result.url)
+
         sh.info(result)
         return result
 
