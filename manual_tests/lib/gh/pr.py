@@ -6,6 +6,8 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 from typing import Self
 from typing import Sequence
+from urllib.request import Request
+from urllib.request import urlopen
 
 from lib import json
 from lib import wait
@@ -13,6 +15,8 @@ from lib.functions import now
 from lib.sh import sh
 from lib.types import Generator
 from lib.types import OSPath
+from manual_tests.lib.gh.approver import get_installation_access_token
+from manual_tests.lib.gh.approver import make_jwt
 from manual_tests.lib.xfail import XFailed
 
 from .types import URL
@@ -76,9 +80,28 @@ class PR:
         )
 
     def approve(self) -> datetime:
+        parts = self.url.split("/")
+        owner = parts[-4]
+        repo = parts[-3]
+        num = parts[-1]
+        token = get_installation_access_token(make_jwt())
         sh.banner("approving PR:")
         # TODO: find a way to approve with a separate service account
-        return self.add_label(":taco::approve")
+        url = (
+            f"https://api.github.com/repos/{owner}/{repo}/pulls/{num}/reviews"
+        )
+        headers = {
+            "Accept": "application/vnd.github+json",
+            "Authorization": f"Bearer {token}",
+            "X-GitHub-Api-Version": "2022-11-28",
+        }
+        req = Request(
+            url, method="POST", headers=headers, data=b'{"event":"APPROVE"}'
+        )
+        since = now()
+        with urlopen(req) as resp:
+            resp.read()
+        return since
 
     def approved(self) -> bool:
         # TODO: use a separate service account to approve the PR
