@@ -65,7 +65,7 @@ jobs:
       - id: slices
         run: |
           : determine which slices to lock
-          python -c 'import lib; print lib' || : code $?
+          python -c 'import lib; print(lib)' || : code $?
           echo "$PYTHONPATH"
           tr ':' '\n' <<< "$PYTHONPATH" |
             xargs -n1 ls -la
