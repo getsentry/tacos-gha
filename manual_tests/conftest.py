@@ -5,6 +5,7 @@ from pytest import fixture
 
 from lib import json
 from lib.constants import REPO_TOP
+from lib.functions import one
 from lib.sh import sh
 from lib.sh.cd import cd
 from lib.types import Environ
@@ -19,9 +20,7 @@ from manual_tests.lib.slice import Slices
 @fixture
 def git_remote() -> gh.repo.Remote:
     return gh.repo.Remote(
-        url="git@github.com:getsentry/tacos-demo",
-        # TODO: update actions for minimal slice names
-        ###subpath=Path("terraform")
+        url="git@github.com:getsentry/tacos-demo", subpath=Path("terraform")
     )
 
 
@@ -48,9 +47,7 @@ def workdir(git_clone: gh.repo.Local, environ: Environ) -> Generator[OSPath]:
 @fixture
 def slice_subpath(user: str) -> Path:
     """which subpath of workdir should we search for slices?"""
-    # TODO: update actions for minimal slice names
-    ###return Path(f"env.{user}/prod")
-    return Path(f"terraform/env.{user}/prod")
+    return Path(f"env.{user}/*")
 
 
 @fixture
@@ -60,8 +57,59 @@ def slices(workdir: OSPath, slice_subpath: Path) -> Slices:
 
 
 @fixture
-def pr(slices: Slices, test_name: str) -> Generator[tacos_demo.PR]:
-    with tacos_demo.PR.opened_for_slices(slices, test_name) as pr:
+def local_feature_branch() -> str:
+    with sh.cd(REPO_TOP):
+        result = one(
+            sh.lines(("git", "symbolic-ref", "-q", "--short", "HEAD"))
+        )
+        # push any GHA-relevant changes
+        if result != "main":
+            if not sh.success(("git", "diff", "--quiet", "HEAD", ".github")):
+                sh.run(
+                    (
+                        "git",
+                        "commit",
+                        ".github",
+                        "--message=auto-commit: .github, for test",
+                    )
+                )
+                sh.run(("git", "show", "--stat"))
+
+            # either way, ensure that what we committed will be used
+            sh.run(("git", "push"))
+    return result
+
+
+@fixture
+def pr(
+    slices: Slices,
+    test_name: str,
+    git_clone: gh.repo.Local,
+    local_feature_branch: str,
+) -> Generator[tacos_demo.PR]:
+    workflow_dir = git_clone.path / ".github/workflows"
+    with sh.cd(workflow_dir):
+        for workflow in OSPath(".").glob("*.yml"):
+            sh.run(
+                (
+                    "sed",
+                    "-ri",
+                    "#".join(
+                        (
+                            "s",
+                            "(@|refs/heads/)main",
+                            r"\1" + local_feature_branch,
+                            "g",
+                        )
+                    ),
+                    workflow,
+                )
+            )
+        sh.run(("git", "add", "-u", "."))
+
+    with tacos_demo.PR.opened_for_slices(
+        slices, test_name, git_clone.path
+    ) as pr:
         yield pr
 
 

@@ -28,7 +28,7 @@ skip_covered = false
 minversion = "6.0"
 markers = []
 xfail_strict = true
-addopts = "--durations-min=10 -vv --doctest-modules --capture=no --last-failed"
+addopts = "--durations-min=10 -vv --doctest-modules --capture=no --showlocals --last-failed"
 testpaths = ["."]
 norecursedirs = [
     "**/__pycache__",

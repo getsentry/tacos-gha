@@ -15,8 +15,7 @@ fi
 if ! git ls-files '*/py.typed' |
     xargs dirname |
     xargs -n1 -tr \
-      env PYTHONPATH="$PWD" \
-        pyright \
+      pyright \
         --ignoreexternal \
         --verifytypes \
       \

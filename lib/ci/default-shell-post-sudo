@@ -14,7 +14,6 @@ export TERM=xterm-256color
 export CLICOLOR=truecolor
 export COLORTERM=truecolor
 
-set -x  # DEBUG
 # bring in the user's environment
 eval "$(direnv allow; direnv export bash)"
 

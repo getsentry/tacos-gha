@@ -7,7 +7,8 @@ from typing import TypeVar
 
 from lib.sh import sh
 
-WAIT_LIMIT = int(getenv("WAIT_LIMIT", "180"))
+# usual amount of time to complete a GHA job is 30s from push
+WAIT_LIMIT = int(getenv("WAIT_LIMIT", "90"))
 WAIT_SLEEP = int(getenv("WAIT_SLEEP", "3"))
 
 # assertion is true when it returns a non-None object (without AssertionError)
