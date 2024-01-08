@@ -97,7 +97,7 @@ def pr(
             sh.run(
                 (
                     "sed",
-                    "-ri",
+                    "-rie",
                     "#".join(
                         (
                             "s",
