@@ -8,6 +8,9 @@ mypy
 isort
 black
 
+# linters
+pylint
+
 # test & coverage
 pytest
 coverage_enable_subprocess
