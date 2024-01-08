@@ -40,14 +40,13 @@ jobs:
       slices: ${{ steps.slices.outputs.slices }}
 
     steps:
+      - uses: HatsuneMiku3939/direnv-action@v1
       - uses: actions/checkout@v4
       - uses: actions/checkout@v4
         with:
           repository: ${{inputs.tacos_gha_repo}}
           ref: ${{inputs.tacos_gha_ref}}
           path: tacos-gha
-      - run: echo 'source_env tacos-gha' >> .envrc
-      - uses: HatsuneMiku3939/direnv-action@v1
 
       - id: files
         uses: getsentry/paths-filter@v2.11.1
