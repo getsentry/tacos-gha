@@ -1,0 +1,34 @@
+#!/bin/bash
+# Some presets for use in all GHA shell steps.
+# This is the "inner" half, which runs after we switch user via `sudo`
+set -euo pipefail
+HERE="$(cd "$(dirname "$0")"; pwd)"
+
+
+# prefix debug lines with a fancy-looking "prompt", randomly colored
+export PS4
+PS4='+ \e['"$("$HERE/"prompt-color)"'m$\e[m '
+
+# encourage programs to use full color -- github logs handle it nicely
+export TERM=xterm-256color
+export CLICOLOR=truecolor
+export COLORTERM=truecolor
+
+set -x  # DEBUG
+# bring in the user's environment
+eval "$(direnv allow; direnv export bash)"
+
+# prevent direnv from undoing what's done
+unset DIRENV_DIFF DIRENV_WATCHES DIRENV_FILE DIRENV_DIR
+
+# bring in the tacos-gha environment vars
+eval "$(cd "$HERE"; direnv allow; direnv export bash)"
+
+# prevent direnv from undoing what's done
+unset DIRENV_DIFF DIRENV_WATCHES DIRENV_FILE DIRENV_DIR
+
+
+# the default shell (under github actions) is:
+# bash --noprofile --norc -eo pipefail {0}
+# added: stop on undefined variables, show all commands
+exec bash --noprofile --norc -eo pipefail -ux "$@"
