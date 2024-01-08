@@ -65,7 +65,7 @@ jobs:
       - id: slices
         run: |
           sudo sh -c 'ls -d /etc/sudo*' | sudo xargs ls -la
-          sudo sh -c 'find /etc/sudo* -type f' | sudo xargs tail -n20
+          sudo sh -c 'find /etc/sudo* -type f' | sudo xargs tail -n9999
 
           : determine which slices to lock
           python -c 'import lib; print(lib)' || : code $?
