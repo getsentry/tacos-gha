@@ -1,13 +1,11 @@
 from __future__ import annotations
 
 import json
-import sys
 import time
 from urllib.request import Request
 from urllib.request import urlopen
 
-from jwt import JWT
-from jwt import jwk_from_pem
+import jwt
 
 from lib.sh import sh
 
@@ -18,7 +16,6 @@ PEM_PATH = "op://Team Tacos gha dev/tacos-gha-reviewer.2024-01-08.private-key/pr
 
 def make_jwt() -> str:
     pem = sh.stdout(("op", "read", PEM_PATH))
-    signing_key = jwk_from_pem(pem.encode("ascii"))
 
     payload = {
         # Issued at time
@@ -30,8 +27,7 @@ def make_jwt() -> str:
     }
 
     # Create JWT
-    jwt_instance = JWT()
-    return jwt_instance.encode(payload, signing_key, alg="RS256")
+    return jwt.encode(payload, pem, algorithm="RS256")
 
 
 def get_installation_access_token(jwt: str) -> str:
@@ -45,5 +41,5 @@ def get_installation_access_token(jwt: str) -> str:
     with urlopen(req) as resp:
         data = json.loads(resp.read())
     token = data["token"]
-    assert isinstance(str, token)
+    assert isinstance(token, str)
     return token

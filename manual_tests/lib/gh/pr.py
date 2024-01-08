@@ -86,7 +86,6 @@ class PR:
         num = parts[-1]
         token = get_installation_access_token(make_jwt())
         sh.banner("approving PR:")
-        # TODO: find a way to approve with a separate service account
         url = (
             f"https://api.github.com/repos/{owner}/{repo}/pulls/{num}/reviews"
         )
@@ -104,9 +103,19 @@ class PR:
         return since
 
     def approved(self) -> bool:
-        # TODO: use a separate service account to approve the PR
-        # TODO: actually check that the PR is approved
-        return ":taco::approve" in self.labels()
+        status = sh.stdout(
+            (
+                "gh",
+                "pr",
+                "view",
+                self.url,
+                "--json",
+                "reviewDecision",
+                "--jq",
+                ".reviewDecision",
+            )
+        )
+        return status == "APPROVED"
 
     def add_label(self, label: Label) -> datetime:
         """Returns a timestamp from *just before* the label was added."""

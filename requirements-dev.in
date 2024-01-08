@@ -18,4 +18,4 @@ covdefaults
 pip-tools
 
 # test dependencies
-jwt
+PyJWT[crypto]
