@@ -15,7 +15,7 @@ def test(pr: tacos_demo.PR) -> None:
     assert pr.approved()
 
     since = pr.add_label(":taco::apply")
-    assert pr.check("terraform_apply").wait(since).success
+    assert pr.check("Terraform Apply", "tacos-gha / main").wait(since).success
 
     sh.banner("For various reasons, the PR is not merged. Time passes")
     # TODO: there should be a better way of simulating the PR being marked as stale.
@@ -23,7 +23,7 @@ def test(pr: tacos_demo.PR) -> None:
 
     sh.banner("An attempt is made to notify the PR owner")
     try:
-        assert pr.check("notify_owner").wait(since).success
+        assert pr.check("Notify Owner", "notify_owner").wait(since).success
     except AssertionError:
         raise XFailed("notify_owner action does not exist")
 
@@ -32,4 +32,4 @@ def test(pr: tacos_demo.PR) -> None:
     since = pr.add_label(":taco::abandoned")
 
     sh.banner("An attempt is made to notify other users of the repo")
-    assert pr.check("notify_collaborators").wait(since).success
+    assert pr.check("Notify Collaborators", "notify_collaborators").wait(since).success

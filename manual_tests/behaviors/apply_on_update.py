@@ -10,7 +10,8 @@ TEST_NAME = __name__
 
 
 def test(pr: tacos_demo.PR, workdir: Path) -> None:
-    assert pr.check("terraform_lock").wait().success
+    # TODO: use slice name
+    assert pr.check("Terraform Lock", "tacos-gha / main").wait().success
 
     pr.approve()
     assert pr.approved()
@@ -18,5 +19,5 @@ def test(pr: tacos_demo.PR, workdir: Path) -> None:
     # the taco-apply label causes the plan to become clean:
     assert tf.plan_dirty(workdir)
     since = pr.add_label(":taco::apply")
-    assert pr.check("terraform_apply").wait(since).success
+    assert pr.check("Terraform Apply", "tacos-gha / main").wait(since).success
     assert tf.plan_clean(workdir)

@@ -8,3 +8,4 @@ Branch = object
 Message = object
 Label = str
 CheckName = str
+WorkflowName = str

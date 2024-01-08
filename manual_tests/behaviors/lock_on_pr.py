@@ -10,7 +10,8 @@ def test(pr: tacos_demo.PR, git_clone: gh.repo.Local) -> None:
     for s in slices:
         assert (
             pr.check(
-                f"terraform_lock ({(slices.workdir / s).relative_to(git_clone.path)})"
+                "Terraform Lock",
+                f"tacos-gha / main ({(slices.workdir / s).relative_to(git_clone.path)})"
             )
             .wait()
             .success

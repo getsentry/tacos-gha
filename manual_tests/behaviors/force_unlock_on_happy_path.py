@@ -11,10 +11,11 @@ TEST_NAME = __name__
 
 @pytest.mark.xfail(raises=XFailed)
 def test(pr: tacos_demo.PR) -> None:
-    assert pr.check("terraform_lock").wait().success
+    # TODO: use slice name
+    assert pr.check("Terraform Lock", "tacos-gha / main").wait().success
 
     since = pr.add_label(":taco::unlock")
-    assert pr.check("terraform_unlock").wait(since).success
+    assert pr.check("Terraform Unlock", "terraform_unlock").wait(since).success
 
     try:
         assert "INFO: Main branch clean, unlock successful." in pr.comments(
