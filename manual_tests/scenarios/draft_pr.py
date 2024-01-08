@@ -5,7 +5,6 @@ import pytest
 
 from lib.sh import sh
 from manual_tests.lib import tacos_demo
-from manual_tests.lib.gh import gh
 from manual_tests.lib.slice import Slices
 from manual_tests.lib.xfail import XFailed
 
@@ -13,7 +12,7 @@ TEST_NAME = __name__
 
 
 @pytest.mark.xfail(raises=XFailed)
-def test(slices: Slices, git_clone: gh.repo.Local) -> None:
+def test(slices: Slices) -> None:
     with tacos_demo.PR.opened_for_slices(slices, TEST_NAME, draft=True) as pr:
         sh.banner("Draft PR opened:", pr.url)
 

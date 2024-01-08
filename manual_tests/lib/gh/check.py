@@ -51,7 +51,7 @@ class Check:
 
         for obj in get_runs_json(self.pr.url):
             run = CheckRun.from_json(obj)
-            if (run.workflowName, run.name) == (self.workflow, self.name):
+            if (run.workflow, run.name) == (self.workflow, self.name):
                 yield run
 
     def latest(self) -> CheckRun:
@@ -66,7 +66,7 @@ class Check:
     def assert_ran(self, since: datetime) -> CheckRun:
         """Did a specified github-actions job run, lately?"""
         c = self.latest()
-        assert c.completedAt > since
+        assert c.completed > since
         return c
 
     def wait(

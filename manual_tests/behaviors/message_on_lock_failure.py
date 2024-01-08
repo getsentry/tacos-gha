@@ -24,7 +24,7 @@ def test(test_name: str, slices: Slices) -> None:
         }
 
         for pr, check in checks.items():
-            comments = pr.comments(since=check.startedAt)
+            comments = pr.comments(since=check.started)
             if check.conclusion == "SUCCESS":
                 assert MESSAGE not in comments
             elif check.conclusion == "FAILURE":
