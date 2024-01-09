@@ -127,17 +127,13 @@ class PR:
     def merge(self) -> str:
         sh.banner("merging PR")
         try:
-            result = sh.stdout(("gh", "pr", "merge", self.url, "--squash"))
+            return sh.stdout(("gh", "pr", "merge", self.url, "--squash"))
         except sh.CalledProcessError:
             # + $ gh pr merge --squash https://github.com/getsentry/tacos-gha.demo/pull/363
             # X Pull request #363 is not mergeable: the base branch policy prohibits the merge.
             # To have the pull request merged after all the requirements have been met, add the `--auto` flag.
             # To use administrator privileges to immediately merge the pull request, add the `--admin` flag.
             raise XFailed("terraform changes not yet mergeable")
-        else:
-            raise AssertionError(
-                f"this shouldn't work, yet... result: {result}"
-            )
 
     def labels(self) -> Sequence[Label]:
         result: list[Label] = []
