@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Callable
 from typing import Mapping
 from typing import ParamSpec
+from typing import Tuple
 from typing import TypeVar
 
 HERE = Path(__file__).parent.absolute()
@@ -75,17 +76,18 @@ def assert_dict_of_strings(json: object) -> dict[str, str]:
     return cast(dict[str, str], json)
 
 
-def get_lock_info(root_module: Path) -> dict[str, str]:
+def get_lock_info(root_module: Path) -> Tuple[bool, dict[str, str]]:
     from json import loads
     from subprocess import check_output
 
     result = loads(check_output((HERE / "tf-lock-info", str(root_module))))
-    return assert_dict_of_strings(result)
+    lock = result.pop("lock")
+    return lock, assert_dict_of_strings(result)
 
 
 def tf_lock_release(root_module: Path, env: Environ) -> None:
-    lock_info = get_lock_info(root_module)
-    if not lock_info["lock"]:
+    has_lock, lock_info = get_lock_info(root_module)
+    if not has_lock:
         info(f"success: already unlocked: {root_module}")
         return
 
