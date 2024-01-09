@@ -14,10 +14,10 @@ from .types import Generator
 
 
 @dataclass(frozen=True)
-class Remote:
+class RemoteRepo:
     """A remote git repository, with a specified subpath.
 
-    As a context, clone and clean up afterward, yielding the Local repo.
+    As a context, clone and clean up afterward, yielding the LocalRepo.
     """
 
     url: URL
@@ -27,7 +27,7 @@ class Remote:
         assert not self.subpath.is_absolute(), self
 
     @contextmanager
-    def cloned(self, dest: OSPath) -> Generator[Local]:
+    def cloned(self, dest: OSPath) -> Generator[LocalRepo]:
         repo = self.clone(dest)
         yield repo
         # cleanup makes debugging harder, plus pytest's tmp_path handles it
@@ -37,21 +37,21 @@ class Remote:
     def name(self) -> str:
         return after(self.url, ":", "/")
 
-    def clone(self, dest: OSPath) -> Local:
+    def clone(self, dest: OSPath) -> LocalRepo:
         dest = dest / self.name
         # git will fail if the repo already exists, and that's a feature
         sh.run(("git", "clone", "git@github.com:getsentry/tacos-demo", dest))
-        return Local(remote=self, path=dest)
+        return LocalRepo(remote=self, path=dest)
 
     def __str__(self) -> str:
         return f"{self.url}//{self.subpath}"
 
 
 @dataclass(frozen=True)
-class Local:
+class LocalRepo:
     """A local checkout of some remote git repository."""
 
-    remote: Remote
+    remote: RemoteRepo
     path: OSPath
 
     def __str__(self) -> str:

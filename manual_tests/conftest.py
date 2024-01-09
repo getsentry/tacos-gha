@@ -18,32 +18,32 @@ from manual_tests.lib.slice import Slices
 
 
 @fixture
-def git_remote() -> gh.repo.Remote:
-    return gh.repo.Remote(
-        url="git@github.com:getsentry/tacos-demo",
+def git_remote() -> gh.RemoteRepo:
+    """The remote specification of the "demo" repo, on github."""
+    return gh.RemoteRepo(
+        url="git@github.com:getsentry/tacos-gha.demo",
         # TODO: update actions for minimal slice names
         ###subpath=Path("terraform")
     )
 
 
 @fixture
-def git_clone(
-    cwd: OSPath, git_remote: gh.repo.Remote
-) -> Generator[gh.repo.Local]:
+def demo(cwd: OSPath, git_remote: gh.RemoteRepo) -> Generator[gh.LocalRepo]:
+    """A local, cloned working copy of the "demo" repo."""
     with git_remote.cloned(cwd) as clone:
         yield clone
 
 
 @fixture
-def workdir(git_clone: gh.repo.Local, environ: Environ) -> Generator[OSPath]:
+def workdir(demo: gh.LocalRepo, environ: Environ) -> Generator[OSPath]:
     with cd(REPO_TOP, environ):
         # disallow direnv from unloading our test environment:
         for var in environ:
             if var.startswith("DIRENV_"):
                 del environ[var]
 
-        with cd(git_clone.workdir, environ):
-            yield git_clone.workdir
+        with cd(demo.workdir, environ):
+            yield demo.workdir
 
 
 @fixture
@@ -61,7 +61,7 @@ def slices(workdir: OSPath, slice_subpath: Path) -> Slices:
 
 
 @fixture
-def local_feature_branch() -> str:
+def tacos_branch() -> str:
     with sh.cd(REPO_TOP):
         result = one(
             sh.lines(("git", "symbolic-ref", "-q", "--short", "HEAD"))
@@ -86,33 +86,10 @@ def local_feature_branch() -> str:
 
 @fixture
 def pr(
-    slices: Slices,
-    test_name: str,
-    git_clone: gh.repo.Local,
-    local_feature_branch: str,
+    slices: Slices, test_name: str, demo: gh.LocalRepo, tacos_branch: str
 ) -> Generator[tacos_demo.PR]:
-    workflow_dir = git_clone.path / ".github/workflows"
-    with sh.cd(workflow_dir):
-        for workflow in OSPath(".").glob("*.yml"):
-            sh.run(
-                (
-                    "sed",
-                    "-rie",
-                    "#".join(
-                        (
-                            "s",
-                            "(@|refs/heads/)[^\s]+\s*$",
-                            r"\1" + local_feature_branch,
-                            "g",
-                        )
-                    ),
-                    workflow,
-                )
-            )
-        sh.run(("git", "add", "-u", "."))
-
     with tacos_demo.PR.opened_for_slices(
-        slices, test_name, git_clone.path
+        slices, test_name, demo, tacos_branch
     ) as pr:
         yield pr
 

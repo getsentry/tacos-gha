@@ -11,14 +11,13 @@ TEST_NAME = __name__
 
 @pytest.mark.xfail(raises=XFailed)
 def test(pr: tacos_demo.PR) -> None:
-    # TODO: use slice name
-    assert pr.check("Terraform Lock").wait().success
+    assert pr.check("tacos_lock").wait().success
 
     since = pr.add_label(":taco::apply")
-    assert pr.check("Terraform Apply").wait(since).success
+    assert pr.check("tacos_apply").wait(since).success
 
     since = pr.add_label(":taco::unlock")
-    assert pr.check("Terraform Unlock").wait(since).success
+    assert pr.check("tacos_unlock").wait(since).success
     try:
         assert (
             "WARNING: Unlocked while applied but not merged!"

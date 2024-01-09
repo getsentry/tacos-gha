@@ -29,7 +29,7 @@ def test(slices: Slices) -> None:
             raise XFailed("tacos/drift branch not created")
 
         sh.banner("TODO: check that the plan matches what we expect")
-        assert pr.check("terraform_plan").wait().success
+        assert pr.check("tacos_plan").wait().success
     finally:
         sh.banner("Cleanup: roll back the infrastructure changes")
         sh.run(("git", "-C", slices.workdir, "reset", "--hard", "origin/main"))
