@@ -25,7 +25,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  scratch:
+  tacos_scratch:
     runs-on: ubuntu-latest
     permissions:
       contents: read
