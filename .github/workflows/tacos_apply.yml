@@ -28,7 +28,7 @@ env:
   GETSENTRY_SAC_VERB: apply
 
 jobs:
-  main:
+  tacos_apply:
     runs-on: ubuntu-latest
     permissions:
       contents: read

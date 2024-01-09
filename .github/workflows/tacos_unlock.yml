@@ -28,7 +28,7 @@ env:
   GETSENTRY_SAC_VERB: apply
 
 jobs:
-  main:
+  tacos_plan:
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -123,13 +123,13 @@ jobs:
 
   summary:
     name: summarize
-    needs: [main]
+    needs: [tacos_plan]
     runs-on: ubuntu-latest
     steps:
       - name: Comment on PR regarding lock state
         uses: actions/github-script@v7
         env:
-          summary: ${{ needs.main.outputs.summary }}
+          summary: ${{ needs.tacos_plan.outputs.summary }}
         with:
           script: |
             const summary = JSON.parse(process.env.summary)

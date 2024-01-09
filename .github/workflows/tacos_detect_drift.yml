@@ -25,7 +25,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  main:
+  tacos_detect_drift:
     runs-on: ubuntu-latest
     permissions:
       contents: read
