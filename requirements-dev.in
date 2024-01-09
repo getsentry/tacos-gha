@@ -8,6 +8,9 @@ mypy
 isort
 black
 
+# linters
+pylint
+
 # test & coverage
 pytest
 coverage_enable_subprocess
@@ -16,3 +19,6 @@ covdefaults
 
 # dependency management
 pip-tools
+
+# test dependencies
+PyJWT[crypto]
