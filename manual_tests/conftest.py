@@ -101,7 +101,7 @@ def pr(
                     "#".join(
                         (
                             "s",
-                            "(@|refs/heads/)main",
+                            "(@|refs/heads/)[^\s]+\s*$",
                             r"\1" + local_feature_branch,
                             "g",
                         )
