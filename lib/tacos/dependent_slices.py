@@ -1,9 +1,9 @@
 #!/usr/bin/env python3.12
 from __future__ import annotations
 
-import re
 import typing
 from dataclasses import dataclass
+from fnmatch import fnmatch
 from typing import Callable
 from typing import Iterable
 from typing import NewType
@@ -88,34 +88,34 @@ class FileSystem:
 class PathFilter:
     """A frozen view of a collection of files."""
 
-    allowed: frozenset[re.Pattern[str]]
+    allowed: frozenset[str]
 
-    def match(self, path: str) -> bool:
+    def match(self, path: Path) -> bool:
+        if not self.allowed:
+            return True
         for pattern in self.allowed:
-            # intentionally uses match to check from the start of the string
-            if pattern.match(path) is not None:
+            if fnmatch(str(path), pattern):
                 return True
         return False
 
     @classmethod
     def from_config(cls, path: OSPath) -> PathFilter:
-        """Get a list of allowed RE patterns from a file.
+        """Get a list of allowed globs from a file
 
-        # comments are removed and blank lines are ignored.
-        An empty or missing file is treated as all allowed."""
-        lines: list[re.Pattern[str]] = []
+        Hash comments are removed and blank lines are ignored.
+        Inline comments are not allowed
+        An empty or missing file is treated as all allowed.
+        Globs are evaluated with the fnmatch module."""
+        lines: list[str] = []
         # remove from the first unescaped # to the end
-        comment_pattern = re.compile(r"(?<!\\)#.*")
         try:
             with path.open() as config:
                 for line in config:
-                    line = comment_pattern.sub("", line).strip()
-                    if line:
-                        lines.append(re.compile(line))
+                    line = line.strip()
+                    if line and not line.startswith("#"):
+                        lines.append(line)
         except FileNotFoundError:
-            lines.append(re.compile(""))
-        if not lines:
-            lines.append(re.compile(""))
+            pass
         return cls(allowed=frozenset(lines))
 
 
@@ -279,13 +279,11 @@ def main() -> int:
     modified_paths = lines_to_paths(fileinput.input(encoding="utf-8"))
 
     path_filter = PathFilter.from_config(
-        # TODO: does this path work in the calling repository?
         OSPath(".config/tacos-gha/slices.allowlist")
     )
 
     for slice in dependent_slices(modified_paths, fs):
-        # TODO: calling str here is a little bit meh.
-        if path_filter.match(str(slice)):
+        if path_filter.match(slice):
             print(slice)
 
     return 0
