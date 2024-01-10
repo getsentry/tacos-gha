@@ -7,6 +7,14 @@ set -x
 : these make pyenv very confused:
 unset MAKEFLAGS MAKELEVEL MFLAGS
 
+: 'still let .envrc set `make`s flags though'
+# shellcheck disable=SC1091  # "not following: bad file descriptor"
+source /dev/stdin <<< "
+  set +x
+  $(DIRENV_FILE='' direnv export bash)
+  set -x
+"
+
 pyenv install -v --skip-existing "$@"
 
 touch "$REPO_TOP/.done/pyenv"

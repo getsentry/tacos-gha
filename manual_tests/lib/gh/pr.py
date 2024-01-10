@@ -14,21 +14,26 @@ from lib import wait
 from lib.functions import now
 from lib.sh import sh
 from lib.types import Generator
-from lib.types import OSPath
-from manual_tests.lib.gh.approver import get_installation_access_token
-from manual_tests.lib.gh.approver import make_jwt
 from manual_tests.lib.xfail import XFailed
 
+from . import app
+from .jwt import JWT
+from .repo import LocalRepo
 from .types import URL
 from .types import Branch
 from .types import CheckName
 from .types import Label
-from .types import WorkflowName
+
+APP_INSTALLATION_REVIEWER = (
+    "op://Team Tacos gha dev/tacos-gha-reviewer/installation.json"
+)
+
 
 Comment = str  # a PR comment
 
 if TYPE_CHECKING:
     from .check import Check
+    from .check_run import CheckRun
 
 # mypy doesn't understand closures :(
 # mypy: disable-error-code="type-var, misc"
@@ -43,14 +48,14 @@ class PR:
     @classmethod
     def open(
         cls,
-        workdir: OSPath,
+        repo: LocalRepo,
         branch: Branch,
         *,
         draft: bool = False,
         **attrs: object,
     ) -> Self:
         since = now()
-        with sh.cd(workdir):
+        with sh.cd(repo.path):
             url = sh.stdout(
                 ("gh", "pr", "create", "--fill-first", "--head", branch)
                 + (("--draft",) if draft else ())
@@ -59,8 +64,8 @@ class PR:
 
     @contextmanager
     @classmethod
-    def opened(cls, workdir: OSPath, branch: Branch) -> Generator[Self]:
-        pr = cls.open(workdir, branch)
+    def opened(cls, repo: LocalRepo, branch: Branch) -> Generator[Self]:
+        pr = cls.open(repo, branch)
         sh.banner("PR opened:", pr.url)
         yield pr
         pr.close()
@@ -79,19 +84,21 @@ class PR:
             )
         )
 
-    def approve(self) -> datetime:
+    def approve(
+        self, app_installation: app.Installation, jwt: JWT
+    ) -> datetime:
         parts = self.url.split("/")
         owner = parts[-4]
         repo = parts[-3]
         num = parts[-1]
-        token = get_installation_access_token(make_jwt())
+
         sh.banner("approving PR:")
         url = (
             f"https://api.github.com/repos/{owner}/{repo}/pulls/{num}/reviews"
         )
         headers = {
             "Accept": "application/vnd.github+json",
-            "Authorization": f"Bearer {token}",
+            "Authorization": f"Bearer {app_installation.token(jwt)}",
             "X-GitHub-Api-Version": "2022-11-28",
         }
         req = Request(
@@ -177,14 +184,10 @@ class PR:
                 result.append(comment["body"])
         return tuple(result)
 
-    def check(
-        self,
-        workflow: WorkflowName,
-        check_name: CheckName = "tacos-gha / main",
-    ) -> Check:
+    def check(self, check_name: CheckName) -> Check:
         from .check import Check
 
-        return Check(self, workflow, check_name)
+        return Check(self, check_name)
 
     @classmethod
     def from_branch(cls, branch: Branch, since: datetime) -> Self:
@@ -199,11 +202,26 @@ class PR:
 
         return wait.for_(branch_pr, timeout=timeout, sleep=5)
 
+    def get_check_runs(
+        self, since: datetime | None = None
+    ) -> Generator[CheckRun]:
+        """Return the all runs of this check."""
+        from . import check_run
+
+        if since is None:
+            since = self.since
+
+        for obj in check_run.get_runs_json(self.url):
+            run = check_run.CheckRun.from_json(obj)
+            if run.started > since:
+                sh.debug(f"  {run}")
+                yield run
+
 
 def commit_and_push(
-    workdir: OSPath, branch: Branch, message: object = None
+    repo: LocalRepo, branch: Branch, message: object = None
 ) -> None:
-    with sh.cd(workdir):
+    with sh.cd(repo.path):
         sh.run(("git", "commit", "-m", message))
         sh.run(("git", "show", "--stat"))
         sh.run(("git", "push", "origin", f"{branch}:{branch}"))

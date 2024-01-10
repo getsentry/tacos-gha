@@ -4,5 +4,5 @@ exec >&2  # all output is logging
 
 set -x
 
-brew bundle "$@"
+brew bundle -vv "$@"
 touch "$REPO_TOP/.done/brew"

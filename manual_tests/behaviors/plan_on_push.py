@@ -11,12 +11,20 @@ from manual_tests.lib.slice import Slice
 from manual_tests.lib.slice import Slices
 
 
-def test(pr: tacos_demo.PR, test_name: str, slices: Slices, user: str) -> None:
+def test(
+    pr: tacos_demo.PR,
+    test_name: str,
+    slices: Slices,
+    user: str,
+    repo: gh.LocalRepo,
+) -> None:
     assert pr.get_plan()
 
-    branch, message = tacos_demo.edit(slices, test_name, message="more code")
+    branch, message = tacos_demo.edit_slices(
+        slices, test_name, message="more code"
+    )
 
-    gh.commit_and_push(slices.workdir, branch, message)
+    gh.commit_and_push(repo, branch, message)
     plan = pr.get_plan()
     assert plan
     pattern = r"""\[([^\]]+)\]   \+ resource "null_resource" "edit-me" \{

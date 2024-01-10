@@ -13,14 +13,20 @@ MESSAGE = "lock failed, on slice prod/slice-3-vm, due to user1, PR #334 "
 
 # reason="locking not yet implemented"
 @pytest.mark.xfail(raises=XFailed)
-def test(test_name: str, slices: Slices) -> None:
+def test(
+    test_name: str, slices: Slices, demo: gh.LocalRepo, tacos_branch: gh.Branch
+) -> None:
     with (
-        tacos_demo.PR.opened_for_slices(slices, test_name, branch=1) as pr1,
-        tacos_demo.PR.opened_for_slices(slices, test_name, branch=2) as pr2,
+        tacos_demo.PR.opened_for_slices(
+            slices, test_name, demo, tacos_branch, branch=1
+        ) as pr1,
+        tacos_demo.PR.opened_for_slices(
+            slices, test_name, demo, tacos_branch, branch=2
+        ) as pr2,
     ):
         checks: dict[tacos_demo.PR, gh.CheckRun] = {
-            pr1: pr1.check("terraform_lock").wait(),
-            pr2: pr2.check("terraform_lock").wait(),
+            pr1: pr1.check("tacos_lock").wait(),
+            pr2: pr2.check("tacos_lock").wait(),
         }
 
         for pr, check in checks.items():
