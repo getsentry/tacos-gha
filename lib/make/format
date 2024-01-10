@@ -12,10 +12,10 @@ git ls-files '**/*.py' |
   xargs -r isort \
 ;
 
-git ls-files |
+git ls-files -z |
   # prettier doesn't like symlinks ¯\_(ツ)_/¯
-  file --mime-type --no-pad --files-from=- |
-  grep -v 'inode/symlink$' |
-  sed 's@: .*@@' |
+  # runs a bash command for each file that checks if the file
+  # is a symlink, and if it is, prints the file name.
+  xargs -0 -I {} bash -c '[[ -L "$1" ]] || echo "$1"' -- {} |
   xargs -r prettier --write --ignore-unknown \
 ;

@@ -81,8 +81,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        tf-root-module:
-          ${{ fromJSON(needs.determine-tf-root-modules.outputs.slices) }}
+        tf-root-module: ${{ fromJSON(needs.determine-tf-root-modules.outputs.slices) }}
 
     steps:
       - uses: bukzor-sentryio/direnv-install@v1

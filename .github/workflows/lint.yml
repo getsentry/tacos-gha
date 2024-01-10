@@ -1,0 +1,46 @@
+name: Lint
+
+on:
+  push:
+    branches:
+      - main
+      - stable
+  pull_request:
+    branches:
+      - main
+      - stable
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: env ./lib/ci/default-shell {0}
+
+jobs:
+  run-linters:
+    name: Run linters
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: bukzor-sentryio/direnv-install@v1
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # see ./.python-version
+      - run: |
+          ./lib/github/set-env 'PYTHON_VERSION' grep -v '^#' .python-version
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{env.PYTHON_VERSION}}
+
+      - name: Install dependencies and run linters
+        run: |
+          python -m venv venv
+          source venv/bin/activate
+          pip install -r requirements-dev.txt
+          eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+          brew bundle
+          make lint
