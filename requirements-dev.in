@@ -1,11 +1,18 @@
+## test dependencies
+PyJWT[crypto]
+
 ## typing
 # https://github.com/microsoft/pyright/issues/6722
-pyright!=1.1.340
+# 1.1.344 throws "newtype cannot use newtype" https://github.com/microsoft/pyright/blame/b16619a8bc7affe726e6c53a829df32dc427aeb2/packages/pyright-internal/src/analyzer/typeEvaluator.ts#L12751
+pyright<1.1.343
 mypy
 
 # auto-formatting
 isort
 black
+
+# lint
+pylint
 
 # test & coverage
 pytest

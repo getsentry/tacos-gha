@@ -1,0 +1,76 @@
+name: TACOS Plan
+
+# downstream projects should use events:
+###pull_request:
+###  types: [opened, synchronize, reopened]
+
+on:
+  workflow_call:
+    inputs:
+      tacos_gha_repo:
+        type: string
+        default: getsentry/tacos-gha
+      tacos_gha_ref:
+        type: string
+        default: refs/heads/stable
+
+defaults:
+  run:
+    shell: env ./tacos-gha/lib/ci/default-shell {0}
+
+# Cancel in progress workflows on pull_requests.
+# https://docs.github.com/en/actions/using-jobs/using-concurrency#example-using-a-fallback-value
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  tacos_plan:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      id-token: write
+
+    steps:
+      - uses: bukzor-sentryio/direnv-install@v1
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: ${{inputs.tacos_gha_repo}}
+          ref: ${{inputs.tacos_gha_ref}}
+          path: tacos-gha
+
+      - name: show event
+        run: |
+          : <<'EOF'
+            ${{toJSON(github.event)}}
+          EOF
+
+      - name: set workload identity provider
+        id: set-workload-identity-provider
+        run: ./tacos-gha/lib/ci/set-workload-identity-provider
+
+      - name: set terraformer
+        id: set-terraformer
+        run: ./tacos-gha/lib/ci/set-terraformer
+
+      - name: gcp auth
+        id: auth
+        uses: google-github-actions/auth@v1
+        with:
+          workload_identity_provider: ${{env.GETSENTRY_SAC_OIDC}}
+          service_account: ${{env.GETSENTRY_SAC_TERRAFORMER}}
+
+      # this should really be default behavior:
+      - run: |
+          ./tacos-gha/lib/github/set-env 'TERRAGRUNT_VERSION' cat .terragrunt-version
+          ./tacos-gha/lib/github/set-env 'TF_VERSION' cat .terraform-version
+
+      - name: Plan
+        uses: gruntwork-io/terragrunt-action@v2
+        with:
+          tf_version: ${{ env.TF_VERSION }}
+          tg_version: ${{ env.TERRAGRUNT_VERSION }}
+          tg_command: "run-all plan"
+          tg_comment: 1

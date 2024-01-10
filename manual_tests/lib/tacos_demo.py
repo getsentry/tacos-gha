@@ -1,27 +1,19 @@
 #!/usr/bin/env py.test
 from __future__ import annotations
 
-import typing
 from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Iterator
 from typing import Self
-from typing import TypeVar
 
 from lib.constants import NOW
 from lib.constants import USER
 from lib.functions import one
 from lib.sh import sh
+from lib.types import Generator
+from lib.types import OSPath
 from manual_tests.lib.gh import gh
 from manual_tests.lib.slice import Slices
-
-# TODO: centralize reused type aliases
-Yields = Iterator
-T = TypeVar("T")
-Generator = typing.Generator[T, None, None]  # shim py313/PEP696
-# FIXME: use a more specific type than str
-URL = str
 
 # FIXME: we need a better way to demarcate tf-plan in comments
 PLAN_MESSAGE = """\
@@ -30,6 +22,8 @@ PLAN_MESSAGE = """\
 
 ```terraform
 """
+
+APP_INSTALLATION_REVIEWER = "op://Team Tacos gha dev/gh-app--tacos-gha-reviewer/app-installation/sentryio-org"
 
 
 @dataclass(frozen=True)
@@ -45,15 +39,17 @@ class PR(gh.PR):
         cls,
         slices: Slices,
         test_name: str,
+        demo: gh.LocalRepo,
+        tacos_branch: gh.Branch,
         branch: object = None,
         message: object = None,
         draft: bool = False,
     ) -> Self:
-        workdir = slices.workdir
-        branch, message = edit(slices, test_name, branch, message)
-        gh.commit_and_push(workdir, branch, message)
+        edit_workflow_versions(demo, tacos_branch)
+        branch, message = edit_slices(slices, test_name, branch, message)
+        gh.commit_and_push(demo, branch, message)
 
-        pr = cls.open(workdir, branch, slices=slices, draft=draft)
+        pr = cls.open(demo, branch, slices=slices, draft=draft)
 
         sh.banner("PR opened:", pr.url)
 
@@ -65,12 +61,16 @@ class PR(gh.PR):
         cls,
         slices: Slices,
         test_name: str,
+        demo: gh.LocalRepo,
+        tacos_branch: gh.Branch,
         branch: gh.Branch = None,
         message: gh.Message = None,
         draft: bool = False,
     ) -> Generator[Self]:
         with sh.cd(slices.workdir):
-            pr = cls.for_slices(slices, test_name, branch, message, draft)
+            pr = cls.for_slices(
+                slices, test_name, demo, tacos_branch, branch, message, draft
+            )
             yield pr
             pr.close()
 
@@ -79,7 +79,7 @@ class PR(gh.PR):
         if since is None:
             since = self.since
 
-        assert self.check("terraform_plan").wait(since).success
+        assert self.check("Terraform Plan").wait(since).success
         plan = [
             comment
             for comment in self.comments(since)
@@ -88,8 +88,47 @@ class PR(gh.PR):
         # there should be just one plan in that timeframe
         return one(plan)
 
+    def approve(
+        self,
+        app_installation: gh.app.Installation | None = None,
+        jwt: gh.JWT | None = None,
+        now: datetime = NOW,
+    ) -> datetime:
+        if app_installation is None:
+            app_installation = gh.app.Installation.from_1password(
+                APP_INSTALLATION_REVIEWER
+            )
+        if jwt is None:
+            jwt = gh.JWT(app_installation.app, app_installation.secret, now)
+        return super().approve(app_installation, jwt)
 
-def edit(
+
+def edit_workflow_versions(
+    demo: gh.LocalRepo, tacos_branch: gh.Branch
+) -> None:
+    workflow_dir = demo.path / ".github/workflows"
+    with sh.cd(workflow_dir):
+        for workflow in OSPath(".").glob("*.yml"):
+            sh.run(
+                (
+                    "sed",
+                    "-ri",
+                    "-e",
+                    "#".join(
+                        (
+                            rf"s",
+                            rf"(@|refs/heads/)[^[:space:]]+[[:space:]]*$",
+                            rf"\1{tacos_branch}",
+                            rf"g",
+                        )
+                    ),
+                    workflow,
+                )
+            )
+        sh.run(("git", "add", "-u", "."))
+
+
+def edit_slices(
     slices: Slices,
     test_name: str,
     branch: gh.Branch = None,

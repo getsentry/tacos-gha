@@ -1,0 +1,2 @@
+#!/bin/bash
+hcl2json ./*.tf | jq '.terraform | add | .backend'

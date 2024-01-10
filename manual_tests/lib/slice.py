@@ -1,17 +1,21 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from pathlib import Path
 from random import Random
-from typing import Iterator
-from typing import Self
+from typing import TYPE_CHECKING
 
+from lib.constants import EMPTY_PATH
+from lib.constants import REPO_TOP
 from lib.functions import now
 from lib.sh import sh
 from lib.types import Generator
+from lib.types import OSPath
+from lib.types import Path
 
-from .xfail import XFailed
-from .xfail import XFails
+if TYPE_CHECKING:
+    from typing import Iterator
+    from typing import Mapping
+    from typing import Self
 
 
 class Slice(Path):
@@ -19,9 +23,11 @@ class Slice(Path):
 
     def is_locked(self, workdir: Path) -> bool:
         with sh.cd(workdir / self):
-            return sh.success(("terraform", "plan", "--lock=true"))
+            j = sh.json(("sudo-sac", REPO_TOP / "lib/tf-lock/tf-lock-info"))
+            assert isinstance(j, Mapping)
+            return j.get("lock", False) is True
 
-    def edit(self, workdir: Path) -> None:
+    def edit(self, workdir: OSPath) -> None:
         tf_path = self / "edit-me.tf"
         tf = f"""\
 resource "null_resource" "edit-me" {{
@@ -31,7 +37,7 @@ resource "null_resource" "edit-me" {{
 }}
 """
         with sh.cd(workdir):
-            with tf_path.open("w") as f:
+            with OSPath(tf_path).open("w") as f:
                 f.write(tf)
             # NB: file is empty if added before close
             sh.run(("git", "add", tf_path))
@@ -39,18 +45,19 @@ resource "null_resource" "edit-me" {{
 
 @dataclass(frozen=True)
 class Slices:
-    workdir: Path
+    workdir: OSPath
     slices: frozenset[Slice]
 
     @classmethod
-    def from_path(cls, workdir: Path) -> Self:
+    def from_path(cls, workdir: OSPath, subpath: Path = EMPTY_PATH) -> Self:
         return cls(
             workdir=workdir,
             slices=frozenset(
                 Slice(slice.relative_to(workdir))
                 # TODO: search for .tf or terragrunt.hcl files
                 # for now, we assume all direct child directories are slices
-                for slice in workdir.glob(f"*/")
+                for slice in (workdir).glob(str(subpath / "*"))
+                if slice.is_dir() and not slice.name == "module"
             ),
         )
 
@@ -67,26 +74,13 @@ class Slices:
         for slice in self:
             slice.edit(self.workdir)
 
-    def assert_locked(self, xfails: XFails | None = None) -> None:
+    def assert_locked(self) -> None:
         cls = type(self)
         for slice in cls.from_path(self.workdir):
             locked = slice.is_locked(self.workdir)
             should_lock = slice in self
 
-            try:
-                assert locked == should_lock, (locked, slice)
-            except AssertionError:
-                if xfails is None:
-                    raise XFailed("locking not yet implemented")
-                else:
-                    # FIXME: actually do locking in our GHA "Obtain Lock" job
-                    assert locked == False
-                    xfails.append(
-                        (
-                            "assert locked == False",
-                            (locked, should_lock, slice),
-                        )
-                    )
+            assert locked == should_lock, (locked, slice)
 
     def paths(self) -> Generator[Path]:
         for slice in self.slices:

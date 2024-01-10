@@ -1,8 +1,6 @@
 """Universally-applicable pytest fixtures."""
 from __future__ import annotations
 
-from pathlib import Path
-
 import pytest
 from pytest import fixture
 
@@ -12,6 +10,7 @@ import lib.pytest.hook
 from lib.sh import sh
 from lib.types import Environ
 from lib.types import Generator
+from lib.types import OSPath
 
 
 @fixture
@@ -54,16 +53,16 @@ def test_name(request: pytest.FixtureRequest) -> str:
 
 
 @fixture
-def cwd(tmp_path: Path, environ: Environ) -> Generator[Path]:
+def cwd(tmp_path: OSPath, environ: Environ) -> Generator[OSPath]:
     """prevent cross-test pollution of cwd"""
-    with sh.cd(tmp_path, env=environ, direnv=False):
+    with sh.cd(tmp_path, environ, direnv=False):
         yield tmp_path
 
 
 @fixture
-def home(cwd: Path, environ: Environ) -> Generator[tuple[Path, Path]]:
+def home(cwd: OSPath, environ: Environ) -> Generator[tuple[OSPath, OSPath]]:
     home = cwd / "home"
-    orig_home = Path(environ["HOME"])
+    orig_home = OSPath(environ["HOME"])
     environ["HOME"] = str(home)
 
     yield orig_home, home
@@ -72,10 +71,8 @@ def home(cwd: Path, environ: Environ) -> Generator[tuple[Path, Path]]:
 
 
 @fixture(autouse=True)
-def xdg(cwd: Path, environ: Environ) -> None:
+def xdg(cwd: OSPath, environ: Environ) -> None:
     """Configure XDG so files are written to / read from cwd by default.
-
-    Currently, none of the configured xdg directories are created.
 
     reference:
         https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html

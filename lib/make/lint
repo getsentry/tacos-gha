@@ -6,13 +6,14 @@ HERE="$(cd "$(dirname "$0")"; pwd)"
 set -x
 
 fail=()
-if ! pyright .; then
+if ! git-ls-python | xargs -r pyright; then
   fail+=(pyright)
 fi
-if ! mypy .; then
+if ! git-ls-python | xargs -r mypy; then
   fail+=(mypy)
 fi
 
+# get directories that contain a py.typed file:
 if ! git ls-files '*/py.typed' |
     xargs dirname |
     xargs -n1 -tr "$HERE/"bin/pyright-verifytypes
@@ -20,7 +21,7 @@ then
   fail+=(pyright-verifytypes)
 fi
 
-if ! git ls-files | "$HERE/"bin/shellcheck; then
+if ! git-ls-sh | xargs -r shellcheck; then
   fail+=(shellcheck)
 fi
 

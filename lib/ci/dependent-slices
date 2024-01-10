@@ -1,0 +1,10 @@
+#!/bin/bash
+set -euo pipefail
+HERE="$(cd "$(dirname "$0")"; pwd)"
+
+jq '.[]' --raw-output |
+  "$HERE/"../tacos/dependent_slices.py |
+  # transform newline-delimited list into json:
+  jq -R |
+  jq -cs \
+;

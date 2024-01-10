@@ -4,25 +4,28 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Self
 
+import lib.parse
 from lib import json
 from lib.json import assert_dict_of_strings
+from lib.sh import sh
 
 from .types import URL
 from .types import CheckName
+from .types import Generator
 
 
 @dataclass(frozen=True, order=True)
 class CheckRun:
     # NOTE: we want chronological ordering
-    startedAt: datetime  # 2023-11-29T22:44:24Z
-    completedAt: datetime  # 2023-11-29T22:44:34Z
-    detailsUrl: URL  # https://github.com/getsentry/tacos-gha.test/actions/runs/7039437133/job/19158411914
+    started: datetime  # 2023-11-29T22:44:24Z
+    completed: datetime  # 2023-11-29T22:44:34Z
+    url: URL  # https://github.com/getsentry/tacos-gha.test/actions/runs/7039437133/job/19158411914
 
     # variable-length strings last, for neatness
-    name: CheckName  # terraform_unlock
-    status: str  # COMPLETED
-    conclusion: str  # SUCCESS
-    workflowName: str  # Terraform Unlock
+    name: CheckName  # tacos-gha / tacos_unlock (slice/...)
+    status: str  # QUEUED, IN_PROGRESS, COMPLETED
+    conclusion: str  # SUCCESS, FAILURE, NEUTRAL
+    workflow: str  # Terraform Unlock
 
     @classmethod
     def from_json(cls, json: json.Value) -> Self:
@@ -31,9 +34,10 @@ class CheckRun:
         #   "__typename": "CheckRun",
         #   "startedAt": "2023-11-29T22:44:24Z",
         #   "completedAt": "2023-11-29T22:44:34Z",
+        #   OR  "completedAt": "0001-01-01T00:00:00Z"
         #   "conclusion": "SUCCESS",
         #   "detailsUrl": "https://github.com/getsentry/tacos-gha.test/actions/runs/7039437133/job/19158411914",
-        #   "name": "terraform_unlock",
+        #   "name": "tacos-gha / tacos_unlock",
         #   "status": "COMPLETED",
         #   "workflowName": "Terraform Unlock"
         # }
@@ -41,8 +45,10 @@ class CheckRun:
         assert attrs["__typename"] == "CheckRun", attrs
         del attrs["__typename"]
         return cls(
-            startedAt=datetime.fromisoformat(attrs.pop("startedAt")),
-            completedAt=datetime.fromisoformat(attrs.pop("completedAt")),
+            started=datetime.fromisoformat(attrs.pop("startedAt")),
+            completed=datetime.fromisoformat(attrs.pop("completedAt")),
+            url=attrs.pop("detailsUrl"),
+            workflow=attrs.pop("workflowName"),
             **attrs,
         )
 
@@ -58,6 +64,44 @@ class CheckRun:
     def skipped(self) -> bool:
         return (self.status, self.conclusion) == ("COMPLETED", "NEUTRAL")
 
+    @property
+    def relevance(self) -> tuple[object, ...]:
+        """(attempt to) enable sorting by relevance to debugging"""
+        result: list[object] = []
+
+        result.append(
+            ("SUCCESS", "", "NEUTRAL", "FAILURE").index(self.conclusion)
+        )
+        result.append(
+            ("QUEUED", "IN_PROGRESS", "COMPLETED").index(self.status)
+        )
+        result.append(self.completed)
+        result.append(self.started)
+        return tuple(result)
+
     def __str__(self) -> str:
-        format = "{name}: {startedAt}-{completedAt} {status}({conclusion})"
+        format = (
+            "{workflow} / {name}: {started}-{completed} {status}({conclusion})"
+        )
         return format.format_map(vars(self))
+
+    @property
+    def job(self) -> str:
+        return lib.parse.after(self.name, " / ")
+
+
+def get_runs_json(pr_url: URL) -> Generator[json.Value]:
+    """Get the json of all runs, for the named check."""
+    # https://docs.github.com/en/graphql/reference/objects#statuscheckrollup
+    return sh.jq(
+        (
+            "gh",
+            "pr",
+            "view",
+            pr_url,
+            "--json",
+            "statusCheckRollup",
+            "--jq",
+            ".statusCheckRollup[]",
+        )
+    )

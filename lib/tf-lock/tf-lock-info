@@ -1,0 +1,44 @@
+#!/bin/bash
+set -eEuo pipefail
+HERE="$(cd "$(dirname "$0")"; pwd)"
+export PATH="$HERE/lib:$PATH"
+root_module="${1:-"$PWD"}"
+
+if [[ "${DEBUG:-}" ]]; then
+  set -x
+fi
+
+fancy_error="$(
+  cd "$root_module"
+  # swap stdout and stderr:
+  terraform force-unlock -force -- -1 3>&2 2>&1 1>&3 <<< ""
+)" && status=$? || status=$?
+
+# strip ansi fanciness from error messages, for automated consumption
+error="$(
+  uncolor <<< "$fancy_error" |
+  sed -r 's/^│ //; /^[╷╵]$/d'
+)"
+
+
+if grep -Eq <<< "$error" $'ID:'; then
+  "$HERE/"lib/error2json <<< "$error"
+elif grep -Eq <<< "$error" \
+    $'^\t\* storage: object doesn'\''t exist$' \
+; then
+  echo '{"lock": false}'
+elif grep -Eq <<< "$error" \
+  'Error: .*Backend initialization required, please run "terraform init"' \
+; then
+  ( # NB: need to undo the cd to keep relative paths valid
+    cd "$root_module"
+    if ! terraform init >/dev/null 2>&1; then
+      echo >&2 Terraform init failed!
+      exit 1
+    fi
+  )
+  exec "$0" "$@"
+else
+  cat >&2 <<< "$fancy_error"
+  exit "$status"
+fi

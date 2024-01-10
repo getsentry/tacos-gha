@@ -1,50 +1,96 @@
 """pytest fixtures specific to tacos-gha demo"""
 from __future__ import annotations
 
-from pathlib import Path
-
 from pytest import fixture
 
 from lib import json
+from lib.constants import REPO_TOP
+from lib.functions import one
 from lib.sh import sh
 from lib.sh.cd import cd
+from lib.types import Environ
 from lib.types import Generator
+from lib.types import OSPath
+from lib.types import Path
 from manual_tests.lib import tacos_demo
 from manual_tests.lib.gh import gh
 from manual_tests.lib.slice import Slices
 
 
 @fixture
-def git_remote(user: str) -> gh.repo.Remote:
-    return gh.repo.Remote(
-        url="git@github.com:getsentry/tacos-demo",
-        subpath=Path(f"terraform/env.{user}/prod/"),
+def git_remote() -> gh.RemoteRepo:
+    """The remote specification of the "demo" repo, on github."""
+    return gh.RemoteRepo(
+        url="git@github.com:getsentry/tacos-gha.demo",
+        # TODO: update actions for minimal slice names
+        ###subpath=Path("terraform")
     )
 
 
 @fixture
-def git_clone(
-    cwd: Path, git_remote: gh.repo.Remote
-) -> Generator[gh.repo.Local]:
+def demo(cwd: OSPath, git_remote: gh.RemoteRepo) -> Generator[gh.LocalRepo]:
+    """A local, cloned working copy of the "demo" repo."""
     with git_remote.cloned(cwd) as clone:
         yield clone
 
 
 @fixture
-def workdir(git_clone: gh.repo.Local) -> Generator[Path]:
-    with cd(git_clone.workdir):
-        yield git_clone.workdir
+def workdir(demo: gh.LocalRepo, environ: Environ) -> Generator[OSPath]:
+    with cd(REPO_TOP, environ):
+        # disallow direnv from unloading our test environment:
+        for var in environ:
+            if var.startswith("DIRENV_"):
+                del environ[var]
+
+        with cd(demo.workdir, environ):
+            yield demo.workdir
 
 
 @fixture
-def slices(workdir: Path) -> Slices:
-    slices = Slices.from_path(workdir)
+def slice_subpath(user: str) -> Path:
+    """which subpath of workdir should we search for slices?"""
+    # TODO: update actions for minimal slice names
+    ###return Path(f"env.{user}/prod")
+    return Path(f"terraform/env.{user}/prod")
+
+
+@fixture
+def slices(workdir: OSPath, slice_subpath: Path) -> Slices:
+    slices = Slices.from_path(workdir, slice_subpath)
     return slices.random()
 
 
 @fixture
-def pr(slices: Slices, test_name: str) -> Generator[tacos_demo.PR]:
-    with tacos_demo.PR.opened_for_slices(slices, test_name) as pr:
+def tacos_branch() -> str:
+    with sh.cd(REPO_TOP):
+        result = one(
+            sh.lines(("git", "symbolic-ref", "-q", "--short", "HEAD"))
+        )
+        # push any GHA-relevant changes
+        if result != "main":
+            if not sh.success(("git", "diff", "--quiet", "HEAD", ".github")):
+                sh.run(
+                    (
+                        "git",
+                        "commit",
+                        ".github",
+                        "--message=auto-commit: .github, for test",
+                    )
+                )
+                sh.run(("git", "show", "--stat"))
+
+            # either way, ensure that what we committed will be used
+            sh.run(("git", "push"))
+    return result
+
+
+@fixture
+def pr(
+    slices: Slices, test_name: str, demo: gh.LocalRepo, tacos_branch: str
+) -> Generator[tacos_demo.PR]:
+    with tacos_demo.PR.opened_for_slices(
+        slices, test_name, demo, tacos_branch
+    ) as pr:
         yield pr
 
 

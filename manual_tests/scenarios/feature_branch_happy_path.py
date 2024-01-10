@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import pytest
 
-from lib.functions import now
 from lib.sh import sh
 from manual_tests.lib import tacos_demo
 from manual_tests.lib import tf
@@ -16,9 +15,8 @@ from manual_tests.lib.xfail import XFails
 def apply(pr: tacos_demo.PR, xfails: XFails) -> None:
     # the taco-apply label causes the plan to become clean:
     assert tf.plan_dirty(pr.slices.workdir)
-    since = now()
-    pr.add_label(":taco::apply")
-    assert pr.check("terraform_apply").wait(since).success
+    since = pr.add_label(":taco::apply")
+    assert pr.check("tacos_apply").wait(since).success
 
     try:
         assert tf.plan_clean(pr.slices.workdir)
@@ -37,7 +35,7 @@ def assert_merged(xfails: XFails) -> None:
 
 
 @pytest.mark.xfail(raises=XFailed)
-def test(pr: tacos_demo.PR) -> None:
+def test(pr: tacos_demo.PR, repo: gh.LocalRepo) -> None:
     xfails: XFails = []
 
     sh.banner("look at your plan")
@@ -52,7 +50,7 @@ def test(pr: tacos_demo.PR) -> None:
     sh.banner("edit, more")
     slices = Slices.from_path(pr.slices.workdir).random()
     slices.edit()
-    gh.commit_and_push(slices.workdir, pr.branch, "more changes")
+    gh.commit_and_push(repo, pr.branch, "more changes")
 
     sh.banner("apply, again")
     apply(pr, xfails)

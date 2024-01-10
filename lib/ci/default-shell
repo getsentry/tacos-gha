@@ -1,0 +1,26 @@
+#!/bin/bash
+# Some presets for use in all GHA shell steps.
+set -euo pipefail
+HERE="$(cd "$(dirname "$0")"; pwd)"
+
+# combine stdout to stderr, to prevent out-of-order interleaving
+exec >&2
+
+: make sure github command-files are writable
+chmod -R g+rw "$(dirname "$GITHUB_OUTPUT")"
+
+sudo=(
+  # switch user to "$USER" (by default this is a noop)
+  sudo --preserve-env -u "$USER"
+
+  # sudo refuses to preserve certain vars: https://github.com/sudo-project/sudo/blob/main/plugins/sudoers/env.c#L138
+  env PATH="$PATH"
+
+  # the "inner half" of this script
+ "$HERE/"default-shell-post-sudo
+
+  # pass along our arguments
+ "$@"
+)
+
+exec "${sudo[@]}"

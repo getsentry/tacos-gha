@@ -1,0 +1,91 @@
+name: TACOS Detect Drift
+
+# downstream projects should use events:
+###schedule:
+###  - cron: "0 0 * * *"
+
+on:
+  workflow_call:
+    inputs:
+      tacos_gha_repo:
+        type: string
+        default: getsentry/tacos-gha
+      tacos_gha_ref:
+        type: string
+        default: refs/heads/stable
+
+defaults:
+  run:
+    shell: env ./tacos-gha/lib/ci/default-shell {0}
+
+# Cancel in progress workflows on pull_requests.
+# https://docs.github.com/en/actions/using-jobs/using-concurrency#example-using-a-fallback-value
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  tacos_detect_drift:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      id-token: write
+
+    steps:
+      - uses: bukzor-sentryio/direnv-install@v1
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: ${{inputs.tacos_gha_repo}}
+          ref: ${{inputs.tacos_gha_ref}}
+          path: tacos-gha
+
+      - name: show event
+        run: |
+          : <<'EOF'
+            ${{toJSON(github.event)}}
+          EOF
+
+      # We don't want to run this job if someone has already obtained the lock
+      - name: Obtain the lock
+        run: ./tacos-gha/lib/ci/obtain-lock
+
+      # this should really be default behavior:
+      - run: |
+          ./tacos-gha/lib/github/set-env 'TF_VERSION' cat .terraform-version
+          ./tacos-gha/lib/github/set-env 'TERRAGRUNT_VERSION' cat .terragrunt-version
+
+      - name: Plan
+        uses: gruntwork-io/terragrunt-action@v2
+        continue-on-error: true
+        id: plan
+        with:
+          tf_version: ${{ env.TF_VERSION }}
+          tg_version: ${{ env.TERRAGRUNT_VERSION }}
+          tg_dir: ${{ env.working_dir }}
+          tg_command: "run-all plan -detailed-exitcode"
+          tg_comment: true
+
+      - name: Update .drift
+        if: steps.plan.outcome == 'failure'
+        run: date -Ins > .drift
+
+      - name: Create PR
+        if: steps.plan.outcome == 'failure'
+        uses: peter-evans/create-pull-request@v5
+        with:
+          branch: "tacos/drift"
+          commit-message: "fix(drift): terraform drift autodetected!"
+          body: |
+            Drift detected!
+
+            ---
+
+            ```
+            {steps.plan.tg_action_output}
+            ```
+          reviewers: |
+            buck.evan@sentry.io
+            ian.woodard@sentry.io
+          labels: ":taco::drift"

@@ -1,0 +1,11 @@
+# https://docs.github.com/en/graphql/reference/mutations
+mutation minimizeComment($id: ID!, $classifier: ReportedContentClassifiers!) {
+  minimizeComment(input: { subjectId: $id, classifier: $classifier }) {
+    clientMutationId
+    minimizedComment {
+      isMinimized
+      minimizedReason
+      viewerCanMinimize
+    }
+  }
+}
