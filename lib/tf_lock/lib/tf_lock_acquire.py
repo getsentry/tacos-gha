@@ -3,21 +3,20 @@ from __future__ import annotations
 
 import asyncio
 from os import getenv
-from typing import TYPE_CHECKING
 
 Command = tuple[str, ...]
+ExitCode = str | int
 
 TF_SLEEP = 10  # terraform has a ten-second sleep loop
 EOF = b""
+DEBUG = int(getenv("DEBUG", "0"))
 
-if getenv("DEBUG") or TYPE_CHECKING:
+if DEBUG >= 3:
     TIMEOUT = 1
-    DEBUG = True
     TERRAFORM: Command = (
         "sh",
         "-exc",
         """\
-echo 1
 printf "> "
 read -r line
 echo line: "$line"
@@ -25,8 +24,7 @@ echo line: "$line"
     )
 else:
     TIMEOUT = 1 * TF_SLEEP + 1
-    DEBUG = False
-    TERRAFORM = ("terraform", "console")
+TERRAFORM = ("terraform", "console")
 
 
 def debug(*msg: object) -> None:
@@ -87,7 +85,7 @@ async def run_terraform(
     return proc, output
 
 
-async def tf_lock_acquire() -> None:
+async def tf_lock_acquire() -> ExitCode:
     proc, output = await run_terraform(TERRAFORM)
     wait = asyncio.create_task(proc.wait())
     prompt = asyncio.create_task(get_prompt(output))
@@ -97,27 +95,25 @@ async def tf_lock_acquire() -> None:
     )
     if wait.done():
         returncode = wait.result()
-        debug("terraform exitted early, code", returncode)
-        raise SystemExit(returncode)
+        return f"terraform exitted early, code {returncode}"
     elif not prompt.done():
         proc.kill()
-        debug("timeout (seconds):", TIMEOUT)
+        return f"timeout (seconds): {TIMEOUT}"
     elif (result := prompt.result()) == "> ":
         debug("got prompt, exit un-gracefully")
         assert not wait.done(), wait
         proc.kill()
         debug("terraform exitted, code", await proc.wait())
-
+        return 0
     else:
-        debug("unexpected output:", repr(result))
+        return f"unexpected output: {repr(result)}"
 
 
-def main() -> int:
+def main() -> ExitCode:
     import logging
 
     logging.basicConfig(level=logging.DEBUG if DEBUG else logging.INFO)
-    asyncio.run(tf_lock_acquire(), debug=DEBUG)
-    return 0
+    return asyncio.run(tf_lock_acquire(), debug=DEBUG > 0)
 
 
 if __name__ == "__main__":
