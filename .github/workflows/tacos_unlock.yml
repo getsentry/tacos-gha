@@ -111,7 +111,7 @@ jobs:
         run: |
           # release all tfstate locks currently held
           # FIXME: surface unexpected unlock failures
-          ./tacos-gha/lib/terragrunt/slices |
+          terragrunt-slices |
             xargs ./tacos-gha/lib/github/log-as-step-summary \
               sudo-sac sh -c '
                 for slice in "$@"; do

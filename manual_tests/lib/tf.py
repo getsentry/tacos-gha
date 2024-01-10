@@ -10,7 +10,7 @@ def _plan_exitcode(workdir: OSPath) -> int:
         result = sh.returncode(
             (
                 "sudo-sac",
-                "terragrunt",
+                "terragrunt-noninteractive",
                 "run-all",
                 "plan",
                 "--detailed-exitcode",
