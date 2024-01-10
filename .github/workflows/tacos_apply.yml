@@ -28,18 +28,16 @@ env:
   GETSENTRY_SAC_VERB: apply
 
 jobs:
-  tacos_apply:
+  determine-tf-root-modules:
     runs-on: ubuntu-latest
     permissions:
       contents: read
       pull-requests: write
-      id-token: write
 
-    # note: we want to noop if they converted to draft first
-    if: |
-      true
-      && github.event.label.name == ':taco::apply'
-      && github.event.pull_request.draft == false
+    name: "Determine TF slices to lock"
+    if: github.event.pull_request.draft == false
+    outputs:
+      slices: ${{ steps.slices.outputs.slices }}
 
     steps:
       - uses: bukzor-sentryio/direnv-install@v1
@@ -50,11 +48,60 @@ jobs:
           ref: ${{inputs.tacos_gha_ref}}
           path: tacos-gha
 
-      - name: show event
+      - id: files
+        uses: getsentry/paths-filter@v2.11.1
+        with:
+          filters: "all: ['**']"
+          list-files: json
+
+      # see ./.python-version
+      - run: |
+          ./tacos-gha/lib/github/set-env 'PYTHON_VERSION' grep -v '^#' tacos-gha/.python-version
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{env.PYTHON_VERSION}}
+
+      - name: show env
         run: |
-          : <<'EOF'
-            ${{toJSON(github.event)}}
+          sort -z /proc/self/environ |
+            tr '\0\n' '\n;' |
+            tee orig.env
+
+      - id: slices
+        run: |
+          ( echo -n slices=
+            ./tacos-gha/lib/ci/dependent-slices <<'EOF'
+          ${{steps.files.outputs.all_files}}
           EOF
+          ) | tee -a "$GITHUB_OUTPUT"
+
+  tacos_apply:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      id-token: write
+
+    # note: we want to noop if they converted to draft first
+    needs: [determine-tf-root-modules]
+    if: |
+      true
+      && github.event.label.name == ':taco::apply'
+      && github.event.pull_request.draft == false
+    strategy:
+      fail-fast: false
+      matrix:
+        tf-root-module:
+          ${{ fromJSON(needs.determine-tf-root-modules.outputs.slices) }}
+
+    steps:
+      - uses: bukzor-sentryio/direnv-install@v1
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: ${{inputs.tacos_gha_repo}}
+          ref: ${{inputs.tacos_gha_ref}}
+          path: tacos-gha
 
       - name: tell TF username and PR
         uses: ./tacos-gha/.github/actions/set-username-and-hostname
@@ -75,23 +122,34 @@ jobs:
           workload_identity_provider: ${{env.GETSENTRY_SAC_OIDC}}
           service_account: ${{env.GETSENTRY_SAC_TERRAFORMER}}
 
-      - name: Obtain the lock
+      - name: set gcloud identity
         run: |
-          ./tacos-gha/lib/github/log-as-step-summary ./tacos-gha/lib/ci/obtain-lock
+          # TODO: upstream feature request on google-github-actions/auth -- this
+          #   should be a default behavior
+          gcloud config get account || : code $?
+          gcloud config set account "$GETSENTRY_SAC_TERRAFORMER"
+
+          # also: mask the access token (NOTE: use cat to avoid xtrace'ing the token)
+          # TODO: ditto
+          cat <<< "::add-mask::$(gcloud auth print-access-token)"
 
       # this should really be default behavior:
       - run: |
           gha-set-env 'TF_VERSION' cat .terraform-version
           gha-set-env 'TERRAGRUNT_VERSION' cat .terragrunt-version
 
-      - name: Apply
-        uses: gruntwork-io/terragrunt-action@v2
+      - name: Setup Terragrunt
+        uses: autero1/action-terragrunt@v1.1.0
         with:
-          tf_version: ${{ env.TF_VERSION }}
-          tg_version: ${{ env.TERRAGRUNT_VERSION }}
-          tg_dir: ${{ env.working_dir }}
-          tg_command: "run-all apply --auto-approve"
-          tg_comment: 1
+          terragrunt_version: ${{env.TERRAGRUNT_VERSION}}
+
+      # TODO save `--out plan` from plan workflow, and reuse it here,
+      # so that apply matches the plan reviewed by construction
+      - name: Release Terraform lock
+        id: release-terraform-lock
+        working-directory: "${{matrix.tf-root-module}}"
+        run:
+          tf-lock "./tacos-gha/"lib/terragrunt/terragrunt-noninteractive apply
 
   reset_label:
     runs-on: ubuntu-latest

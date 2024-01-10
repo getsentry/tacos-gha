@@ -1,0 +1,18 @@
+#!/bin/bash
+set -euo pipefail
+HERE="$(cd "$(dirname "$0")"; pwd)"
+TACOS_HOME="$(cd "$HERE"/../..; pwd)"
+export TACOS_HOME
+
+
+"$TACOS_HOME/"lib/tacos/slices |
+  "$TACOS_HOME/"lib/getsentry-sac/sudo-sac \
+    xargs -rn1 \
+      sh -c '
+        slice="$1"
+        "$TACOS_HOME/"lib/tf-lock/tf-lock-info "$slice" |
+          jq --arg slice "$slice" '\''. + {"slice":$slice}'\''
+      ' \
+    - \
+  \
+;

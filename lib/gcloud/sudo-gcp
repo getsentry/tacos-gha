@@ -17,5 +17,4 @@ fi
 # NOTE: eval must be done separately to avoid gobbling exit code
 token="$("$HERE/"gcloud-auth-export-access-token "${service_account[@]}")"
 eval "$token"
-set -x
 "$@"
