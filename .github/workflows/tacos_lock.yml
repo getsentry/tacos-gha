@@ -127,7 +127,7 @@ jobs:
       - name: Obtain the lock
         id: lock
         run: |
-          ./tacos-gha/lib/github/log-as-step-summary \
+          gha-log-as-step-summary \
             ./tacos-gha/lib/ci/obtain-lock '${{matrix.tf-root-module}}' \
           ;
 
