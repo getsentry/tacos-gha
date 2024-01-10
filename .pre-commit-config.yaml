@@ -1,5 +1,57 @@
 repos:
-  - repo: https://github.com/koalaman/shellcheck-precommit
-    rev: v0.9.0
+  - repo: local
     hooks:
+      - id: prettier
+        name: prettier
+        language: system
+        entry: prettier --write --ignore-unknown
+
+      - id: black
+        name: black
+        language: system
+        entry: black
+        files: '\.py$'
+
+      - id: isort
+        name: isort
+        language: system
+        entry: isort
+        files: '\.py$'
+
+      - id: pyright
+        name: pyright
+        language: system
+        entry: pyright
+        files: '\.py$'
+
+      - id: mypy
+        name: mypy
+        language: system
+        entry: mypy
+        files: '\.py$'
+
+      - id: pyright-verifytypes-lib
+        name: "pyright verify: lib"
+        language: system
+        entry: ./lib/make/bin/pyright-verifytypes lib
+        files: "^lib/"
+        pass_filenames: false
+
+      - id: pyright-verifytypes-spec
+        name: "pyright verify: spec"
+        language: system
+        entry: ./lib/make/bin/pyright-verifytypes manual_tests
+        files: "^manual_tests/"
+        pass_filenames: false
+
+      - id: pyright-verifytypes-tf-lock
+        name: "pyright verify: tf-lock"
+        language: system
+        entry: ./lib/make/bin/pyright-verifytypes lib/tf-lock/lib
+        files: "^lib/tf-lock/lib/"
+        pass_filenames: false
+
       - id: shellcheck
+        name: shellcheck
+        language: system
+        entry: ./lib/make/bin/shellcheck

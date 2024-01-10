@@ -35,8 +35,9 @@ if TYPE_CHECKING:
     from .check import Check
     from .check_run import CheckRun
 
-# mypy doesn't understand closures :(
-# mypy: disable-error-code="type-var, misc"
+# mypy doesn't understand ParamSpec :(
+# pr.py:203: error: Argument 1 to "for_" has incompatible type "Callable[[], Self | None]"; expected "Callable[[], Self | None]"
+# mypy: disable-error-code="arg-type"
 
 
 @dataclass(frozen=True)
@@ -196,7 +197,7 @@ class PR:
 
     @classmethod
     def wait_for(cls, branch: str, since: datetime, timeout: int = 60) -> Self:
-        def branch_pr() -> Self:
+        def branch_pr() -> Self | None:
             assert sh.success(("gh", "pr", "view", branch))
             return cls.from_branch(branch, since)
 
