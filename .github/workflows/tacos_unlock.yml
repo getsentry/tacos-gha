@@ -65,14 +65,14 @@ jobs:
           terraform_wrapper: false
 
       - run: |
-          ./tacos-gha/lib/github/set-env 'PYTHON_VERSION' grep -v '^#' tacos-gha/.python-version
+          gha-set-env 'PYTHON_VERSION' grep -v '^#' tacos-gha/.python-version
       - uses: actions/setup-python@v5
         with:
           python-version: ${{env.PYTHON_VERSION}}
 
       # this should really be default behavior:
       - run: |
-          ./tacos-gha/lib/github/set-env 'TERRAGRUNT_VERSION' cat .terragrunt-version
+          gha-set-env 'TERRAGRUNT_VERSION' cat .terragrunt-version
 
       - name: Setup Terragrunt
         uses: autero1/action-terragrunt@v1.1.0
