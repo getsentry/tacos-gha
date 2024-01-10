@@ -2,15 +2,20 @@
 from __future__ import annotations
 
 from pathlib import Path
+from subprocess import CalledProcessError
+from subprocess import check_call
+from subprocess import check_output
 from typing import Callable
 from typing import Mapping
 from typing import ParamSpec
+from typing import Tuple
 from typing import TypeVar
 
 HERE = Path(__file__).parent.absolute()
 Environ = Mapping[str, str]
 T = TypeVar("T")
 P = ParamSpec("P")
+TF_LOCK_EHELD = 3
 
 
 def info(msg: object) -> None:
@@ -20,7 +25,7 @@ def info(msg: object) -> None:
 
 
 class UserError(SystemExit):
-    def __init__(self, message: object, *, code: int | None = None):
+    def __init__(self, message: object = None, *, code: int | None = None):
         if code is None:
             code = 1
         super().__init__(code)
@@ -36,7 +41,8 @@ class UserError(SystemExit):
             try:
                 return func(*args, **kwargs)
             except cls as error:
-                info(error.message)
+                if error.message is not None:
+                    info(error.message)
                 raise
 
         return wrapped
@@ -75,40 +81,48 @@ def assert_dict_of_strings(json: object) -> dict[str, str]:
     return cast(dict[str, str], json)
 
 
-def get_lock_info(root_module: Path) -> dict[str, str]:
+def get_lock_info(root_module: Path) -> Tuple[bool, dict[str, str]]:
     from json import loads
-    from subprocess import check_output
 
-    result = loads(check_output((HERE / "tf-lock-info", str(root_module))))
-    return assert_dict_of_strings(result)
+    try:
+        result = loads(check_output((HERE / "tf-lock-info", str(root_module))))
+    except CalledProcessError as error:
+        # error message was already printed by subcommand
+        raise UserError(code=error.returncode)
+    lock = result.pop("lock")
+    assert isinstance(lock, bool)
+
+    return lock, assert_dict_of_strings(result)
 
 
 def tf_lock_release(root_module: Path, env: Environ) -> None:
-    lock_info = get_lock_info(root_module)
-    if not lock_info["lock"]:
+    lock, lock_info = get_lock_info(root_module)
+    if not lock:
         info(f"success: already unlocked: {root_module}")
         return
 
     tf_user = f"{get_current_user(env)}@{get_current_host(env)}"
     lock_user = lock_info["Who"]
     if tf_user == lock_user:
-        from subprocess import check_call
-
-        check_call(
-            ("terraform", "force-unlock", "-force", "--", lock_info["ID"]),
-            stdout=2,
-            cwd=root_module,
-        )
+        try:
+            check_call(
+                ("terraform", "force-unlock", "-force", "--", lock_info["ID"]),
+                stdout=2,
+                cwd=root_module,
+            )
+        except CalledProcessError as error:
+            # error message was already printed by subcommand
+            raise UserError(code=error.returncode)
 
         info(f"success: released lock (from {lock_user}): {root_module}")
 
     else:
         raise UserError(
             f"""\
-refusing unlock: lock is held by {lock_user} (not {tf_user})
+error: lock held: {lock_user} (not {tf_user})
 (hint: to override, set $USER and/or $HOST explicitly)
 """,
-            code=3,
+            code=TF_LOCK_EHELD,
         )
 
 

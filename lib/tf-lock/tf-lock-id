@@ -1,6 +1,8 @@
 #!/bin/bash
 set -eEuo pipefail
 HERE="$(cd "$(dirname "$0")"; pwd)"
+. "$HERE/"lib/env.sh
 
 "$HERE/"tf-lock-info "$@" |
-  "$HERE/"lib/lock-id.jq
+  "$HERE/"lib/lock-id.jq \
+;
