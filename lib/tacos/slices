@@ -4,5 +4,8 @@ HERE="$(cd "$(dirname "$0")"; pwd)"
 TACOS_HOME="$(cd "$HERE"/../..; pwd)"
 export TACOS_HOME
 
-PYTHONPATH="$TACOS_HOME${PYTHONPATH+:$PYTHONPATH}" \
-  python3.12 -m lib.tacos.slices "$@"
+export PYTHONPATH="$TACOS_HOME${PYTHONPATH+:$PYTHONPATH}"
+
+python3.12 -m lib.tacos.slices "$@" |
+  python3.12 -m lib.tacos.path_filter \
+;
