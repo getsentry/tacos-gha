@@ -1,0 +1,4 @@
+#!/bin/sh
+set -eu
+HERE="$(cd "$(dirname "$0")"; pwd)"
+exec "$HERE/"git-ls-mimetype 'text/x-shellscript'

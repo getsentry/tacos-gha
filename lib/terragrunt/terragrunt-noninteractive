@@ -1,0 +1,9 @@
+#!/bin/bash
+set -euo pipefail
+export TERRAGRUNT_NO_AUTO_APPROVE=false
+export TERRAGRUNT_NON_INTERACTIVE=true
+export TF_DETAILED_EXITCODE=1
+
+terragrunt "$@" |
+  # shorten the danged "module prefixes" to a readable length
+  sed -u 's,'"$PWD"',.,g'

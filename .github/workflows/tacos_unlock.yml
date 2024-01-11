@@ -65,14 +65,14 @@ jobs:
           terraform_wrapper: false
 
       - run: |
-          ./tacos-gha/lib/github/set-env 'PYTHON_VERSION' grep -v '^#' tacos-gha/.python-version
+          gha-set-env 'PYTHON_VERSION' grep -v '^#' tacos-gha/.python-version
       - uses: actions/setup-python@v5
         with:
           python-version: ${{env.PYTHON_VERSION}}
 
       # this should really be default behavior:
       - run: |
-          ./tacos-gha/lib/github/set-env 'TERRAGRUNT_VERSION' cat .terragrunt-version
+          gha-set-env 'TERRAGRUNT_VERSION' cat .terragrunt-version
 
       - name: Setup Terragrunt
         uses: autero1/action-terragrunt@v1.1.0
@@ -110,12 +110,12 @@ jobs:
         id: release-terraform-lock
         run: |
           # release all tfstate locks currently held
-          # FIXME: surface unexpected unlock failures
-          ./tacos-gha/lib/terragrunt/slices |
-            xargs ./tacos-gha/lib/github/log-as-step-summary \
+          # FIXME: matrix strategy, surface unexpected unlock failures
+          terragrunt-slices |
+            xargs gha-log-as-step-summary \
               sudo-sac sh -c '
                 for slice in "$@"; do
-                  ./tacos-gha/lib/tf-lock/tf-lock-release "$slice" || : unlock failed
+                  tf-lock-release "$slice" || : unlock failed
                 done
               ' \
             \

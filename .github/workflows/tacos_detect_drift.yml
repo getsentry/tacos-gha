@@ -53,8 +53,8 @@ jobs:
 
       # this should really be default behavior:
       - run: |
-          ./tacos-gha/lib/github/set-env 'TF_VERSION' cat .terraform-version
-          ./tacos-gha/lib/github/set-env 'TERRAGRUNT_VERSION' cat .terragrunt-version
+          gha-set-env 'TF_VERSION' cat .terraform-version
+          gha-set-env 'TERRAGRUNT_VERSION' cat .terragrunt-version
 
       - name: Plan
         uses: gruntwork-io/terragrunt-action@v2
