@@ -1,15 +1,29 @@
 #!/bin/bash
 set -euo pipefail
+HERE="$(cd "$(dirname "$0")"; pwd)"
+PATH="$HERE/../unix:$PATH"
 
 get_line() {
   config_file="$1"
   grep -Ev -m1 '^\s*(#|$)' "$config_file"
 }
+interpolate_line() {
+  config_file="$1"
 
-if config="$(nearest-config-file sudo-gcp.d)"; then
-  # note: we're using `eval` to interpolate $variables
-  # TODO: interpolate without executing arbitrary shell code
-  eval 'echo "'"$(get_line "$config/service-account")"'"'
+  val="$(get_line "$config_file")"
+
+  # support interpolating ${X:-${Y:-xyz}} for dynamic config and defaults
+  # TODO: interpolate with a python (rust?) script, for less abitrary execution
+  /bin/sh -ec 'echo "'"$val"'"'
+}
+
+
+if config="$(nearest-config-file .config/sudo-gcp/service-account)"; then
+  interpolate_line "$config"
+
+# TODO: clean up `sudo-gcp.toml` configs, then delete me:
+elif config="$(nearest-config-file sudo-gcp.d)"; then
+  interpolate_line "$config"
 
 # TODO: clean up `sudo-gcp.toml` configs, then delete me:
 elif config="$(nearest-config-file sudo-gcp.toml)"; then
