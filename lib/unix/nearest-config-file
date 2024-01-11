@@ -31,15 +31,14 @@ def get_device_number(path: Path) -> Device:
 
 
 def nearest_config_file(cwd: Path, relpath: Path) -> Path:
-    fname = relpath.name
-    curr_path = cwd / relpath.parent
+    curr_path = cwd
     orig_device = get_device_number(cwd)
     while True:
         if get_device_number(curr_path) != orig_device:
             # we crossed a mountpoint
             raise NotFoundSameDeviceError(relpath)
 
-        fpath = curr_path / fname
+        fpath = curr_path / relpath
         if fpath.exists():
             return fpath
 
