@@ -1,10 +1,6 @@
 #!/bin/bash
 set -eEuo pipefail
-HERE="$(dirname "$(readlink -f "$0")")"
-
-# workaround, pending https://github.com/koalaman/shellcheck/issues/2899
-REPO_TOP="$(cd "$HERE/../.."; pwd)"
-. "$REPO_TOP/"lib/tf_lock/lib/env.sh
+. "$TACOS_GHA_HOME/"lib/tf_lock/lib/env.sh
 
 if [[ "${DEBUG:-}" ]]; then
   set -x

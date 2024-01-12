@@ -1,8 +1,5 @@
 #!/bin/bash
 set -euo pipefail
-HERE="$(dirname "$(readlink -f "$0")")"
-REPO_TOP="$(cd "$HERE/"../..; pwd)"
-
 if [[ "${DEBUG:-}" ]]; then
   set -x
 fi
@@ -19,7 +16,7 @@ elif ! [[ "${1:-}" || "${1:-}" =~ ^- ]]; then
 else
   service_account=(
     "${SUDO_GCP_SERVICE_ACCOUNT:-"$(
-      "$REPO_TOP/"lib/gcloud/sudo-gcp-service-account
+      "$TACOS_GHA_HOME/"lib/gcloud/sudo-gcp-service-account
     )"}"
   )
 fi
@@ -27,7 +24,7 @@ fi
 
 # NOTE: evaluate separately from running subprocess, to avoid ignoring errors
 eval="$(
-  "$REPO_TOP/"lib/gcloud/gcloud-auth-export-access-token "${service_account[@]}"
+  "$TACOS_GHA_HOME/"lib/gcloud/gcloud-auth-export-access-token "${service_account[@]}"
 )"
 eval "$eval"
 "$@"

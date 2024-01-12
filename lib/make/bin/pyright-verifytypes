@@ -1,5 +1,4 @@
 #!/bin/sh
 lib="$1"
 set -ex
-export PYTHONPATH="$REPO_TOP"
 pyright --ignoreexternal --verifytypes "$lib"

@@ -1,8 +1,5 @@
 #!/not/executable/bash
 set -e
-export TACOS_HOME
-TACOS_HOME="${TACOS_HOME:-$(cd "$HERE/"../..; pwd)}"
-
 export USER HOSTNAME
 USER="${USER:-$(whoami)}"
 HOST="${HOST:-"${HOSTNAME:-"$(hostname -f)"}"}"

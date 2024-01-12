@@ -3,7 +3,7 @@ set -euo pipefail
 exec >&2  # all output is logging
 
 set -x
-export COVERAGE_PROCESS_START="$REPO_TOP/.coveragerc"
+export COVERAGE_PROCESS_START="$TACOS_GHA_HOME/.coveragerc"
 
 "$@"
 

@@ -1,11 +1,6 @@
 #!/bin/bash
 set -eEuo pipefail
-HERE="$(cd "$(dirname "$0")"; pwd)"
-
-# workaround, pending https://github.com/koalaman/shellcheck/issues/2899
-REPO_TOP="$(cd "$HERE/../.."; pwd)"
-. "$REPO_TOP/"lib/tf_lock/lib/env.sh
-
-"$HERE/"tf-lock-info "$@" |
-  "$HERE/"lib/lock-id.jq \
+. "$TACOS_GHA_HOME/"lib/tf_lock/lib/env.sh
+"$TACOS_GHA_HOME/"lib/tf_lock/tf-lock-info "$@" |
+  "$TACOS_GHA_HOME/"lib/tf_lock/lib/lock-id.jq \
 ;

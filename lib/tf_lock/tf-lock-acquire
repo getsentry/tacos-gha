@@ -1,10 +1,9 @@
 #!/bin/bash
 set -euo pipefail
-HERE="$(cd "$(dirname "$0")"; pwd)"
+HERE="$(dirname "$(readlink -f "$0")")"
 
 # workaround, pending https://github.com/koalaman/shellcheck/issues/2899
-REPO_TOP="$(cd "$HERE/../.."; pwd)"
-. "$REPO_TOP/"lib/tf_lock/lib/env.sh
+. "$TACOS_GHA_HOME/"lib/tf_lock/lib/env.sh
 
 root_module="${1:-"."}"
 
