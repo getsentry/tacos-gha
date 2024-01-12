@@ -4,13 +4,17 @@
 external-sources=true
 
 # https://www.shellcheck.net/wiki/SC2028
+# "echo won't expand escape sequences. Consider printf."
 # I'll use printf when I want format handling
 disable=SC2028
 
 # https://www.shellcheck.net/wiki/SC2016
-# I know that hard-quotes print $ literally...
+# "Expressions don't expand in single quotes, use double quotes for that."
+# I know that hard-quotes print $ literally. That's exactly why I use them.
 disable=SC2016
 
 # https://www.shellcheck.net/wiki/SC2001
-# I like sed and dislike ${//}
+# "See if you can use ${variable//search/replace} instead."
+# I dislike ${//}, and I like sed.
+# TODO: Perhaps I should change my mind though, given macOS.
 disable=SC2001

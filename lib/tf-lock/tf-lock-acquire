@@ -1,7 +1,10 @@
 #!/bin/bash
 set -euo pipefail
 HERE="$(cd "$(dirname "$0")"; pwd)"
-. "$HERE/"lib/env.sh
+
+# workaround, pending https://github.com/koalaman/shellcheck/issues/2899
+REPO_TOP="$(cd "$HERE/../.."; pwd)"
+. "$REPO_TOP/"lib/tf-lock/lib/env.sh
 
 root_module="${1:-"."}"
 
