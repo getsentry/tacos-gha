@@ -94,6 +94,9 @@ jobs:
         tf-root-module:
           ${{ fromJSON(needs.determine-tf-root-modules.outputs.slices) }}
 
+    env:
+      TF_ROOT_MODULE: ${{matrix.tf-root-module}}
+
     steps:
       - uses: bukzor-sentryio/direnv-install@v1
       - uses: actions/checkout@v4
@@ -112,7 +115,6 @@ jobs:
 
       - name: set terraformer
         id: set-terraformer
-        working-directory: ${{ env.working_dir }}
         run: ./tacos-gha/lib/ci/set-terraformer
 
       - name: gcp auth
@@ -145,10 +147,9 @@ jobs:
 
       # TODO save `--out plan` from plan workflow, and reuse it here,
       # so that apply matches the plan reviewed by construction
-      - name: Release Terraform lock
-        id: release-terraform-lock
-        working-directory: "${{matrix.tf-root-module}}"
-        run:
+      - name: Terragrunt Apply
+        run: |
+          cd "$TF_ROOT_MODULE"
           tf-lock "./tacos-gha/"lib/terragrunt/terragrunt-noninteractive apply
 
   reset_label:

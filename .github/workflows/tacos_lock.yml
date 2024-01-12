@@ -106,7 +106,6 @@ jobs:
 
       - name: set terraformer
         id: set-terraformer
-        working-directory: ${{ env.working_dir }}
         run: ./tacos-gha/lib/ci/set-terraformer
 
       - name: gcp auth
