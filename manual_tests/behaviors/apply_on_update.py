@@ -17,5 +17,5 @@ def test(pr: tacos_demo.PR, slices_subpath: Path) -> None:
     # the taco-apply label causes the plan to become clean:
     assert tf.plan_dirty(slices_dir)
     since = pr.add_label(":taco::apply")
-    assert pr.check("Terraform Apply").wait(since)
+    assert pr.check("Terraform Apply").wait(since).success
     assert tf.plan_clean(slices_dir)

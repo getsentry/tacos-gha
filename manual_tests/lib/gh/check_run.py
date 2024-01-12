@@ -101,7 +101,7 @@ class CheckRun:
         return tuple(result)
 
     def __str__(self) -> str:
-        format = "{workflow} / {name}: {started_at}-{completed_at} {status}({conclusion})"
+        format = "{workflow} / {name}:\n      {started_at}-{completed_at} {status}({conclusion})"
         return format.format_map(vars(self))
 
     @property
