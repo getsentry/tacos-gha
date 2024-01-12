@@ -156,7 +156,7 @@ jobs:
       - name: Terragrunt Apply
         run: |
           cd "$TF_ROOT_MODULE"
-          tf-lock "./tacos-gha/"lib/terragrunt/terragrunt-noninteractive apply
+          tf-lock terragrunt-noninteractive apply
 
   reset_label:
     runs-on: ubuntu-latest
