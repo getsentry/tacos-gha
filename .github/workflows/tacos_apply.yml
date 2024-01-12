@@ -56,7 +56,7 @@ jobs:
 
       # see ./.python-version
       - run: |
-          ./tacos-gha/lib/github/set-env 'PYTHON_VERSION' grep -v '^#' tacos-gha/.python-version
+          gha-set-env 'PYTHON_VERSION' grep -v '^#' tacos-gha/.python-version
       - uses: actions/setup-python@v5
         with:
           python-version: ${{env.PYTHON_VERSION}}
@@ -144,6 +144,12 @@ jobs:
         uses: autero1/action-terragrunt@v1.1.0
         with:
           terragrunt_version: ${{env.TERRAGRUNT_VERSION}}
+
+      - run: |
+          gha-set-env 'PYTHON_VERSION' grep -v '^#' tacos-gha/.python-version
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{env.PYTHON_VERSION}}
 
       # TODO save `--out plan` from plan workflow, and reuse it here,
       # so that apply matches the plan reviewed by construction
