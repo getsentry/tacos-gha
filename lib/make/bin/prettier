@@ -1,0 +1,8 @@
+#!/bin/sh
+git ls-files |
+  # prettier doesn't like symlinks ¯\_(ツ)_/¯
+  file --mime-type --no-pad --files-from=- |
+  grep -v 'inode/symlink$' |
+  sed 's@: .*@@' |
+  xargs -r prettier --write --ignore-unknown \
+;

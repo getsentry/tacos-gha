@@ -9,8 +9,8 @@ repos:
       - id: black
         name: black
         language: system
-        entry: black
-        files: '\.py$'
+        entry: ./lib/make/bin/black
+        pass_filenames: false
 
       - id: isort
         name: isort
@@ -47,8 +47,8 @@ repos:
       - id: pyright-verifytypes-tf-lock
         name: "pyright verify: tf-lock"
         language: system
-        entry: ./lib/make/bin/pyright-verifytypes lib/tf-lock/lib
-        files: "^lib/tf-lock/lib/"
+        entry: ./lib/make/bin/pyright-verifytypes lib/tf_lock/lib
+        files: "^lib/tf_lock/lib/"
         pass_filenames: false
 
       - id: shellcheck

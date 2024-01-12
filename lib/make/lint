@@ -6,10 +6,10 @@ HERE="$(cd "$(dirname "$0")"; pwd)"
 set -x
 
 fail=()
-if ! git-ls-python | xargs -r pyright; then
+if ! "$HERE/"bin/pyright; then
   fail+=(pyright)
 fi
-if ! git-ls-python | xargs -r mypy; then
+if ! "$HERE/"bin/mypy; then
   fail+=(mypy)
 fi
 
@@ -21,7 +21,7 @@ then
   fail+=(pyright-verifytypes)
 fi
 
-if ! git-ls-sh | xargs -r shellcheck; then
+if ! "$HERE/"bin/shellcheck; then
   fail+=(shellcheck)
 fi
 

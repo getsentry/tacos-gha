@@ -1,21 +1,10 @@
 #!/bin/bash
 set -euo pipefail
 exec >&2  # all output is logging
+HERE="$(cd "$(dirname "$0")"; pwd)"
 
 set -x
 
-git ls-files '**/*.py' |
-  xargs -r black \
-;
-
-git ls-files '**/*.py' |
-  xargs -r isort \
-;
-
-git ls-files |
-  # prettier doesn't like symlinks ¯\_(ツ)_/¯
-  file --mime-type --no-pad --files-from=- |
-  grep -v 'inode/symlink$' |
-  sed 's@: .*@@' |
-  xargs -r prettier --write --ignore-unknown \
-;
+"$HERE/"bin/black
+"$HERE/"bin/isort
+"$HERE/"bin/prettier
