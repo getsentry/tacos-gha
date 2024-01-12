@@ -3,7 +3,7 @@ set -euo pipefail
 
 HERE="$(cd "$(dirname "$0")"; pwd)"
 
-"$HERE/"../tf-lock/tf-lock-release
+"$HERE/"../tf_lock/tf-lock-release
 status=$?
 
 set -x

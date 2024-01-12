@@ -10,7 +10,7 @@ export TACOS_HOME
     xargs -rn1 \
       sh -c '
         slice="$1"
-        "$TACOS_HOME/"lib/tf-lock/tf-lock-info "$slice" |
+        "$TACOS_HOME/"lib/tf_lock/tf-lock-info "$slice" |
           jq --arg slice "$slice" '\''. + {"slice":$slice}'\''
       ' \
     - \
