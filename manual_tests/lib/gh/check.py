@@ -10,6 +10,7 @@ from lib.sh import sh
 
 from .types import CheckName
 from .types import Generator
+from .types import WorkflowName
 
 if TYPE_CHECKING:
     from .check_run import CheckRun
@@ -21,9 +22,10 @@ class DidNotRun(Exception):
 
 
 @dataclass(frozen=True)
-class Check:
+class CheckFilter:
     pr: PR
-    name: CheckName
+    workflow: WorkflowName
+    name: CheckName | None
 
     def latest(self, since: datetime) -> Generator[CheckRun]:
         """Return the _most recent_ status of the named check."""
@@ -31,7 +33,12 @@ class Check:
 
         buckets: defaultdict[str, list[CheckRun]] = defaultdict(list)
         for run in self.pr.get_check_runs(since):
-            if run.started > since and run.job.startswith(self.name):
+            if (
+                True
+                and run.started > since
+                and run.workflow == self.workflow
+                and (self.name is None or run.name == self.name)
+            ):
                 buckets[run.name].append(run)
 
         for _, runs in sorted(buckets.items()):
@@ -39,19 +46,19 @@ class Check:
             sh.info(run)
             yield run
 
-    def ran(self, since: datetime) -> tuple[CheckRun, ...]:
-        """Did a specified github-actions job run, lately?"""
+    def ran(self, since: datetime) -> CheckRun | None:
+        """Did a specified github-action run, lately?"""
         __tracebackhide__ = True
 
         runs = tuple(self.latest(since))
         if runs:
             sh.banner(runs[0].url)
 
-        if all(run.completed > run.started for run in runs):
-            return runs
+        run = max(runs, key=lambda run: run.relevance)
+        if run.completed:  # all runs completed, or else one failed
+            return run
         else:
-            sh.debug("not finished yet")
-            return ()
+            return None
 
     def wait(
         self, since: datetime | None = None, timeout: int = wait.WAIT_LIMIT
@@ -67,7 +74,10 @@ class Check:
         result = wait.for_(lambda: self.ran(since), timeout=timeout)
 
         sh.banner(f"{self} ran")
-        return max(result, key=lambda run: run.relevance)
+        return result
 
     def __str__(self) -> str:
-        return self.name
+        if self.name:
+            return f"{self.workflow} / {self.name}"
+        else:
+            return self.workflow

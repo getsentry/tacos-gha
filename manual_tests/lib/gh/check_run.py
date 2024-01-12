@@ -69,11 +69,12 @@ class CheckRun:
         """(attempt to) enable sorting by relevance to debugging"""
         result: list[object] = []
 
+        # failures and incomplete jobs _must_ show up before successes
         result.append(
-            ("SUCCESS", "", "NEUTRAL", "FAILURE").index(self.conclusion)
+            ("NEUTRAL", "SUCCESS", "", "FAILURE").index(self.conclusion)
         )
         result.append(
-            ("QUEUED", "IN_PROGRESS", "COMPLETED").index(self.status)
+            ("COMPLETED", "QUEUED", "IN_PROGRESS").index(self.status)
         )
         result.append(self.completed)
         result.append(self.started)
