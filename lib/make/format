@@ -1,7 +1,9 @@
 #!/bin/bash
 set -euo pipefail
 exec >&2  # all output is logging
-HERE="$(cd "$(dirname "$0")"; pwd)"
+
+# relative HERE, for prettier logs
+HERE="$(dirname "$0")"
 
 set -x
 

@@ -1,6 +1,8 @@
 #!/bin/bash
 set -eEuo pipefail
-. "$TACOS_GHA_HOME/"lib/tf_lock/lib/env.sh
+HERE="$(dirname "$(readlink -f "$0")")"
+
+. "$HERE/"lib/env.sh
 
 if [[ "${DEBUG:-}" ]]; then
   set -x
@@ -28,6 +30,6 @@ else
   slice="."
 fi
 
-"$TACOS_HOME/"lib/tf_lock/tf-lock-release "$slice"
+"$HERE/"tf-lock-release "$slice"
 "$@"
-"$TACOS_HOME/"lib/tf_lock/tf-lock-acquire "$slice"
+"$HERE/"tf-lock-acquire "$slice"

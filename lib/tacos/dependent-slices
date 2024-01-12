@@ -1,12 +1,15 @@
 #!/bin/bash
 set -euo pipefail
-HERE="$(cd "$(dirname "$0")"; pwd)"
+HERE="$(dirname "$(readlink -f "$0")")"
+TACOS_GHA_HOME="$(cd "$HERE"/../..; pwd)"
+export PYTHONPATH="$TACOS_GHA_HOME${PYTHONPATH+:$PYTHONPATH}"
+
 SHA1="${1:-HEAD^}"
 SHA2="${2:-HEAD}"
 
 set -x
 
-"$HERE/"dependent_slices.py <(
+python -m lib.tacos.dependent_slices <(
     git diff  "$SHA1" "$SHA2" \
         --name-only \
         --diff-filter=ACMRT \

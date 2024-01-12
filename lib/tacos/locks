@@ -1,16 +1,16 @@
 #!/bin/bash
 set -euo pipefail
-HERE="$(cd "$(dirname "$0")"; pwd)"
-TACOS_HOME="$(cd "$HERE"/../..; pwd)"
-export TACOS_HOME
+HERE="$(dirname "$(readlink -f "$0")")"
+TACOS_GHA_HOME="$(cd "$HERE"/../..; pwd)"
+export PATH="$TACOS_GHA_HOME/bin:$PATH"
 
 
-"$TACOS_HOME/"lib/tacos/slices |
-  "$TACOS_HOME/"lib/getsentry-sac/sudo-gcp \
+"$HERE"/slices |
+  sudo-gcp \
     xargs -rn1 \
       sh -c '
         slice="$1"
-        "$TACOS_HOME/"lib/tf_lock/tf-lock-info "$slice" |
+        tf-lock-info "$slice" |
           jq --arg slice "$slice" '\''. + {"slice":$slice}'\''
       ' \
     - \

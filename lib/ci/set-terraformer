@@ -1,7 +1,6 @@
 #!/bin/bash
 set -euo pipefail
-HERE="$(cd "$(dirname "$0")"; pwd)"
 
-exec "$HERE/"../github/set-env SUDO_GCP_SERVICE_ACCOUNT \
-  "$HERE/"../gcloud/sudo-gcp-service-account \
+exec gha-set-env SUDO_GCP_SERVICE_ACCOUNT \
+  "$TACOS_GHA_HOME/"lib/gcloud/sudo-gcp-service-account \
 ;

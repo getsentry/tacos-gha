@@ -1,10 +1,9 @@
 #!/bin/bash
 set -euo pipefail
-HERE="$(cd "$(dirname "$0")"; pwd)"
-TACOS_HOME="$(cd "$HERE"/../..; pwd)"
-export TACOS_HOME
+HERE="$(dirname "$(readlink -f "$0")")"
+TACOS_GHA_HOME="$(cd "$HERE"/../..; pwd)"
+export PYTHONPATH="$TACOS_GHA_HOME${PYTHONPATH+:$PYTHONPATH}"
 
-export PYTHONPATH="$TACOS_HOME${PYTHONPATH+:$PYTHONPATH}"
 
 python3.12 -m lib.tacos.slices "$@" |
   python3.12 -m lib.tacos.path_filter \
