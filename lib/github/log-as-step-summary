@@ -3,7 +3,7 @@
 # also, set a `summary` output
 set -euo pipefail
 
-( set -x; "$@" ) |& tee >(
+( set -x; "$@" ) 2>&1 | tee >(
   # I can't find a way to convince step summary to handle ansi colors the same
   # way github logging does...
   uncolor |
