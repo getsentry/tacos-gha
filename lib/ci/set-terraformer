@@ -2,6 +2,6 @@
 set -euo pipefail
 HERE="$(cd "$(dirname "$0")"; pwd)"
 
-exec "$HERE/"../github/set-env GETSENTRY_SAC_TERRAFORMER \
-  "$HERE/"../getsentry-sac/sac-terraformer \
+exec "$HERE/"../github/set-env SUDO_GCP_SERVICE_ACCOUNT \
+  "$HERE/"../gcloud/sudo-gcp-service-account \
 ;

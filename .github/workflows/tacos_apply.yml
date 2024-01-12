@@ -120,14 +120,14 @@ jobs:
         uses: google-github-actions/auth@v1
         with:
           workload_identity_provider: ${{env.GETSENTRY_SAC_OIDC}}
-          service_account: ${{env.GETSENTRY_SAC_TERRAFORMER}}
+          service_account: ${{env.SUDO_GCP_SERVICE_ACCOUNT}}
 
       - name: set gcloud identity
         run: |
           # TODO: upstream feature request on google-github-actions/auth -- this
           #   should be a default behavior
           gcloud config get account || : code $?
-          gcloud config set account "$GETSENTRY_SAC_TERRAFORMER"
+          gcloud config set account "$SUDO_GCP_SERVICE_ACCOUNT"
 
           # also: mask the access token (NOTE: use cat to avoid xtrace'ing the token)
           # TODO: ditto

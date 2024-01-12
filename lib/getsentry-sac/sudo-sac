@@ -1,5 +1,0 @@
-#!/bin/bash
-set -euo pipefail
-HERE="$(dirname "$(readlink -f "$0")")"
-sac_terraformer="${GETSENTRY_SAC_TERRAFORMER:-"$("$HERE/"sac-terraformer)"}"
-"$HERE/"../gcloud/sudo-gcp -u "$sac_terraformer" "$@"

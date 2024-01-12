@@ -6,7 +6,7 @@ export TACOS_HOME
 
 
 "$TACOS_HOME/"lib/tacos/slices |
-  "$TACOS_HOME/"lib/getsentry-sac/sudo-sac \
+  "$TACOS_HOME/"lib/getsentry-sac/sudo-gcp \
     xargs -rn1 \
       sh -c '
         slice="$1"
