@@ -16,13 +16,13 @@ fi
 # use colors 1 through 6: red, green, yellow, blue, magenta, cyan
 hue=$(( prompt_color / 2 ))
 if (( (prompt_color % 2) == 0 )); then
-  style='3'
+  style() { echo "3$hue"; }
 else
-  style='1;9'
+  style() { echo "9$hue;1"; }
   hue=$(( hue + 3 ))  # rotate color for extra constrast
 fi
-
-printf "%s%s" "$style" "$(( (hue % 6) + 1 ))"
+hue="$(( (hue % 6) + 1 ))"
+style
 
 # record the sequence number
 cat <<< "$prompt_color" > .prompt-color
