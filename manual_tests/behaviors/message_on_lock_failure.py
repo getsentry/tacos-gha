@@ -30,7 +30,7 @@ def test(
         }
 
         for pr, check in checks.items():
-            comments = pr.comments(since=check.started)
+            comments = pr.comments(since=check.started_at)
             if check.conclusion == "SUCCESS":
                 assert MESSAGE not in comments
             elif check.conclusion == "FAILURE":

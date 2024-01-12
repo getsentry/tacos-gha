@@ -35,7 +35,7 @@ class CheckFilter:
         for run in self.pr.get_check_runs(since):
             if (
                 True
-                and run.started > since
+                and run.started_at > since
                 and run.workflow == self.workflow
                 and (self.name is None or run.name == self.name)
             ):
@@ -51,10 +51,11 @@ class CheckFilter:
         __tracebackhide__ = True
 
         runs = tuple(self.latest(since))
-        if runs:
-            sh.banner(runs[0].url)
+        if not runs:
+            return None
 
         run = max(runs, key=lambda run: run.relevance)
+        sh.banner(run.url)
         if run.completed:  # all runs completed, or else one failed
             return run
         else:

@@ -47,7 +47,7 @@ def workdir(demo: gh.LocalRepo, environ: Environ) -> Generator[OSPath]:
 
 
 @fixture
-def slice_subpath(user: str) -> Path:
+def slices_subpath(user: str) -> Path:
     """which subpath of workdir should we search for slices?"""
     # TODO: update actions for minimal slice names
     ###return Path(f"env.{user}/prod")
@@ -55,8 +55,8 @@ def slice_subpath(user: str) -> Path:
 
 
 @fixture
-def slices(workdir: OSPath, slice_subpath: Path) -> Slices:
-    slices = Slices.from_path(workdir, slice_subpath)
+def slices(workdir: OSPath, slices_subpath: Path) -> Slices:
+    slices = Slices.from_path(workdir, slices_subpath)
     return slices.random()
 
 

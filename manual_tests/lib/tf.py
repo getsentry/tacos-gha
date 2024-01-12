@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 from lib.sh import sh
-from lib.types import OSPath
+from lib.types import Path
 
 
-def _plan_exitcode(workdir: OSPath) -> int:
+def _plan_exitcode(workdir: Path) -> int:
     sh.banner("checking tf plan...")
     with sh.cd(workdir):
         result = sh.returncode(
@@ -27,29 +27,20 @@ def _plan_exitcode(workdir: OSPath) -> int:
     return result
 
 
-def plan_clean(workdir: OSPath) -> bool:
+def plan_clean(workdir: Path) -> bool:
     """
     Returns whether running terraform plan differs from the current state
     """
     return _plan_exitcode(workdir) == 0
 
 
-def plan_dirty(workdir: OSPath) -> bool:
+def plan_dirty(workdir: Path) -> bool:
     """
     Returns whether running terraform plan differs from the current state
     """
     return _plan_exitcode(workdir) == 2
 
 
-def apply(workdir: OSPath) -> None:
+def apply(workdir: Path) -> None:
     with sh.cd(workdir):
-        sh.run(
-            (
-                "sudo-gcp",
-                "terragrunt",
-                "run-all",
-                "apply",
-                "--auto-approve",
-                "--terragrunt-non-interactive",
-            )
-        )
+        sh.run(("sudo-gcp", "terragrunt-noninteractive", "run-all", "apply"))
