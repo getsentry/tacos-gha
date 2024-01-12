@@ -1,6 +1,0 @@
-#!/bin/bash
-set -eEuo pipefail
-. "$TACOS_GHA_HOME/"lib/tf_lock/lib/env.sh
-"$TACOS_GHA_HOME/"lib/tf_lock/tf-lock-info "$@" |
-  "$TACOS_GHA_HOME/"lib/tf_lock/lib/lock-id.jq \
-;
