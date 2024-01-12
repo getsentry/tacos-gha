@@ -6,7 +6,7 @@ set-env() {
   "$HERE/"../github/set-env "$@"
 }
 
-if set-env TF_LOCK_ID "$HERE/"../tf-lock/tf-lock-acquire "$@"; then
+if set-env TF_LOCK_ID "$HERE/"../tf_lock/tf-lock-acquire "$@"; then
   set-env TF_LOCK echo true
 else
   status="$?"

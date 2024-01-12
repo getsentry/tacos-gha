@@ -45,10 +45,10 @@ repos:
         pass_filenames: false
 
       - id: pyright-verifytypes-tf-lock
-        name: "pyright verify: tf-lock"
+        name: "pyright verify: tf_lock"
         language: system
-        entry: ./lib/make/bin/pyright-verifytypes lib/tf-lock/lib
-        files: "^lib/tf-lock/lib/"
+        entry: ./lib/make/bin/pyright-verifytypes lib/tf_lock/lib
+        files: "^lib/tf_lock/lib/"
         pass_filenames: false
 
       - id: shellcheck
