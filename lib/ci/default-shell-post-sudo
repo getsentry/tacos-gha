@@ -7,7 +7,7 @@ HERE="$(cd "$(dirname "$0")"; pwd)"
 
 # prefix debug lines with a fancy-looking "prompt", randomly colored
 export PS4
-PS4='+ \e['"$("$HERE/"prompt-color)"'m$\e[m '
+PS4=$'+ \e['"$("$HERE/"prompt-color)"'m$\e[m '
 
 # encourage programs to use full color -- github logs handle it nicely
 export TERM=xterm-256color
