@@ -13,7 +13,7 @@ if ! git-ls-python | xargs -r mypy; then
   fail+=(mypy)
 fi
 
-python -c 'import _pytesst; print(_pytest); import _pytest.doctest; print(_pytest.doctest); print(_pytest.doctest.DoctestItem)'
+python -c 'import _pytest; print(_pytest); import _pytest.doctest; print(_pytest.doctest); print(_pytest.doctest.DoctestItem)'
 
 # get directories that contain a py.typed file:
 if ! git ls-files '*/py.typed' |
