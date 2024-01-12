@@ -6,8 +6,6 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 from typing import Self
 from typing import Sequence
-from urllib.request import Request
-from urllib.request import urlopen
 
 from lib import json
 from lib import wait
@@ -89,26 +87,11 @@ class PR:
     def approve(
         self, app_installation: app.Installation, jwt: JWT
     ) -> datetime:
-        parts = self.url.split("/")
-        owner = parts[-4]
-        repo = parts[-3]
-        num = parts[-1]
-
-        sh.banner("approving PR:")
-        url = (
-            f"https://api.github.com/repos/{owner}/{repo}/pulls/{num}/reviews"
-        )
-        headers = {
-            "Accept": "application/vnd.github+json",
-            "Authorization": f"Bearer {app_installation.token(jwt)}",
-            "X-GitHub-Api-Version": "2022-11-28",
-        }
-        req = Request(
-            url, method="POST", headers=headers, data=b'{"event":"APPROVE"}'
-        )
         since = now()
-        with urlopen(req) as resp:
-            resp.read()
+        sh.run(
+            ("gh", "pr", "review", "--approve", self.url),
+            env={"GITHUB_TOKEN": app_installation.token(jwt)},
+        )
         return since
 
     def approved(self) -> bool:
