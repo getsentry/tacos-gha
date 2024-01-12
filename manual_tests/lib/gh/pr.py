@@ -191,24 +191,17 @@ class PR:
 
     def get_check_runs(
         self, since: datetime | None = None
-    ) -> Sequence[CheckRun]:
+    ) -> Generator[CheckRun]:
         """Return the all runs of this check."""
         from . import check_run
 
         if since is None:
             since = self.since
 
-        result: list[CheckRun] = []
         for obj in check_run.get_runs_json(self.url):
             run = check_run.CheckRun.from_json(obj)
             if run.started_at > since:
-                result.append(run)
-
-        result.sort(key=lambda run: run.relevance)
-        for run in result:
-            sh.debug(f"  {run}")
-
-        return result
+                yield run
 
 
 def commit_and_push(
