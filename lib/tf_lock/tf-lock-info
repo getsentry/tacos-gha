@@ -32,8 +32,9 @@ elif grep -Eq <<< "$error" \
 ; then
   ( # NB: need to undo the cd to keep relative paths valid
     cd "$root_module"
-    if ! terraform init 2>/dev/null 1>&2; then
+    if ! noise="$(terraform init 2>&1)"; then
       echo >&2 Terraform init failed!
+      echo >&2 "$noise"
       exit 1
     fi
   )
