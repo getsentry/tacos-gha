@@ -11,7 +11,7 @@ from typing import ParamSpec
 from typing import Tuple
 from typing import TypeVar
 
-HERE = Path(__file__).parent.absolute()
+HERE = Path(__file__).parent.resolve()
 Environ = Mapping[str, str]
 T = TypeVar("T")
 P = ParamSpec("P")
