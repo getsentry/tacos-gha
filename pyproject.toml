@@ -77,6 +77,8 @@ reportPropertyTypeMismatch = "error"
 reportUninitializedInstanceVariable = "error"
 reportUnnecessaryTypeIgnoreComment = "error"
 reportUnusedCallResult = "none"  # too noisy
+reportUnknownMemberType = "none" # doesn't work in CI
+reportUnknownClassType = "none" # doesn't work in CI
 
 # maintainer has an strong anti-idomatic stance on what "constant" means
 # https://github.com/microsoft/pyright/issues/5265
