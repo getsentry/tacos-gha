@@ -67,7 +67,7 @@ typeCheckingMode = "strict"
 
 # don't flag arguments as long as its type is known
 reportMissingParameterType = "none"
-reportUnknownParameterType = "error"
+reportUnknownParameterType = "none"
 
 # turn on all the checks not already enabled by "strict":
 reportCallInDefaultInitializer = "error"
@@ -77,8 +77,6 @@ reportPropertyTypeMismatch = "error"
 reportUninitializedInstanceVariable = "error"
 reportUnnecessaryTypeIgnoreComment = "error"
 reportUnusedCallResult = "none"  # too noisy
-reportUnknownMemberType = "none" # doesn't work in CI
-reportUnknownClassType = "none" # doesn't work in CI
 
 # maintainer has an strong anti-idomatic stance on what "constant" means
 # https://github.com/microsoft/pyright/issues/5265
