@@ -23,7 +23,7 @@ if TYPE_CHECKING:
 class Slice(Path):
     """Relative path to a terraform slice"""
 
-    def is_locked(self, workdir: Path) -> bool:
+    def is_locked(self, workdir: OSPath) -> bool:
         with sh.cd(workdir / self):
             j = sh.json(
                 ("sudo-gcp", TACOS_GHA_HOME / "lib/tf_lock/tf-lock-info")
