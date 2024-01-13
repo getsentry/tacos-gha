@@ -5,6 +5,8 @@ from time import sleep as do_sleep
 from typing import Callable
 from typing import TypeVar
 
+from lib.sh import sh
+
 # usual amount of time to complete a GHA job is 30s from push
 WAIT_LIMIT = int(getenv("WAIT_LIMIT", "90"))
 WAIT_SLEEP = int(getenv("WAIT_SLEEP", "3"))
@@ -33,14 +35,16 @@ def for_(
 
     limit = timeout
 
-    # with sh.quiet():
-    while True:
-        do_sleep(sleep)
-        limit -= sleep
+    with sh.uniq():  # suppress repeated messages during the loop
+        while True:
+            do_sleep(sleep)
+            limit -= sleep
 
-        result = assertion()
-        if result:
-            return result
+            result = assertion()
+            if result:
+                return result
 
-        if limit <= 0:
-            raise TimeoutExpired(f"never succeeded, over {timeout} seconds")
+            if limit <= 0:
+                raise TimeoutExpired(
+                    f"never succeeded, over {timeout} seconds"
+                )
