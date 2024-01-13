@@ -14,14 +14,17 @@ from lib.types import Path
 from .path_filter import PathFilter
 
 # NewTypes exist only during typing, but help keep track of things
+# FIXME: remove pright:ignore, pending https://github.com/microsoft/pyright/issues/6976
 Dir = NewType("Dir", Path)
-TFConfigDir = NewType("TFConfigDir", Dir)
+TFConfigDir = NewType("TFConfigDir", Dir)  # pyright: ignore
 File = NewType("File", Path)
-TFConfigFile = NewType("TFConfigFile", File)
-TFSharedModulesDir = NewType("TFSharedModulesDir", Dir)
-TFModule = NewType("TFModule", Dir)
-TopLevelTFModule = NewType("TopLevelTFModule", TFModule)  # AKA "slice"
-SharedTFModule = NewType("SharedTFModule", TFModule)
+TFConfigFile = NewType("TFConfigFile", File)  # pyright: ignore
+TFSharedModulesDir = NewType("TFSharedModulesDir", Dir)  # pyright: ignore
+TFModule = NewType("TFModule", Dir)  # pyright: ignore
+TopLevelTFModule = NewType(
+    "TopLevelTFModule", TFModule  # pyright: ignore
+)  # AKA "slice"
+SharedTFModule = NewType("SharedTFModule", TFModule)  # pyright: ignore
 
 T = typing.TypeVar("T")
 P = typing.ParamSpec("P")
