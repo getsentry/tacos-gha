@@ -25,6 +25,7 @@ def force_unlock(root_module: Path) -> None:
         sh.run(
             (
                 "env",
+                f"GETSENTRY_SAC_VERB=apply",
                 f"USER={user}",
                 f"HOST={host}",
                 "sudo-gcp",

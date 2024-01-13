@@ -18,7 +18,7 @@ if "$lock"; then
   if [[ "$lock_user" == "$tf_user" ]]; then
     # already done!
     echo >&2 "success: acquired lock (for $lock_user): $root_module"
-    "$HERE/"lib/lock-id.jq <<< "$lock_info"
+    jq .ID <<< "$lock_info"
     exit 0
   else
     cat >&2 <<EOF
