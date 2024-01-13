@@ -67,7 +67,7 @@ typeCheckingMode = "strict"
 
 # don't flag arguments as long as its type is known
 reportMissingParameterType = "none"
-reportUnknownParameterType = "none"
+reportUnknownParameterType = "error"
 
 # turn on all the checks not already enabled by "strict":
 reportCallInDefaultInitializer = "error"
