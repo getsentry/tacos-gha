@@ -31,5 +31,6 @@ else
 fi
 
 "$HERE/"tf-lock-release "$slice"
-"$@"
+"$@" && status=$? || status=$?
 "$HERE/"tf-lock-acquire "$slice"
+exit "$status"

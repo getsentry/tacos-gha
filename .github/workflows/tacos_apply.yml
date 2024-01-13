@@ -70,7 +70,7 @@ jobs:
       - id: slices
         run: |
           ( echo -n slices=
-            ./tacos-gha/lib/ci/dependent-slices <<'EOF'
+            "$TACOS_GHA_HOME/"lib/ci/dependent-slices <<'EOF'
           ${{steps.files.outputs.all_files}}
           EOF
           ) | tee -a "$GITHUB_OUTPUT"
@@ -111,11 +111,13 @@ jobs:
 
       - name: set workload identity provider
         id: set-workload-identity-provider
-        run: ./tacos-gha/lib/ci/set-workload-identity-provider
+        run: |
+          "$TACOS_GHA_HOME/"lib/ci/set-workload-identity-provider
 
       - name: set terraformer
         id: set-terraformer
-        run: ./tacos-gha/lib/ci/set-terraformer
+        run: |
+          "$TACOS_GHA_HOME/"lib/ci/set-terraformer
 
       - name: gcp auth
         id: auth
@@ -146,7 +148,7 @@ jobs:
           terragrunt_version: ${{env.TERRAGRUNT_VERSION}}
 
       - run: |
-          gha-set-env 'PYTHON_VERSION' grep -v '^#' tacos-gha/.python-version
+          gha-set-env 'PYTHON_VERSION' grep -v '^#' "$TACOS_GHA_HOME/".python-version
       - uses: actions/setup-python@v5
         with:
           python-version: ${{env.PYTHON_VERSION}}
@@ -155,8 +157,7 @@ jobs:
       # so that apply matches the plan reviewed by construction
       - name: Terragrunt Apply
         run: |
-          cd "$TF_ROOT_MODULE"
-          tf-lock terragrunt-noninteractive apply
+          "$TACOS_GHA_HOME/"lib/ci/tacos-apply
 
   reset_label:
     runs-on: ubuntu-latest

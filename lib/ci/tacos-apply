@@ -1,0 +1,5 @@
+#!/bin/bash
+set -euxo pipefail
+
+cd "$TF_ROOT_MODULE"
+tf-lock terragrunt-noninteractive apply --auto-approve
