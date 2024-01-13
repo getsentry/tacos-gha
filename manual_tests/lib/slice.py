@@ -58,8 +58,7 @@ class Slices:
         return cls(
             workdir=workdir,
             slices=frozenset(
-                Slice(slice.relative_to(workdir))
-                for slice in tf_categorized.slices
+                Slice(subpath / slice) for slice in tf_categorized.slices
             ),
         )
 
@@ -88,11 +87,11 @@ class Slices:
         for slice in self.slices:
             yield self.workdir / slice
 
-    def force_unlock_all(self) -> None:
-        """Unlock *all* slices, forcefully."""
-        sh.banner("forcefully unlocking all slices...")
+    def force_unlock(self) -> None:
+        """Unlock these slices, forcefully."""
+        sh.banner("forcefully unlocking slices...")
         with sh.cd(self.workdir):
-            for slice in Slices.from_path(self.workdir):
+            for slice in self:
                 tf_lock.force_unlock(slice)
 
     def __iter__(self) -> Iterator[Slice]:

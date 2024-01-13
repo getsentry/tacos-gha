@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import contextlib
+from functools import lru_cache
 from os import getenv
 from typing import ContextManager
 
@@ -19,6 +20,8 @@ PS4 = f"+ {ansi.TEAL}${ansi.RESET} "
 DEBUG: int = int(getenv("DEBUG", "1"))
 
 
+# minimize useless verbosity by ensuring the last several log lines are unique
+@lru_cache(maxsize=50)
 def info(*msg: object) -> None:
     """Show the user a message."""
 

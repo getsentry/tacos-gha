@@ -16,6 +16,21 @@ from manual_tests.lib import tacos_demo
 from manual_tests.lib.gh import gh
 from manual_tests.lib.slice import Slices
 
+# you forgot to commit if these paths have pending edits
+GHA_RELEVANT_PATHS = (
+    ".envrc",
+    ".github",
+    "bin",
+    "lib/ci",
+    "lib/gcloud",
+    "lib/getsentry-sac",
+    "lib/github",
+    "lib/tacos",
+    "lib/terragrunt",
+    "lib/tf_lock",
+    "lib/unix",
+)
+
 
 @fixture
 def git_remote() -> gh.RemoteRepo:
@@ -50,8 +65,8 @@ def workdir(demo: gh.LocalRepo, environ: Environ) -> Generator[OSPath]:
 def slices_subpath(user: str) -> Path:
     """which subpath of workdir should we search for slices?"""
     # TODO: update actions for minimal slice names
-    ###return Path(f"env.{user}/prod")
-    return Path(f"terraform/env.{user}/prod")
+    ###return Path(f"env.{user}")
+    return Path(f"terraform/env.{user}")
 
 
 @fixture
@@ -68,19 +83,24 @@ def tacos_branch() -> str:
         )
         # push any GHA-relevant changes
         if result != "main":
-            if not sh.success(("git", "diff", "--quiet", "HEAD", ".github")):
+            if not sh.success(
+                ("git", "diff", "--quiet", "HEAD") + GHA_RELEVANT_PATHS
+            ):
+                # TODO: amend if the previous commit was a similar auto-commit
                 sh.run(
                     (
                         "git",
                         "commit",
-                        ".github",
-                        "--message=auto-commit: .github, for test",
+                        "--message=auto-commit: GHA deps, for test",
                     )
+                    + GHA_RELEVANT_PATHS
                 )
                 sh.run(("git", "show", "--stat"))
 
             # either way, ensure that what we committed will be used
-            sh.run(("git", "push"))
+            sh.run(
+                ("git", "push", "--force-with-lease", "--force-if-includes")
+            )
     return result
 
 

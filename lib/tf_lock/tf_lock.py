@@ -33,5 +33,3 @@ def force_unlock(root_module: Path) -> None:
                 root_module,
             )
         )
-    else:
-        sh.debug("already unlocked:", root_module)

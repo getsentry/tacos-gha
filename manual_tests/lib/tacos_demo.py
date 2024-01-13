@@ -49,7 +49,7 @@ class PR(gh.PR):
         branch, message = edit_slices(slices, test_name, branch, message)
         gh.commit_and_push(demo, branch, message)
 
-        slices.force_unlock_all()
+        slices.force_unlock()
         self = cls.open(demo, branch, slices=slices, draft=draft)
 
         sh.banner("PR opened:", self.url)
@@ -58,7 +58,7 @@ class PR(gh.PR):
 
     def close(self) -> None:
         super().close()
-        self.slices.force_unlock_all()
+        self.slices.force_unlock()
 
     @classmethod
     @contextmanager
