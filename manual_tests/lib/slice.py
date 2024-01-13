@@ -8,6 +8,7 @@ from lib.constants import EMPTY_PATH
 from lib.constants import TACOS_GHA_HOME
 from lib.functions import now
 from lib.sh import sh
+from lib.tacos.dependent_slices import TFCategorized
 from lib.tf_lock import tf_lock
 from lib.types import Generator
 from lib.types import OSPath
@@ -53,14 +54,12 @@ class Slices:
 
     @classmethod
     def from_path(cls, workdir: OSPath, subpath: Path = EMPTY_PATH) -> Self:
+        tf_categorized = TFCategorized.from_git(workdir / subpath)
         return cls(
             workdir=workdir,
             slices=frozenset(
                 Slice(slice.relative_to(workdir))
-                # TODO: search for .tf or terragrunt.hcl files
-                # for now, we assume all direct child directories are slices
-                for slice in (workdir).glob(str(subpath / "*"))
-                if slice.is_dir() and not slice.name == "module"
+                for slice in tf_categorized.slices
             ),
         )
 

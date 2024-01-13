@@ -179,6 +179,15 @@ class TFCategorized:
         modified_fs = FileSystem.from_paths(modified_paths)
         return cls.from_fs(modified_fs, fs)
 
+    @classmethod
+    def from_git(cls, path: OSPath | None = None) -> Self:
+        if path is not None:
+            assert path.is_dir(), path
+            arg = Dir(File(path))
+        else:
+            arg = None
+        return cls.from_fs(FileSystem.from_git(arg))
+
     def config_deps(self) -> SliceDeps:
         """Map from config dirs to the slices that (could) depend on them."""
         config_deps: dict[TFConfigDir, set[TopLevelTFModule]] = {}
