@@ -8,6 +8,7 @@ from lib.constants import EMPTY_PATH
 from lib.constants import TACOS_GHA_HOME
 from lib.functions import now
 from lib.sh import sh
+from lib.tf_lock import tf_lock
 from lib.types import Generator
 from lib.types import OSPath
 from lib.types import Path
@@ -87,6 +88,13 @@ class Slices:
     def paths(self) -> Generator[Path]:
         for slice in self.slices:
             yield self.workdir / slice
+
+    def force_unlock_all(self) -> None:
+        """Unlock *all* slices, forcefully."""
+        sh.banner("forcefully unlocking all slices...")
+        with sh.cd(self.workdir):
+            for slice in Slices.from_path(self.workdir):
+                tf_lock.force_unlock(slice)
 
     def __iter__(self) -> Iterator[Slice]:
         return iter(self.slices)
