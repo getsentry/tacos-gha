@@ -1,12 +1,14 @@
 #!/bin/bash
 set -euo pipefail
 exec >&2  # all output is logging
-HERE="$(cd "$(dirname "$0")"; pwd)"
+
+# relative HERE, for prettier logs
+HERE="$(dirname "$0")"
 
 set -x
 
 fail=()
-if ! git-ls-python | xargs -r pyright; then
+if ! git-ls-python | xargs -r "$HERE/"bin/pyright; then
   fail+=(pyright)
 fi
 if ! git-ls-python | xargs -r mypy; then

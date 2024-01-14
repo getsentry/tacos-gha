@@ -1,4 +1,8 @@
 #!/bin/sh
 set -eu
-HERE="$(cd "$(dirname "$0")"; pwd)"
-exec "$HERE/"git-ls-mimetype 'text/x-script\.python'
+HERE="$(dirname "$(readlink -f "$0")")"
+
+{
+  git ls-files '*.py'
+  "$HERE/"ls-mimetype 'text/x-script\.python'
+} | sort -u

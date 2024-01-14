@@ -5,4 +5,4 @@ exec >&2  # all output is logging
 set -x
 
 brew bundle -vv "$@"
-touch "$REPO_TOP/.done/brew"
+touch "$TACOS_GHA_HOME/.done/brew"
