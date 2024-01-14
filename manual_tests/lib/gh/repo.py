@@ -40,7 +40,9 @@ class RemoteRepo:
     def clone(self, dest: OSPath) -> LocalRepo:
         dest = dest / self.name
         # git will fail if the repo already exists, and that's a feature
-        sh.run(("git", "clone", "git@github.com:getsentry/tacos-demo", dest))
+        sh.run(
+            ("git", "clone", "git@github.com:getsentry/tacos-gha.demo", dest)
+        )
         return LocalRepo(remote=self, path=dest)
 
     def __str__(self) -> str:
