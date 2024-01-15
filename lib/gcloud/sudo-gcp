@@ -1,5 +1,11 @@
 #!/bin/bash
 set -euo pipefail
+HERE="$(dirname "$(readlink -f "$0")")"
+
+if [[ "${DEBUG:-}" ]]; then
+  set -x
+fi
+
 
 # FIXME: support `-u $USER` and/or `-u $EMAIL` to request an end-user access token
 if [[ "${1:-}" = "-u" ]]; then
@@ -10,11 +16,17 @@ elif ! [[ "${1:-}" || "${1:-}" =~ ^- ]]; then
   echo >&2 'usage: sudo-gcp -u $GCP_SERVICE_ACCOUNT $COMAND'
   exit 1
 else
-  service_account=()
+  service_account=(
+    "${SUDO_GCP_SERVICE_ACCOUNT:-"$(
+      "$HERE/"sudo-gcp-service-account
+    )"}"
+  )
 fi
 
-# NOTE: eval must be done separately to avoid gobbling exit code
-token="$(gcloud-auth-export-access-token "${service_account[@]}")"
-eval "$token"
-set -x
+
+# NOTE: evaluate separately from running subprocess, to avoid ignoring errors
+eval="$(
+  "$HERE/"gcloud-auth-export-access-token "${service_account[@]}"
+)"
+eval "$eval"
 "$@"

@@ -22,7 +22,7 @@ class Slice(Path):
 
     def is_locked(self, workdir: Path) -> bool:
         with sh.cd(workdir / self):
-            j = sh.json(("sudo-sac", "tf-lock-info"))
+            j = sh.json(("sudo-gcp", "tf-lock-info"))
             assert isinstance(j, Mapping)
             return j.get("lock", False) is True
 

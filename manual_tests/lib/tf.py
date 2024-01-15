@@ -9,7 +9,7 @@ def _plan_exitcode(workdir: OSPath) -> int:
     with sh.cd(workdir):
         result = sh.returncode(
             (
-                "sudo-sac",
+                "sudo-gcp",
                 "terragrunt-noninteractive",
                 "run-all",
                 "plan",
@@ -43,13 +43,4 @@ def plan_dirty(workdir: OSPath) -> bool:
 
 def apply(workdir: OSPath) -> None:
     with sh.cd(workdir):
-        sh.run(
-            (
-                "sudo-sac",
-                "terragrunt",
-                "run-all",
-                "apply",
-                "--auto-approve",
-                "--terragrunt-non-interactive",
-            )
-        )
+        sh.run(("sudo-gcp", "terragrunt-noninteractive", "run-all", "apply"))
