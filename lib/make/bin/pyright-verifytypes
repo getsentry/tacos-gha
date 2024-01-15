@@ -1,5 +1,5 @@
 #!/bin/sh
 lib="$1"
 set -ex
-export PYTHONPATH="$REPO_TOP"
+export PYTHONPATH="$TACOS_GHA_HOME"
 pyright --ignoreexternal --verifytypes "$lib"

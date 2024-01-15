@@ -2,7 +2,7 @@
 # Some presets for use in all GHA shell steps.
 # This is the "inner" half, which runs after we switch user via `sudo`
 set -euo pipefail
-HERE="$(cd "$(dirname "$0")"; pwd)"
+HERE="$(dirname "$(readlink -f "$0")")"
 
 
 # prefix debug lines with a fancy-looking "prompt", randomly colored

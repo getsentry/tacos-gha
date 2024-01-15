@@ -7,7 +7,6 @@ from typing import Mapping
 from typing import ParamSpec
 from typing import TypeVar
 
-HERE = Path(__file__).parent.absolute()
 Environ = Mapping[str, str]
 T = TypeVar("T")
 P = ParamSpec("P")
@@ -79,7 +78,7 @@ def get_lock_info(root_module: Path) -> dict[str, str]:
     from json import loads
     from subprocess import check_output
 
-    result = loads(check_output((HERE / "tf-lock-info", str(root_module))))
+    result = loads(check_output(("tf-lock-info", str(root_module))))
     return assert_dict_of_strings(result)
 
 

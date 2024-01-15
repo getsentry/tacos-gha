@@ -1,7 +1,5 @@
 #!/bin/bash
 set -euo pipefail
-HERE="$(cd "$(dirname "$0")"; pwd)"
-PATH="$HERE/../unix:$PATH"
 
 get_line() {
   config_file="$1"
@@ -22,7 +20,7 @@ if config="$(nearest-config-file .config/sudo-gcp/service-account)"; then
   interpolate_line "$config"
 
 # TODO: clean up `sudo-gcp.toml` configs, then delete me:
-elif config="$(nearest-config-file sudo-gcp.d)"; then
+elif config="$(nearest-config-file sudo-gcp.d/service-account)"; then
   interpolate_line "$config"
 
 # TODO: clean up `sudo-gcp.toml` configs, then delete me:
