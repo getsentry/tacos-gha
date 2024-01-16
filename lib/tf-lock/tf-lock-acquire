@@ -1,6 +1,6 @@
 #!/bin/bash
 set -euo pipefail
-HERE="$(cd "$(dirname "$0")"; pwd)"
+HERE="$(dirname "$(readlink -f "$0")")"
 root_module="${1:-"$PWD"}"
 
 if [[ "${DEBUG:-}" ]]; then
@@ -8,7 +8,7 @@ if [[ "${DEBUG:-}" ]]; then
 fi
 
 lock_id=$(
-  "$HERE/"tf-lock-id "$root_module"
+  tf-lock-id "$root_module"
 ) && status=$? || status=$?
 
 if (( status == 2 )); then
@@ -18,7 +18,7 @@ if (( status == 2 )); then
       exit 1
     fi
   )
-  exec "$HERE/"tf-lock-id "$root_module"
+  exec tf-lock-id "$root_module"
 elif (( status == 0 )); then
   # already done!
   cat <<< "$lock_id"

@@ -4,7 +4,7 @@ from __future__ import annotations
 from pytest import fixture
 
 from lib import json
-from lib.constants import REPO_TOP
+from lib.constants import TACOS_GHA_HOME
 from lib.functions import one
 from lib.sh import sh
 from lib.sh.cd import cd
@@ -36,7 +36,7 @@ def demo(cwd: OSPath, git_remote: gh.RemoteRepo) -> Generator[gh.LocalRepo]:
 
 @fixture
 def workdir(demo: gh.LocalRepo, environ: Environ) -> Generator[OSPath]:
-    with cd(REPO_TOP, environ):
+    with cd(TACOS_GHA_HOME, environ):
         # disallow direnv from unloading our test environment:
         for var in environ:
             if var.startswith("DIRENV_"):
@@ -62,7 +62,7 @@ def slices(workdir: OSPath, slice_subpath: Path) -> Slices:
 
 @fixture
 def tacos_branch() -> str:
-    with sh.cd(REPO_TOP):
+    with sh.cd(TACOS_GHA_HOME):
         result = one(
             sh.lines(("git", "symbolic-ref", "-q", "--short", "HEAD"))
         )

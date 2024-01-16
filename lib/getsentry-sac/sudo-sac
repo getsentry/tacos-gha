@@ -1,3 +1,4 @@
 #!/bin/bash
-sac_terraformer="${GETSENTRY_SAC_TERRAFORMER:-"$(sac-terraformer)"}"
+HERE="$(dirname "$(readlink -f "$0")")"
+sac_terraformer="${GETSENTRY_SAC_TERRAFORMER:-"$("$HERE/"sac-terraformer)"}"
 sudo-gcp -u "$sac_terraformer" "$@"
