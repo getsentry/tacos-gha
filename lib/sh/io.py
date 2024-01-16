@@ -60,9 +60,9 @@ def xtrace(cmd: Command) -> None:
     debug("".join((PS4, quote(cmd))))
 
 
-def debug(msg: object) -> None:
+def debug(*msg: object) -> None:
     if DEBUG:
-        info(msg)
+        info(*msg)
 
 
 @contextlib.contextmanager
