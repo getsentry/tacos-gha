@@ -5,7 +5,6 @@ from random import Random
 from typing import TYPE_CHECKING
 
 from lib.constants import EMPTY_PATH
-from lib.constants import TACOS_GHA_HOME
 from lib.functions import now
 from lib.sh import sh
 from lib.tacos.dependent_slices import TFCategorized
@@ -25,9 +24,7 @@ class Slice(Path):
 
     def is_locked(self, workdir: OSPath) -> bool:
         with sh.cd(workdir / self):
-            j = sh.json(
-                ("sudo-gcp", TACOS_GHA_HOME / "lib/tf_lock/tf-lock-info")
-            )
+            j = sh.json(("sudo-sac", "tf-lock-info"))
             assert isinstance(j, Mapping)
             return j.get("lock", False) is True
 
