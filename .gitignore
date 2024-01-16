@@ -1,6 +1,3 @@
-# our standard system-under-test
-tacos-demo/
-
 # coverage raw data
 .coverage*
 
