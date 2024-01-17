@@ -14,7 +14,9 @@ class DescribeBanner:
 
         result = capfd.readouterr()
         assert result.out == ""
-        assert result.err == "\x1b[92;1m ======== one: 1 ======== \x1b[m\n"
+        assert (
+            result.err == "\x1b[92;1m ======== one: 1 ======== \x1b[m\n"
+        )  # ]]  treesitter-python bug
 
 
 class DescribeXtrace:
@@ -34,3 +36,19 @@ class DescribeQuiet:
         result = capfd.readouterr()
         assert result.out == ""
         assert result.err == ""
+
+
+class DescribeUniq:
+    def it_suppresses_dups(self, capfd: pytest.CaptureFixture[str]) -> None:
+        with io.uniq():
+            io.info("1")
+            io.debug("2")
+            io.info("1")
+            io.debug("3")
+            io.info("2")
+            io.info("4")
+            io.info("3")
+
+        result = capfd.readouterr()
+        assert result.out == ""
+        assert result.err == "1\n2\n3\n4\n"

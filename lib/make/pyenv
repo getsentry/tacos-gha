@@ -17,4 +17,4 @@ source /dev/stdin <<< "
 
 pyenv install -v --skip-existing "$@"
 
-touch "$REPO_TOP/.done/pyenv"
+touch "$TACOS_GHA_HOME/.done/pyenv"

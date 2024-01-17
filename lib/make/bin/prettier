@@ -1,0 +1,8 @@
+#!/bin/sh
+# run prettier on all files passed via stdin, except ignore symlink files
+# prettier doesn't like symlinks ¯\_(ツ)_/¯
+file --mime-type --no-pad --files-from=- |
+  grep -v 'inode/symlink$' |
+  sed 's@: .*@@' |
+  xargs -r prettier --write --ignore-unknown \
+;

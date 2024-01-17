@@ -1,7 +1,6 @@
 #!/bin/bash
 set -eEuo pipefail
-HERE="$(cd "$(dirname "$0")"; pwd)"
-export PATH="$HERE/lib:$PATH"
+HERE="$(dirname "$(readlink -f "$0")")"
 root_module="${1:-"$PWD"}"
 
 if [[ "${DEBUG:-}" ]]; then

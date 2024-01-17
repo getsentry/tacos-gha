@@ -33,7 +33,7 @@ jobs:
       id-token: write
 
     steps:
-      - uses: bukzor-sentryio/direnv-install@v1
+      - uses: bukzor/direnv-install@v1
       - uses: actions/checkout@v4
       - uses: actions/checkout@v4
         with:

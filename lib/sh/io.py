@@ -18,13 +18,22 @@ PS4 = f"+ {ansi.TEAL}${ansi.RESET} "
 # 2+ - trace
 DEBUG: int = int(getenv("DEBUG", "1"))
 
+Uniq = set[tuple[object, ...]]
+UNIQ: Uniq | None = None
+
 
 def info(*msg: object) -> None:
     """Show the user a message."""
 
     from sys import stderr
 
+    if UNIQ is not None and msg in UNIQ:
+        return  # duplicate message in a `uniq` context
+
     print(*msg, file=stderr, flush=True)
+
+    if UNIQ is not None:
+        UNIQ.add(msg)
 
 
 def banner(*msg: object) -> None:
@@ -51,9 +60,9 @@ def xtrace(cmd: Command) -> None:
     debug("".join((PS4, quote(cmd))))
 
 
-def debug(msg: object) -> None:
+def debug(*msg: object) -> None:
     if DEBUG:
-        info(msg)
+        info(*msg)
 
 
 @contextlib.contextmanager
@@ -71,3 +80,13 @@ def quiet() -> ContextManager[int]:
 
 def loud() -> ContextManager[int]:
     return verbosity(2)
+
+
+@contextlib.contextmanager
+def uniq() -> Generator[Uniq]:
+    """Only show unique log messages."""
+    global UNIQ
+    newvalue: Uniq = set()
+    orig, UNIQ = UNIQ, newvalue
+    yield newvalue
+    UNIQ = orig
