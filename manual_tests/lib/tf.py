@@ -43,4 +43,13 @@ def plan_dirty(workdir: OSPath) -> bool:
 
 def apply(workdir: OSPath) -> None:
     with sh.cd(workdir):
-        sh.run(("sudo-gcp", "terragrunt-noninteractive", "run-all", "apply"))
+        sh.run(
+            (
+                "env",
+                "GETSENTRY_SAC_VERB=apply",
+                "sudo-gcp",
+                "terragrunt-noninteractive",
+                "run-all",
+                "apply",
+            )
+        )

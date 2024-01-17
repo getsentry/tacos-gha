@@ -13,6 +13,7 @@ from lib.types import Generator
 from lib.types import OSPath
 from lib.types import Path
 from manual_tests.lib import tacos_demo
+from manual_tests.lib import tf
 from manual_tests.lib.gh import gh
 from manual_tests.lib.slice import Slices
 
@@ -106,12 +107,21 @@ def tacos_branch() -> str:
 
 @fixture
 def pr(
-    slices: Slices, test_name: str, demo: gh.LocalRepo, tacos_branch: str
+    slices: Slices,
+    test_name: str,
+    demo: gh.LocalRepo,
+    tacos_branch: str,
+    slices_subpath: Path,
 ) -> Generator[tacos_demo.PR]:
+    # cleanup: apply main in case some other test left things in a dirty state
+    tf.apply(slices.workdir / slices_subpath)
+
     with tacos_demo.PR.opened_for_slices(
         slices, test_name, demo, tacos_branch
     ) as pr:
         yield pr
+
+    tf.apply(slices.workdir / slices_subpath)
 
 
 GCLOUD_CONFIG = Path(".config/gcloud/configurations")
