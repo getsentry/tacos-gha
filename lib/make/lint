@@ -11,7 +11,7 @@ fail=()
 if ! git-ls-python | xargs -r "$HERE/"bin/pyright; then
   fail+=(pyright)
 fi
-if ! "$HERE/"bin/mypy; then
+if ! git-ls-python | xargs -r mypy; then
   fail+=(mypy)
 fi
 
@@ -23,7 +23,7 @@ then
   fail+=(pyright-verifytypes)
 fi
 
-if ! "$HERE/"bin/shellcheck; then
+if ! git-ls-sh | xargs -r shellcheck; then
   fail+=(shellcheck)
 fi
 
