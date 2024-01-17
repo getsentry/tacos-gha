@@ -5,5 +5,4 @@ lib="$1"
 HERE="$(dirname "$0")"
 
 set -ex
-export PYTHONPATH="$TACOS_GHA_HOME"
 "$HERE/"pyright --ignoreexternal --verifytypes "$lib"

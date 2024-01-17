@@ -1,6 +1,5 @@
 #!/bin/bash
 set -euo pipefail
-HERE="$(dirname "$(readlink -f "$0")")"
 
 # FIXME: support `-u $USER` and/or `-u $EMAIL` to request an end-user access token
 if [[ "${1:-}" = "-u" ]]; then
@@ -15,7 +14,7 @@ else
 fi
 
 # NOTE: eval must be done separately to avoid gobbling exit code
-token="$("$HERE/"gcloud-auth-export-access-token "${service_account[@]}")"
+token="$(gcloud-auth-export-access-token "${service_account[@]}")"
 eval "$token"
 set -x
 "$@"

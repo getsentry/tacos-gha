@@ -1,6 +1,6 @@
 #!/bin/bash
 set -eEuo pipefail
-HERE="$(cd "$(dirname "$0")"; pwd)"
+HERE="$(dirname "$(readlink -f "$0")")"
 
 printf '{'
 "$HERE/"error2json.sed |
