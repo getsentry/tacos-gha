@@ -1,5 +1,8 @@
 #!/bin/sh
 lib="$1"
+
+# relative HERE, for prettier logs
+HERE="$(dirname "$0")"
+
 set -ex
-export PYTHONPATH="$TACOS_GHA_HOME"
-pyright --ignoreexternal --verifytypes "$lib"
+"$HERE/"pyright --ignoreexternal --verifytypes "$lib"
