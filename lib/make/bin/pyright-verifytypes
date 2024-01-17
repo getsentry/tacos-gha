@@ -1,4 +1,8 @@
 #!/bin/sh
 lib="$1"
+
+# relative HERE, for prettier logs
+HERE="$(dirname "$0")"
+
 set -ex
-pyright --ignoreexternal --verifytypes "$lib"
+"$HERE/"pyright --ignoreexternal --verifytypes "$lib"

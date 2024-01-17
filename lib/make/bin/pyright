@@ -1,2 +1,8 @@
-#!/bin/sh
-git-ls-python | xargs -r pyright
+#!/bin/bash
+set -euo pipefail
+
+pyright "$@" |
+
+  # this just makes things so much easier to read
+  sed "s,$PWD,.,g" \
+;

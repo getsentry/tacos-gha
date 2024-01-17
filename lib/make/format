@@ -7,6 +7,6 @@ HERE="$(dirname "$0")"
 
 set -x
 
-"$HERE/"bin/black
-"$HERE/"bin/isort
-"$HERE/"bin/prettier
+git-ls-python | xargs -r black
+git-ls-python | xargs -r isort
+git ls-files | "$HERE/"bin/prettier

@@ -3,32 +3,45 @@ repos:
     hooks:
       - id: prettier
         name: prettier
-        language: system
         entry: prettier --write --ignore-unknown
+        language: system
+        types:
+          - text
 
       - id: black
         name: black
+        entry: black
         language: system
-        entry: ./lib/make/bin/black
-        pass_filenames: false
+        types:
+          - python
 
       - id: isort
         name: isort
-        language: system
         entry: isort
-        files: '\.py$'
+        language: system
+        types:
+          - python
 
       - id: pyright
         name: pyright
+        entry: ./lib/make/bin/pyright
         language: system
-        entry: pyright
-        files: '\.py$'
+        types:
+          - python
 
       - id: mypy
         name: mypy
-        language: system
         entry: mypy
-        files: '\.py$'
+        language: system
+        types:
+          - python
+
+      - id: shellcheck
+        name: shellcheck
+        entry: shellcheck
+        language: system
+        types:
+          - shell
 
       - id: pyright-verifytypes-lib
         name: "pyright verify: lib"
@@ -45,13 +58,8 @@ repos:
         pass_filenames: false
 
       - id: pyright-verifytypes-tf-lock
-        name: "pyright verify: tf-lock"
+        name: "pyright verify: tf_lock"
         language: system
         entry: ./lib/make/bin/pyright-verifytypes lib/tf_lock/lib
         files: "^lib/tf_lock/lib/"
         pass_filenames: false
-
-      - id: shellcheck
-        name: shellcheck
-        language: system
-        entry: ./lib/make/bin/shellcheck

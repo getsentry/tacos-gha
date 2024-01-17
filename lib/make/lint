@@ -8,7 +8,7 @@ HERE="$(dirname "$0")"
 set -x
 
 fail=()
-if ! "$HERE/"bin/pyright; then
+if ! git-ls-python | xargs -r "$HERE/"bin/pyright; then
   fail+=(pyright)
 fi
 if ! "$HERE/"bin/mypy; then
