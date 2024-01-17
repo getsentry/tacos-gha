@@ -1,4 +1,8 @@
 #!/bin/sh
 set -eu
 HERE="$(dirname "$(readlink -f "$0")")"
-exec "$HERE/"ls-mimetype 'text/x-shellscript'
+
+{
+  git ls-files '*.sh'
+  "$HERE/"ls-mimetype 'text/x-shellscript'
+} | sort -u

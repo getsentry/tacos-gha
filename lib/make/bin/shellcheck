@@ -1,6 +1,0 @@
-#!/bin/sh
-file --mime-type --no-pad --files-from=- |
-    grep ': text/x-shellscript$' |
-    sed 's@: text/x-shellscript$@@' |
-    xargs -r shellcheck \
-;

@@ -7,12 +7,11 @@ from os import environ
 from lib import json as JSON
 from lib.types import Environ
 from lib.types import Generator
-from lib.types import Path
+from lib.types import OSPath
 
 from .core import run
 from .io import banner as banner
 from .io import info as info
-from .io import quiet as quiet
 from .io import xtrace
 from .json import json
 
@@ -22,17 +21,21 @@ Command = tuple[object, ...]
 
 @contextlib.contextmanager
 def cd(
-    dirname: Path, env: Environ = environ, *, direnv: bool = True
-) -> Generator[Path]:
-    oldpwd = Path(env["PWD"])
+    dirname: OSPath, env: Environ = environ, *, direnv: bool = True
+) -> Generator[OSPath]:
+    oldpwd = OSPath(env["PWD"])
+
+    # double-check that $PWD stays accurate:
+    assert oldpwd.samefile(OSPath.cwd()), (oldpwd, OSPath.cwd())
+
     newpwd = oldpwd / dirname
-    if newpwd == oldpwd:  # we're already there
-        yield newpwd
+    if newpwd.samefile(oldpwd):  # we're already there
+        yield oldpwd
         return
 
+    env["PWD"] = str(newpwd)
     xtrace(("cd", dirname))
     with contextlib.chdir(dirname):
-        env["PWD"] = str(newpwd)
         if direnv:
             run(("direnv", "allow"))
             direnv_json: JSON.Value = json(("direnv", "export", "json"))
@@ -48,3 +51,7 @@ def cd(
             else:
                 raise AssertionError(f"expected dict, got {type(direnv_json)}")
         yield dirname
+
+        # show the un-cd, and reflect it in $PWD
+        env["PWD"] = str(oldpwd)
+        xtrace(("cd", oldpwd))

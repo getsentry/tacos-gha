@@ -68,7 +68,7 @@ pylint==3.0.3
     # via -r requirements-dev.in
 pyproject-hooks==1.0.0
     # via build
-pyright==1.1.342
+pyright==1.1.345
     # via -r requirements-dev.in
 pytest==7.4.4
     # via -r requirements-dev.in
