@@ -15,7 +15,6 @@ from lib.types import Path
 
 if TYPE_CHECKING:
     from typing import Iterator
-    from typing import Mapping
     from typing import Self
 
 
@@ -25,7 +24,7 @@ class Slice(Path):
     def is_locked(self, workdir: OSPath) -> bool:
         with sh.cd(workdir / self):
             j = sh.json(("sudo-gcp", "tf-lock-info"))
-            assert isinstance(j, Mapping)
+            assert isinstance(j, dict)
             return j.get("lock", False) is True
 
     def edit(self, workdir: OSPath) -> None:
