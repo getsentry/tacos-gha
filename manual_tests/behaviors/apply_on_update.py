@@ -9,6 +9,10 @@ TEST_NAME = __name__
 
 
 def test(pr: tacos_demo.PR, slices_subpath: Path) -> None:
+    # cleanup: apply main in case some other test left things in a dirty state
+    # TODO: move to a fixture?
+    tf.apply(pr.slices.workdir / slices_subpath)
+
     pr.approve()
     assert pr.approved()
 
