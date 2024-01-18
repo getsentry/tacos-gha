@@ -76,8 +76,10 @@ class PR(gh.PR):
             pr = cls.for_slices(
                 slices, test_name, demo, tacos_branch, branch, message, draft
             )
-            yield pr
-            pr.close()
+            try:
+                yield pr
+            finally:
+                pr.close()
 
     def get_plan(self, since: datetime | None = None) -> str:
         """Return the body of the github PR comment containing the tf plan."""
