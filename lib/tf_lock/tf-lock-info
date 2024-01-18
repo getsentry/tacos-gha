@@ -1,6 +1,7 @@
 #!/bin/bash
 set -eEuo pipefail
 HERE="$(dirname "$(readlink -f "$0")")"
+
 root_module="${1:-"$PWD"}"
 
 if [[ "${DEBUG:-}" ]]; then
@@ -8,7 +9,7 @@ if [[ "${DEBUG:-}" ]]; then
 fi
 
 fancy_error="$(
-  cd "$root_module"
+  cd "$root_module" || exit 1
   # swap stdout and stderr:
   terraform force-unlock -force -- -1 3>&2 2>&1 1>&3 <<< ""
 )" && status=$? || status=$?
@@ -23,7 +24,7 @@ error="$(
 if grep -Eq <<< "$error" $'ID:'; then
   "$HERE/"lib/error2json <<< "$error"
 elif grep -Eq <<< "$error" \
-    $'^\t\* storage: object doesn'\''t exist$' \
+    $'^\t\* storage: object doesn'\''t exist$|^Failed to unlock state: LocalState not locked$' \
 ; then
   echo '{"lock": false}'
 elif grep -Eq <<< "$error" \
@@ -31,13 +32,15 @@ elif grep -Eq <<< "$error" \
 ; then
   ( # NB: need to undo the cd to keep relative paths valid
     cd "$root_module"
-    if ! terraform init >/dev/null 2>&1; then
+    if ! noise="$(terraform init 2>&1)"; then
       echo >&2 Terraform init failed!
+      echo >&2 "$noise"
       exit 1
     fi
   )
-  exec "$0" "$@"
+  exec "$0" "$@"  # start over
 else
-  cat >&2 <<< "$fancy_error"
+  set +x
+  echo -n >&2 "$fancy_error"  # avoid the appended newline of <<<
   exit "$status"
 fi

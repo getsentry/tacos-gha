@@ -49,11 +49,16 @@ class PR(gh.PR):
         branch, message = edit_slices(slices, test_name, branch, message)
         gh.commit_and_push(demo, branch, message)
 
-        pr = cls.open(demo, branch, slices=slices, draft=draft)
+        slices.force_unlock()
+        self = cls.open(demo, branch, slices=slices, draft=draft)
 
-        sh.banner("PR opened:", pr.url)
+        sh.banner("PR opened:", self.url)
 
-        return pr
+        return self
+
+    def close(self) -> None:
+        super().close()
+        self.slices.force_unlock()
 
     @classmethod
     @contextmanager

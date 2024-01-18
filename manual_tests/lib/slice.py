@@ -7,6 +7,8 @@ from typing import TYPE_CHECKING
 from lib.constants import EMPTY_PATH
 from lib.functions import now
 from lib.sh import sh
+from lib.tacos.dependent_slices import TFCategorized
+from lib.tf_lock import tf_lock
 from lib.types import Generator
 from lib.types import OSPath
 from lib.types import Path
@@ -49,14 +51,11 @@ class Slices:
 
     @classmethod
     def from_path(cls, workdir: OSPath, subpath: Path = EMPTY_PATH) -> Self:
+        tf_categorized = TFCategorized.from_git(workdir / subpath)
         return cls(
             workdir=workdir,
             slices=frozenset(
-                Slice(slice.relative_to(workdir))
-                # TODO: search for .tf or terragrunt.hcl files
-                # for now, we assume all direct child directories are slices
-                for slice in (workdir).glob(str(subpath / "*"))
-                if slice.is_dir() and not slice.name == "module"
+                Slice(subpath / slice) for slice in tf_categorized.slices
             ),
         )
 
@@ -84,6 +83,13 @@ class Slices:
     def paths(self) -> Generator[Path]:
         for slice in self.slices:
             yield self.workdir / slice
+
+    def force_unlock(self) -> None:
+        """Unlock these slices, forcefully."""
+        sh.banner("forcefully unlocking slices...")
+        with sh.cd(self.workdir):
+            for slice in self:
+                tf_lock.force_unlock(slice)
 
     def __iter__(self) -> Iterator[Slice]:
         return iter(self.slices)

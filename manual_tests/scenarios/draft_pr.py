@@ -21,18 +21,18 @@ def test(
 
         # The terraform_plan check should run automatically when the PR is opened
         sh.banner("Wait for the terraform_plan check to complete")
-        assert pr.check("tacos_plan").wait(pr.since).success
+        assert pr.check("Terraform Plan").wait(pr.since).success
 
         # The terraform_lock check should not run automatically when the PR is a draft
         sh.banner("Make sure the terraform_lock check did not run")
-        assert pr.check("tacos_lock").wait(pr.since).skipped
+        assert pr.check("Terraform Lock").wait(pr.since).skipped
 
         # Since this PR is a draft, it should not be able to apply the plan
         sh.banner("Try to apply the plan for a draft PR")
         since = pr.add_label(":taco::apply")
 
         # The terraform_apply check should not run automatically when the PR is a draft
-        assert pr.check("tacos_apply").wait(pr.since).skipped
+        assert pr.check("Terraform Apply").wait(pr.since).skipped
 
         # Another user should be able to aquire the lock(s)
         sh.banner("Open a second, non-draft PR for the same slices")
@@ -47,16 +47,16 @@ def test(
             sh.banner(
                 "Wait for the terraform_plan check to complete successfully"
             )
-            pr2.check("tacos_plan").wait().success
+            pr2.check("Terraform Plan").wait().success
 
             # This PR should aquire the lock
             sh.banner("Make sure the terraform_lock checks ran successfully")
-            assert pr2.check("tacos_lock").wait().success
+            assert pr2.check("Terraform Lock").wait().success
 
             # Since this is not a draft PR, it should be able to apply the plan
             sh.banner("Apply the plan for the second PR")
             since = pr2.add_label(":taco::apply")
-            pr2.check("tacos_apply").wait(since).success
+            pr2.check("Terraform Apply").wait(since).success
 
             # Merge the second PR
             sh.banner("Merge the second PR")

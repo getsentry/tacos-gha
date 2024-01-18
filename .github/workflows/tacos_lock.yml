@@ -106,7 +106,6 @@ jobs:
 
       - name: set terraformer
         id: set-terraformer
-        working-directory: ${{ env.working_dir }}
         run: ./tacos-gha/lib/ci/set-terraformer
 
       - name: gcp auth
@@ -114,7 +113,7 @@ jobs:
         uses: google-github-actions/auth@v1
         with:
           workload_identity_provider: ${{env.GETSENTRY_SAC_OIDC}}
-          service_account: ${{env.GETSENTRY_SAC_TERRAFORMER}}
+          service_account: ${{env.SUDO_GCP_SERVICE_ACCOUNT}}
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3

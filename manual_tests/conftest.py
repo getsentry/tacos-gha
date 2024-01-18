@@ -13,8 +13,24 @@ from lib.types import Generator
 from lib.types import OSPath
 from lib.types import Path
 from manual_tests.lib import tacos_demo
+from manual_tests.lib import tf
 from manual_tests.lib.gh import gh
 from manual_tests.lib.slice import Slices
+
+# you forgot to commit if these paths have pending edits
+GHA_RELEVANT_PATHS = (
+    ".envrc",
+    ".github",
+    "bin",
+    "lib/ci",
+    "lib/gcloud",
+    "lib/getsentry-sac",
+    "lib/github",
+    "lib/tacos",
+    "lib/terragrunt",
+    "lib/tf_lock",
+    "lib/unix",
+)
 
 
 @fixture
@@ -47,16 +63,16 @@ def workdir(demo: gh.LocalRepo, environ: Environ) -> Generator[OSPath]:
 
 
 @fixture
-def slice_subpath(user: str) -> Path:
+def slices_subpath(user: str) -> Path:
     """which subpath of workdir should we search for slices?"""
     # TODO: update actions for minimal slice names
-    ###return Path(f"env.{user}/prod")
-    return Path(f"terraform/env.{user}/prod")
+    ###return Path(f"env.{user}")
+    return Path(f"terraform/env.{user}")
 
 
 @fixture
-def slices(workdir: OSPath, slice_subpath: Path) -> Slices:
-    slices = Slices.from_path(workdir, slice_subpath)
+def slices(workdir: OSPath, slices_subpath: Path) -> Slices:
+    slices = Slices.from_path(workdir, slices_subpath)
     return slices.random()
 
 
@@ -68,30 +84,44 @@ def tacos_branch() -> str:
         )
         # push any GHA-relevant changes
         if result != "main":
-            if not sh.success(("git", "diff", "--quiet", "HEAD", ".github")):
+            if not sh.success(
+                ("git", "diff", "--quiet", "HEAD") + GHA_RELEVANT_PATHS
+            ):
+                # TODO: amend if the previous commit was a similar auto-commit
                 sh.run(
                     (
                         "git",
                         "commit",
-                        ".github",
-                        "--message=auto-commit: .github, for test",
+                        "--message=auto-commit: GHA deps, for test",
                     )
+                    + GHA_RELEVANT_PATHS
                 )
                 sh.run(("git", "show", "--stat"))
 
             # either way, ensure that what we committed will be used
-            sh.run(("git", "push"))
+            sh.run(
+                ("git", "push", "--force-with-lease", "--force-if-includes")
+            )
     return result
 
 
 @fixture
 def pr(
-    slices: Slices, test_name: str, demo: gh.LocalRepo, tacos_branch: str
+    slices: Slices,
+    test_name: str,
+    demo: gh.LocalRepo,
+    tacos_branch: str,
+    slices_subpath: Path,
 ) -> Generator[tacos_demo.PR]:
+    # cleanup: apply main in case some other test left things in a dirty state
+    tf.apply(slices.workdir / slices_subpath)
+
     with tacos_demo.PR.opened_for_slices(
         slices, test_name, demo, tacos_branch
     ) as pr:
         yield pr
+
+    tf.apply(slices.workdir / slices_subpath)
 
 
 GCLOUD_CONFIG = Path(".config/gcloud/configurations")

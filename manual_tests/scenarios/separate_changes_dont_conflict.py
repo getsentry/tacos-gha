@@ -32,7 +32,7 @@ def test(
         ) as pr2,
     ):
         sh.banner("User 1 acquires the lock")
-        assert pr1.check("tacos_lock").wait().success
+        assert pr1.check("Terraform Lock").wait().success
 
         sh.banner("User 2 acquires the lock")
-        assert pr2.check("tacos_lock").wait().success
+        assert pr2.check("Terraform Lock").wait().success

@@ -27,7 +27,7 @@ def test(
     ):
         winner = loser = None
         for pr in (pr1, pr2):
-            conclusion = pr.check("tacos_lock").wait().conclusion
+            conclusion = pr.check("Terraform Lock").wait().conclusion
             if conclusion == "SUCCESS":
                 winner = pr
                 sh.banner("Winner acquires the lock")
@@ -40,7 +40,7 @@ def test(
                 raise AssertionError(f"Unexpected conclusion: {conclusion}")
 
         assert winner is not None, winner
-        assert winner.check("tacos_lock").wait().success
+        assert winner.check("Terraform Lock").wait().success
 
         sh.banner("Loser recieves a comment about the locking failure")
         try:
@@ -59,4 +59,4 @@ def test(
         since = loser.add_label(":taco::acquire-lock")
 
         sh.banner("Loser acquires the lock")
-        assert loser.check("tacos_lock").wait(since).success
+        assert loser.check("Terraform Lock").wait(since).success

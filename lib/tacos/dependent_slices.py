@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import typing
 from dataclasses import dataclass
-from fnmatch import fnmatch
 from typing import Callable
 from typing import Iterable
 from typing import NewType
@@ -11,6 +10,8 @@ from typing import Self
 
 from lib.types import OSPath
 from lib.types import Path
+
+from .path_filter import PathFilter
 
 # NewTypes exist only during typing, but help keep track of things
 # FIXME: remove pright:ignore, pending https://github.com/microsoft/pyright/issues/6976
@@ -85,41 +86,6 @@ class FileSystem:
         for file in self.files:
             if parent(file) == dir:
                 yield file
-
-
-@dataclass(frozen=True)
-class PathFilter:
-    """A frozen view of a collection of files."""
-
-    allowed: frozenset[str]
-
-    def match(self, path: Path) -> bool:
-        if not self.allowed:
-            return True
-        for pattern in self.allowed:
-            if fnmatch(str(path), pattern):
-                return True
-        return False
-
-    @classmethod
-    def from_config(cls, path: OSPath) -> PathFilter:
-        """Get a list of allowed globs from a file
-
-        Hash comments are removed and blank lines are ignored.
-        Inline comments are not allowed
-        An empty or missing file is treated as all allowed.
-        Globs are evaluated with the fnmatch module."""
-        lines: list[str] = []
-        # remove from the first unescaped # to the end
-        try:
-            with path.open() as config:
-                for line in config:
-                    line = line.strip()
-                    if line and not line.startswith("#"):
-                        lines.append(line)
-        except FileNotFoundError:
-            pass
-        return cls(allowed=frozenset(lines))
 
 
 @typing.overload
@@ -216,6 +182,15 @@ class TFCategorized:
         modified_fs = FileSystem.from_paths(modified_paths)
         return cls.from_fs(modified_fs, fs)
 
+    @classmethod
+    def from_git(cls, path: OSPath | None = None) -> Self:
+        if path is not None:
+            assert path.is_dir(), path
+            arg = Dir(File(path))
+        else:
+            arg = None
+        return cls.from_fs(FileSystem.from_git(arg))
+
     def config_deps(self) -> SliceDeps:
         """Map from config dirs to the slices that (could) depend on them."""
         config_deps: dict[TFConfigDir, set[TopLevelTFModule]] = {}
@@ -281,12 +256,10 @@ def main() -> int:
     fs = FileSystem.from_git()
     modified_paths = lines_to_paths(fileinput.input(encoding="utf-8"))
 
-    path_filter = PathFilter.from_config(
-        OSPath(".config/tacos-gha/slices.allowlist")
-    )
+    path_filter = PathFilter.from_config()
 
     for slice in dependent_slices(modified_paths, fs):
-        if path_filter.match(slice):
+        if path_filter.match(str(slice)):
             print(slice)
 
     return 0

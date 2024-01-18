@@ -1,0 +1,18 @@
+#!/bin/bash
+set -euo pipefail
+HERE="$(dirname "$(readlink -f "$0")")"
+TACOS_GHA_HOME="$(cd "$HERE"/../..; pwd)"
+export PATH="$TACOS_GHA_HOME/bin:$PATH"
+
+
+"$HERE"/slices |
+  sudo-gcp \
+    xargs -rn1 \
+      sh -c '
+        slice="$1"
+        tf-lock-info "$slice" |
+          jq --arg slice "$slice" '\''. + {"slice":$slice}'\''
+      ' \
+    - \
+  \
+;

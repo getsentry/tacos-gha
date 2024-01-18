@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from . import app as app
-from .check import Check as Check
+from .check import CheckFilter as CheckFilter
 from .check_run import CheckRun as CheckRun
 from .jwt import JWT as JWT
 from .pr import PR as PR

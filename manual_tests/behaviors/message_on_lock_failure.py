@@ -25,12 +25,12 @@ def test(
         ) as pr2,
     ):
         checks: dict[tacos_demo.PR, gh.CheckRun] = {
-            pr1: pr1.check("tacos_lock").wait(),
-            pr2: pr2.check("tacos_lock").wait(),
+            pr1: pr1.check("Terraform Lock").wait(),
+            pr2: pr2.check("Terraform Lock").wait(),
         }
 
         for pr, check in checks.items():
-            comments = pr.comments(since=check.started)
+            comments = pr.comments(since=check.started_at)
             if check.conclusion == "SUCCESS":
                 assert MESSAGE not in comments
             elif check.conclusion == "FAILURE":

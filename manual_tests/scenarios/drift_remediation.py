@@ -47,7 +47,7 @@ def test_roll_forward(slices: Slices) -> None:
 
     sh.banner("user merges and closes pr")
     since = pr.add_label(":taco::apply")
-    assert pr.check("tacos_apply").wait(since).success
+    assert pr.check("Terraform Apply").wait(since).success
 
     pr.merge()
 
@@ -68,7 +68,7 @@ def test_roll_back(slices: Slices) -> None:
         raise XFailed("tacos/drift branch not created")
 
     since = pr.add_label(":taco::unlock")
-    assert pr.check("tacos_unlock").wait(since).success
+    assert pr.check("Terraform Unlock").wait(since).success
     assert "INFO: Main branch clean, unlock successful." in pr.comments(
         since=since
     )

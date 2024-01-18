@@ -1,6 +1,0 @@
-#!/bin/bash
-set -eEuo pipefail
-HERE="$(cd "$(dirname "$0")"; pwd)"
-
-"$HERE/"tf-lock-info "$@" |
-  "$HERE/"lib/lock-id.jq

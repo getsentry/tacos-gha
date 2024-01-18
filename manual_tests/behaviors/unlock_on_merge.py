@@ -11,7 +11,7 @@ TEST_NAME = __name__
 
 @pytest.mark.xfail(raises=XFailed)
 def test(pr: tacos_demo.PR) -> None:
-    assert pr.check("tacos_lock").wait().success
+    assert pr.check("Terraform Lock").wait().success
 
     since = pr.approve()
     assert pr.approved()
@@ -19,6 +19,6 @@ def test(pr: tacos_demo.PR) -> None:
     pr.merge()
 
     try:
-        assert pr.check("tacos_unlock").wait(since, timeout=6).success
+        assert pr.check("Terraform Unlock").wait(since, timeout=6).success
     except AssertionError:
         raise XFailed("Unlock not yet implemented.")

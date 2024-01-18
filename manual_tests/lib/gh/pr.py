@@ -21,6 +21,7 @@ from .types import URL
 from .types import Branch
 from .types import CheckName
 from .types import Label
+from .types import WorkflowName
 
 APP_INSTALLATION_REVIEWER = (
     "op://Team Tacos gha dev/tacos-gha-reviewer/installation.json"
@@ -30,7 +31,7 @@ APP_INSTALLATION_REVIEWER = (
 Comment = str  # a PR comment
 
 if TYPE_CHECKING:
-    from .check import Check
+    from .check import CheckFilter
     from .check_run import CheckRun
 
 # mypy doesn't understand ParamSpec :(
@@ -168,10 +169,12 @@ class PR:
                 result.append(comment["body"])
         return tuple(result)
 
-    def check(self, check_name: CheckName) -> Check:
-        from .check import Check
+    def check(
+        self, workflow: WorkflowName, check_name: CheckName | None = None
+    ) -> CheckFilter:
+        from .check import CheckFilter
 
-        return Check(self, check_name)
+        return CheckFilter(self, workflow, check_name)
 
     @classmethod
     def from_branch(cls, branch: Branch, since: datetime) -> Self:
@@ -197,8 +200,7 @@ class PR:
 
         for obj in check_run.get_runs_json(self.url):
             run = check_run.CheckRun.from_json(obj)
-            if run.started > since:
-                sh.debug(f"  {run}")
+            if run.started_at > since:
                 yield run
 
 

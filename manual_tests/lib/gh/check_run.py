@@ -17,8 +17,8 @@ from .types import Generator
 @dataclass(frozen=True, order=True)
 class CheckRun:
     # NOTE: we want chronological ordering
-    started: datetime  # 2023-11-29T22:44:24Z
-    completed: datetime  # 2023-11-29T22:44:34Z
+    started_at: datetime  # 2023-11-29T22:44:24Z
+    completed_at: datetime | None  # 2023-11-29T22:44:34Z
     url: URL  # https://github.com/getsentry/tacos-gha.test/actions/runs/7039437133/job/19158411914
 
     # variable-length strings last, for neatness
@@ -44,9 +44,16 @@ class CheckRun:
         attrs = assert_dict_of_strings(json).copy()
         assert attrs["__typename"] == "CheckRun", attrs
         del attrs["__typename"]
+
+        tmp = datetime.fromisoformat(attrs.pop("completedAt"))
+        if tmp.year == 1:
+            completed_at = None
+        else:
+            completed_at = tmp
+
         return cls(
-            started=datetime.fromisoformat(attrs.pop("startedAt")),
-            completed=datetime.fromisoformat(attrs.pop("completedAt")),
+            started_at=datetime.fromisoformat(attrs.pop("startedAt")),
+            completed_at=completed_at,
             url=attrs.pop("detailsUrl"),
             workflow=attrs.pop("workflowName"),
             **attrs,
@@ -65,24 +72,36 @@ class CheckRun:
         return (self.status, self.conclusion) == ("COMPLETED", "NEUTRAL")
 
     @property
+    def completed(self) -> bool:
+        if self.status == "COMPLETED":
+            assert self.completed_at, self.completed_at
+            return True
+        else:
+            assert not self.completed_at, self.completed_at
+            return False
+
+    @property
     def relevance(self) -> tuple[object, ...]:
         """(attempt to) enable sorting by relevance to debugging"""
         result: list[object] = []
 
+        # failures and incomplete jobs _must_ show up before successes
         result.append(
-            ("SUCCESS", "", "NEUTRAL", "FAILURE").index(self.conclusion)
+            ("COMPLETED", "QUEUED", "IN_PROGRESS").index(self.status)
         )
         result.append(
-            ("QUEUED", "IN_PROGRESS", "COMPLETED").index(self.status)
+            ("NEUTRAL", "SUCCESS", "", "FAILURE").index(self.conclusion)
         )
-        result.append(self.completed)
-        result.append(self.started)
+        result.append(-self.started_at.timestamp())
+        if self.completed_at:
+            result.append(-self.completed_at.timestamp())
+        else:
+            result.append(0)
+        result.append(self.name)
         return tuple(result)
 
     def __str__(self) -> str:
-        format = (
-            "{workflow} / {name}: {started}-{completed} {status}({conclusion})"
-        )
+        format = "{workflow} / {name}:\n      {started_at}-{completed_at} {status}({conclusion})"
         return format.format_map(vars(self))
 
     @property
