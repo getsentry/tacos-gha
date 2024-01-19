@@ -67,8 +67,10 @@ class PR:
     def opened(cls, repo: LocalRepo, branch: Branch) -> Generator[Self]:
         pr = cls.open(repo, branch)
         sh.banner("PR opened:", pr.url)
-        yield pr
-        pr.close()
+        try:
+            yield pr
+        finally:
+            pr.close()
 
     def close(self) -> None:
         sh.banner("deleting branch")
