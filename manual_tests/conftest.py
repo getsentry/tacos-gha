@@ -107,21 +107,12 @@ def tacos_branch() -> str:
 
 @fixture
 def pr(
-    slices: Slices,
-    test_name: str,
-    demo: gh.LocalRepo,
-    tacos_branch: str,
-    slices_subpath: Path,
+    slices: Slices, test_name: str, demo: gh.LocalRepo, tacos_branch: str
 ) -> Generator[tacos_demo.PR]:
-    # cleanup: apply main in case some other test left things in a dirty state
-    tf.apply(slices.workdir / slices_subpath)
-
     with tacos_demo.PR.opened_for_slices(
         slices, test_name, demo, tacos_branch
     ) as pr:
         yield pr
-
-    tf.apply(slices.workdir / slices_subpath)
 
 
 GCLOUD_CONFIG = Path(".config/gcloud/configurations")
@@ -167,3 +158,17 @@ def cli_auth_gh() -> None:
     from os import environ
 
     environ["GITHUB_TOKEN"] = sh.stdout(("gh", "auth", "token"))
+
+
+@fixture
+def clean_slices(slices: Slices) -> Generator[Slices]:
+    """Ensure that all (relevant) slices are terraform clean."""
+    tf.apply(slices.path)
+
+    try:
+        yield slices
+    finally:
+        # cleanup: apply main in case the test left things in a dirty state
+        sh.banner("Cleanup: roll back the infrastructure changes")
+        sh.run(("git", "-C", slices.path, "reset", "--hard", "origin/main"))
+        tf.apply(slices.path)

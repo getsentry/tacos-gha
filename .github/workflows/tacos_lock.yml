@@ -61,10 +61,16 @@ jobs:
         with:
           python-version: ${{env.PYTHON_VERSION}}
 
+      - name: show env
+        run: |
+          sort -z /proc/self/environ |
+            tr '\0\n' '\n;' |
+            tee orig.env
+
       - id: slices
         run: |
           ( echo -n slices=
-            ./tacos-gha/lib/ci/dependent-slices <<'EOF'
+            "$TACOS_GHA_HOME/"lib/ci/dependent-slices <<'EOF'
           ${{steps.files.outputs.all_files}}
           EOF
           ) | tee -a "$GITHUB_OUTPUT"
@@ -76,13 +82,19 @@ jobs:
       pull-requests: write
       id-token: write
 
+    # note: we want to noop if they converted to draft first
     needs: [determine-tf-root-modules]
-    if: github.event.pull_request.draft == false
+    if: |
+      true
+      && github.event.pull_request.draft == false
     strategy:
       fail-fast: false
       matrix:
         tf-root-module:
           ${{ fromJSON(needs.determine-tf-root-modules.outputs.slices) }}
+
+    env:
+      TF_ROOT_MODULE: ${{matrix.tf-root-module}}
 
     steps:
       - uses: bukzor/direnv-install@v1
@@ -93,20 +105,18 @@ jobs:
           ref: ${{inputs.tacos_gha_ref}}
           path: tacos-gha
 
-      # see ./.python-version
-      - run: |
-          gha-set-env 'PYTHON_VERSION' grep -v '^#' tacos-gha/.python-version
-      - uses: actions/setup-python@v5
-        with:
-          python-version: ${{env.PYTHON_VERSION}}
+      - name: tell TF username and PR
+        uses: ./tacos-gha/.github/actions/set-username-and-hostname
 
       - name: set workload identity provider
         id: set-workload-identity-provider
-        run: ./tacos-gha/lib/ci/set-workload-identity-provider
+        run: |
+          "$TACOS_GHA_HOME/"lib/ci/set-workload-identity-provider
 
       - name: set terraformer
         id: set-terraformer
-        run: ./tacos-gha/lib/ci/set-terraformer
+        run: |
+          "$TACOS_GHA_HOME/"lib/ci/set-terraformer
 
       - name: gcp auth
         id: auth
@@ -115,20 +125,37 @@ jobs:
           workload_identity_provider: ${{env.GETSENTRY_SAC_OIDC}}
           service_account: ${{env.SUDO_GCP_SERVICE_ACCOUNT}}
 
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_wrapper: false
+      - name: set gcloud identity
+        run: |
+          # TODO: upstream feature request on google-github-actions/auth -- this
+          #   should be a default behavior
+          gcloud config get account || : code $?
+          gcloud config set account "$SUDO_GCP_SERVICE_ACCOUNT"
 
-      - name: tell TF username and PR
-        uses: ./tacos-gha/.github/actions/set-username-and-hostname
+          # also: mask the access token (NOTE: use cat to avoid xtrace'ing the token)
+          # TODO: ditto
+          cat <<< "::add-mask::$(gcloud auth print-access-token)"
+
+      # this should really be default behavior:
+      - run: |
+          gha-set-env 'TF_VERSION' cat .terraform-version
+          gha-set-env 'TERRAGRUNT_VERSION' cat .terragrunt-version
+
+      - name: Setup Terragrunt
+        uses: autero1/action-terragrunt@v1.1.0
+        with:
+          terragrunt_version: ${{env.TERRAGRUNT_VERSION}}
+
+      - run: |
+          gha-set-env 'PYTHON_VERSION' grep -v '^#' "$TACOS_GHA_HOME/".python-version
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{env.PYTHON_VERSION}}
 
       - name: Obtain the lock
         id: lock
         run: |
-          gha-log-as-step-summary \
-            ./tacos-gha/lib/ci/obtain-lock '${{matrix.tf-root-module}}' \
-          ;
+          gha-log-as-step-summary "$TACOS_GHA_HOME/"lib/ci/obtain-lock
 
   summary:
     runs-on: ubuntu-latest
@@ -136,7 +163,6 @@ jobs:
       contents: read
       pull-requests: write
 
-    name: "Summarize lock state."
     needs: [tacos_lock]
     if: |
       true
@@ -150,28 +176,12 @@ jobs:
           repository: ${{inputs.tacos_gha_repo}}
           ref: ${{inputs.tacos_gha_ref}}
           path: tacos-gha
-      - name: show full context
-        if: always()
-        run: |
-          : <<'EOF'
-          env:      ${{ toJSON(env) }},
-          vars:     ${{ toJSON(vars) }},
-          job:      ${{ toJSON(job) }},
-          jobs:     # for reusable workflows only
-          steps:    ${{ toJSON(steps) }},
-          runner:   ${{ toJSON(runner) }},
-          secrets:  ${{ toJSON(secrets) }},
-          strategy: ${{ toJSON(strategy) }},
-          matrix:   ${{ toJSON(matrix) }},
-          needs:    ${{ toJSON(needs) }},
-          inputs:   ${{ toJSON(inputs) }},
-          EOF
 
-      ###- name: Comment on PR whether lock is obtained
-      ###  if: always()
-      ###  uses: actions/github-script@v7
-      ###  with:
-      ###    script: |
-      ###      const lockObtained = process.env.TF_LOCK === "true"
-      ###      const script = require('./lib/ci/lock-acquisition-comment.js')
-      ###      console.log(script({github, context, lockObtained}))
+      - name: PR comment
+        uses: actions/github-script@v7
+        if: always()
+        with:
+          script: |
+            const lockObtained = process.env.TF_LOCK === "true"
+            const script = require('./tacos-gha/lib/ci/lock-acquisition-comment.js')
+            console.log(script({github, context, lockObtained}))

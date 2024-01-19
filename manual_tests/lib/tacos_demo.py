@@ -72,7 +72,7 @@ class PR(gh.PR):
         message: gh.Message = None,
         draft: bool = False,
     ) -> Generator[Self]:
-        with sh.cd(slices.workdir):
+        with sh.cd(slices.path):
             pr = cls.for_slices(
                 slices, test_name, demo, tacos_branch, branch, message, draft
             )
