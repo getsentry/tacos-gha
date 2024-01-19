@@ -13,6 +13,7 @@ from lib.types import Generator
 from lib.types import OSPath
 from lib.types import Path
 from manual_tests.lib import tacos_demo
+from manual_tests.lib import tf
 from manual_tests.lib.gh import gh
 from manual_tests.lib.slice import Slices
 
@@ -157,3 +158,17 @@ def cli_auth_gh() -> None:
     from os import environ
 
     environ["GITHUB_TOKEN"] = sh.stdout(("gh", "auth", "token"))
+
+
+@fixture
+def clean_slices(slices: Slices) -> Generator[Slices]:
+    """Ensure that all (relevant) slices are terraform clean."""
+    tf.apply(slices.path)
+
+    try:
+        yield slices
+    finally:
+        # cleanup: apply main in case the test left things in a dirty state
+        sh.banner("Cleanup: roll back the infrastructure changes")
+        sh.run(("git", "-C", slices.path, "reset", "--hard", "origin/main"))
+        tf.apply(slices.path)
