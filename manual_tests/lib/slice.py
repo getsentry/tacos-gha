@@ -26,7 +26,7 @@ class Slice(Path):
         lock, _ = get_lock_info(self)
         return lock is True
 
-    def edit(self, workdir: OSPath) -> None:
+    def edit(self, slices_path: OSPath) -> None:
         tf_path = self / "edit-me.tf"
         tf = f"""\
 resource "null_resource" "edit-me" {{
@@ -35,7 +35,7 @@ resource "null_resource" "edit-me" {{
   }}
 }}
 """
-        with sh.cd(workdir):
+        with sh.cd(slices_path):
             with OSPath(tf_path).open("w") as f:
                 f.write(tf)
             # NB: file is empty if added before close
@@ -45,16 +45,21 @@ resource "null_resource" "edit-me" {{
 @dataclass(frozen=True)
 class Slices:
     workdir: OSPath
+    subpath: Path
     slices: frozenset[Slice]
+
+    @property
+    def path(self):
+        return self.workdir / self.subpath
 
     @classmethod
     def from_path(cls, workdir: OSPath, subpath: Path = EMPTY_PATH) -> Self:
-        tf_categorized = TFCategorized.from_git(workdir / subpath)
+        slices_path = workdir / subpath
+        tf_categorized = TFCategorized.from_git(slices_path)
         return cls(
             workdir=workdir,
-            slices=frozenset(
-                Slice(subpath / slice) for slice in tf_categorized.slices
-            ),
+            subpath=subpath,
+            slices=frozenset(Slice(slice) for slice in tf_categorized.slices),
         )
 
     def random(self, seed: object = None, count: int | None = None) -> Self:
@@ -64,28 +69,29 @@ class Slices:
 
         cls = type(self)
         slices = random.sample(tuple(self.slices), count)
-        return cls(workdir=self.workdir, slices=frozenset(slices))
+        return cls(
+            workdir=self.workdir,
+            subpath=self.subpath,
+            slices=frozenset(slices),
+        )
 
     def edit(self) -> None:
         for slice in self:
-            slice.edit(self.workdir)
+            slice.edit(self.path)
 
     def assert_locked(self) -> None:
         cls = type(self)
-        for slice in cls.from_path(self.workdir):
-            locked = slice.is_locked(self.workdir)
-            should_lock = slice in self
+        with sh.cd(self.path):
+            for slice in cls.from_path(self.workdir, self.subpath):
+                locked = slice.is_locked()
+                should_lock = slice in self
 
-            assert locked == should_lock, (locked, slice)
-
-    def paths(self) -> Generator[Path]:
-        for slice in self.slices:
-            yield self.workdir / slice
+                assert locked == should_lock, (locked, slice)
 
     def force_unlock(self) -> None:
         """Unlock these slices, forcefully."""
         sh.banner("forcefully unlocking slices...")
-        with sh.cd(self.workdir):
+        with sh.cd(self.path):
             for slice in self:
                 tf_lock.force_unlock(slice)
 
@@ -93,12 +99,17 @@ class Slices:
         return iter(self.slices)
 
     def __sub__(self, other: Self) -> Self:
-        assert self.workdir == other.workdir, (self, other)
+        if (self.workdir, self.subpath) == (other.workdir, other.subpath):
+            raise ValueError("can't subtract unrelated", self, other)
+
         cls = type(self)
-        return cls(self.workdir, self.slices - other.slices)
+        return cls(self.workdir, self.subpath, self.slices - other.slices)
 
     def __contains__(self, other: Slice) -> bool:
         return other in self.slices
 
     def __str__(self) -> str:
-        return ", ".join(str(slice) for slice in sorted(self.slices))
+        result = ", ".join(str(slice) for slice in sorted(self.slices))
+        if self.subpath:
+            result = f"{self.subpath}: {result}"
+        return result
