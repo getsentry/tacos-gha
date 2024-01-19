@@ -27,14 +27,14 @@ def _plan_exitcode(workdir: OSPath) -> int:
     return result
 
 
-def plan_clean(workdir: OSPath) -> bool:
+def plan_is_clean(workdir: OSPath) -> bool:
     """
     Returns whether running terraform plan differs from the current state
     """
     return _plan_exitcode(workdir) == 0
 
 
-def plan_dirty(workdir: OSPath) -> bool:
+def plan_is_dirty(workdir: OSPath) -> bool:
     """
     Returns whether running terraform plan differs from the current state
     """
