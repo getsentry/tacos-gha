@@ -9,6 +9,7 @@ from lib.functions import now
 from lib.sh import sh
 from lib.tacos.dependent_slices import TFCategorized
 from lib.tf_lock import tf_lock
+from lib.tf_lock.tf_lock import get_lock_info
 from lib.types import Generator
 from lib.types import OSPath
 from lib.types import Path
@@ -21,11 +22,9 @@ if TYPE_CHECKING:
 class Slice(Path):
     """Relative path to a terraform slice"""
 
-    def is_locked(self, workdir: OSPath) -> bool:
-        with sh.cd(workdir / self):
-            j = sh.json(("sudo-gcp", "tf-lock-info"))
-            assert isinstance(j, dict)
-            return j.get("lock", False) is True
+    def is_locked(self) -> bool:
+        lock, _ = get_lock_info(self)
+        return lock is True
 
     def edit(self, workdir: OSPath) -> None:
         tf_path = self / "edit-me.tf"

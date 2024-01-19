@@ -8,13 +8,19 @@ from lib.types import Path
 
 
 def get_lock_info(root_module: Path) -> Tuple[bool, dict[str, str]]:
-    result = sh.json(("tf-lock-info", root_module))
-    assert isinstance(result, dict)
+    lock_info = sh.json(("tf-lock-info", root_module))
+    assert isinstance(lock_info, dict)
 
-    lock = result.pop("lock")
+    lock = lock_info.pop("lock")
     assert isinstance(lock, bool)
 
-    return lock, json.assert_dict_of_strings(result)
+    sh.info(root_module, "lock:", lock)
+    # TODO: sh.show_json(): use jq to highlight
+    from json import dumps
+
+    sh.debug(dumps(lock_info, indent=2))
+
+    return lock, json.assert_dict_of_strings(lock_info)
 
 
 def force_unlock(root_module: Path) -> None:
