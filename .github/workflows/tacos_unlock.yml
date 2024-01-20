@@ -65,7 +65,7 @@ jobs:
           python-version: ${{env.PYTHON_VERSION}}
 
       - name: Setup Terragrunt
-        uses: autero1/action-terragrunt@v1.1.0
+        uses: autero1/action-terragrunt@v1.3.2
         with:
           terragrunt_version: ${{env.TERRAGRUNT_VERSION}}
 

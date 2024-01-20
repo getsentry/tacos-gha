@@ -52,7 +52,7 @@ runs:
         gha-set-env 'TERRAGRUNT_VERSION' cat .terragrunt-version
 
     - name: Setup Terragrunt
-      uses: autero1/action-terragrunt@v1.1.0
+      uses: autero1/action-terragrunt@v1.3.2
       with:
         terragrunt_version: ${{env.TERRAGRUNT_VERSION}}
 
