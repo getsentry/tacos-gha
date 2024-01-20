@@ -1,0 +1,27 @@
+name: 'Prepare Summary'
+description: 'Downloads all artifacts from the current workflow run and prepares a summary of the results.'
+inputs:
+  artifact-path:
+    description: 'The path to the artifact to download.'
+    required: true
+  process-file-command:
+    description: 'A command or script used to process each file.'
+    required: true
+runs:
+  using: 'composite'
+  steps:
+    - name: 'Download artifacts'
+      uses: 'actions/download-artifact@v3'
+    
+    - name: 'Prepare summary'
+      shell: bash
+      run: |
+        summary=""
+
+        for file in ${{ inputs.artifact-path }}; do
+          # Process the file using the provided command or script
+          result=$(bash -c '${{ inputs.process-file-command }} "$0"' "$file")
+          summary+="$result,"
+        done
+
+        echo "SUMMARY=$summary" >> "$GITHUB_ENV"

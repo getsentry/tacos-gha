@@ -1,0 +1,19 @@
+#!/bin/bash
+
+# Get the file path from the command line arguments
+file_path=$1
+
+# Read the file
+result=$(cat "$file_path")
+
+# Extract the artifact name, removing the prefix and replacing the operation
+artifact_name=$(echo "$file_path" | sed -e 's/^lock_result_//' -e 's/-/\//g' -e 's/\/lock_result.txt//')
+
+# Add a locked emoji if the artifact is locked
+if [[ "$result" == "true" ]]; then
+  result="✅🔒"
+else
+  result="❌"
+fi
+
+echo "$artifact_name: $result"
