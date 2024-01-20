@@ -49,43 +49,25 @@ jobs:
           repository: ${{inputs.tacos_gha_repo}}
           ref: ${{inputs.tacos_gha_ref}}
           path: tacos-gha
-
-      - name: show event
-        run: |
-          : <<'EOF'
-            ${{toJSON(github.event)}}
-          EOF
-
       - name: tell TF username and PR
         uses: ./tacos-gha/.github/actions/set-username-and-hostname
+      - name: environment config
+        run: |
+          "$TACOS_GHA_HOME/"lib/ci/setenv
 
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_wrapper: false
+      ###- name: Setup Terraform
+      ###  uses: hashicorp/setup-terraform@v3
+      ###  with:
+      ###    terraform_wrapper: false
 
-      - run: |
-          gha-set-env 'PYTHON_VERSION' grep -v '^#' tacos-gha/.python-version
       - uses: actions/setup-python@v5
         with:
           python-version: ${{env.PYTHON_VERSION}}
-
-      # this should really be default behavior:
-      - run: |
-          gha-set-env 'TERRAGRUNT_VERSION' cat .terragrunt-version
 
       - name: Setup Terragrunt
         uses: autero1/action-terragrunt@v1.1.0
         with:
           terragrunt_version: ${{env.TERRAGRUNT_VERSION}}
-
-      - name: set workload identity provider
-        id: set-workload-identity-provider
-        run: ./tacos-gha/lib/ci/set-workload-identity-provider
-
-      - name: set terraformer
-        id: set-terraformer
-        run: ./tacos-gha/lib/ci/set-terraformer
 
       - name: gcp auth
         id: auth

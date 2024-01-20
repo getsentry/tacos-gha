@@ -34,13 +34,12 @@ jobs:
       contents: read
       pull-requests: write
 
-    name: "Determine TF slices to lock"
+    name: list slices
     if: github.event.pull_request.draft == false
     outputs:
       slices: ${{ steps.slices.outputs.slices }}
 
     steps:
-      - uses: bukzor/direnv-install@v1
       - uses: actions/checkout@v4
       - uses: actions/checkout@v4
         with:
@@ -48,46 +47,23 @@ jobs:
           ref: ${{inputs.tacos_gha_ref}}
           path: tacos-gha
 
-      - id: files
-        uses: getsentry/paths-filter@v2.11.1
-        with:
-          filters: "all: ['**']"
-          list-files: json
-
-      # see ./.python-version
-      - run: |
-          gha-set-env 'PYTHON_VERSION' grep -v '^#' tacos-gha/.python-version
-      - uses: actions/setup-python@v5
-        with:
-          python-version: ${{env.PYTHON_VERSION}}
-
-      - name: show env
-        run: |
-          sort -z /proc/self/environ |
-            tr '\0\n' '\n;' |
-            tee orig.env
-
       - id: slices
-        run: |
-          ( echo -n slices=
-            "$TACOS_GHA_HOME/"lib/ci/dependent-slices <<'EOF'
-          ${{steps.files.outputs.all_files}}
-          EOF
-          ) | tee -a "$GITHUB_OUTPUT"
+        uses: ./tacos-gha/.github/actions/determine-slices
 
   tacos_apply:
+    # note: we want to noop if they converted to draft first
+    if: |
+      true
+      && github.event.pull_request.draft == false
+      && github.event.label.name == ':taco::apply'
+
+    needs: [determine-tf-root-modules]
     runs-on: ubuntu-latest
     permissions:
       contents: read
       pull-requests: write
       id-token: write
 
-    # note: we want to noop if they converted to draft first
-    needs: [determine-tf-root-modules]
-    if: |
-      true
-      && github.event.pull_request.draft == false
-      && github.event.label.name == ':taco::apply'
     strategy:
       fail-fast: false
       matrix:
@@ -98,66 +74,29 @@ jobs:
       TF_ROOT_MODULE: ${{matrix.tf-root-module}}
 
     steps:
-      - uses: bukzor/direnv-install@v1
       - uses: actions/checkout@v4
       - uses: actions/checkout@v4
         with:
           repository: ${{inputs.tacos_gha_repo}}
           ref: ${{inputs.tacos_gha_ref}}
           path: tacos-gha
+      - name: setup
+        uses: ./tacos-gha/.github/actions/setup
 
-      - name: tell TF username and PR
-        uses: ./tacos-gha/.github/actions/set-username-and-hostname
-
-      - name: set workload identity provider
-        id: set-workload-identity-provider
-        run: |
-          "$TACOS_GHA_HOME/"lib/ci/set-workload-identity-provider
-
-      - name: set terraformer
-        id: set-terraformer
-        run: |
-          "$TACOS_GHA_HOME/"lib/ci/set-terraformer
-
-      - name: gcp auth
-        id: auth
-        uses: google-github-actions/auth@v1
-        with:
-          workload_identity_provider: ${{env.GETSENTRY_SAC_OIDC}}
-          service_account: ${{env.SUDO_GCP_SERVICE_ACCOUNT}}
-
-      - name: set gcloud identity
-        run: |
-          # TODO: upstream feature request on google-github-actions/auth -- this
-          #   should be a default behavior
-          gcloud config get account || : code $?
-          gcloud config set account "$SUDO_GCP_SERVICE_ACCOUNT"
-
-          # also: mask the access token (NOTE: use cat to avoid xtrace'ing the token)
-          # TODO: ditto
-          cat <<< "::add-mask::$(gcloud auth print-access-token)"
-
-      # this should really be default behavior:
-      - run: |
-          gha-set-env 'TF_VERSION' cat .terraform-version
-          gha-set-env 'TERRAGRUNT_VERSION' cat .terragrunt-version
-
-      - name: Setup Terragrunt
-        uses: autero1/action-terragrunt@v1.1.0
-        with:
-          terragrunt_version: ${{env.TERRAGRUNT_VERSION}}
-
-      - run: |
-          gha-set-env 'PYTHON_VERSION' grep -v '^#' "$TACOS_GHA_HOME/".python-version
-      - uses: actions/setup-python@v5
-        with:
-          python-version: ${{env.PYTHON_VERSION}}
-
-      # TODO save `--out plan` from plan workflow, and reuse it here,
+      # TODO fetch the `--out tfplan` file from the plan workflow, to use here
       # so that apply matches the plan reviewed by construction
+      ### - uses: actions/download-artifact@v4
+      ###   with:
+      ###     name: tfplan
+      ###     # TODO: github-script to fetch run-id of the most recent tfplan
+      ###     run-id: ${{steps.find-plan.output.run-id}}
+
       - name: Terragrunt Apply
         run: |
-          "$TACOS_GHA_HOME/"lib/ci/tacos-apply
+          gha-log-as-step-summary "$TACOS_GHA_HOME/"lib/ci/tacos-apply
+
+  # FIXME: we need a fan-in summary
+  # summary:
 
   reset_label:
     runs-on: ubuntu-latest

@@ -16,7 +16,7 @@ def test(
     test_name: str,
     slices: Slices,
     user: str,
-    repo: gh.LocalRepo,
+    demo: gh.LocalRepo,
 ) -> None:
     assert pr.get_plan()
 
@@ -24,7 +24,7 @@ def test(
         slices, test_name, message="more code"
     )
 
-    gh.commit_and_push(repo, branch, message)
+    gh.commit_and_push(demo, branch, message)
     plan = pr.get_plan()
     assert plan
     pattern = r"""\[([^\]]+)\]   \+ resource "null_resource" "edit-me" \{
