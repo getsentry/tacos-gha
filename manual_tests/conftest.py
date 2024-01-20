@@ -25,7 +25,7 @@ GHA_RELEVANT_PATHS = (
     "lib/ci",
     "lib/gcloud",
     "lib/getsentry-sac",
-    "lib/github",
+    "lib/github-actions",
     "lib/tacos",
     "lib/terragrunt",
     "lib/tf_lock",
