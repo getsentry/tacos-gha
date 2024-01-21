@@ -44,8 +44,6 @@ class PR(gh.PR):
         edit_workflow_versions(demo, tacos_branch)
         branch, message = edit_slices(slices, test_name, branch, message)
         gh.commit_and_push(demo, branch, message)
-
-        slices.force_unlock()
         self = cls.open(demo, branch, slices=slices, draft=draft)
 
         sh.banner("PR opened:", self.url)
@@ -54,7 +52,6 @@ class PR(gh.PR):
 
     def close(self) -> None:
         super().close()
-        self.slices.force_unlock()
 
     @classmethod
     @contextmanager
@@ -116,6 +113,7 @@ class PR(gh.PR):
 def edit_workflow_versions(
     demo: gh.LocalRepo, tacos_branch: gh.Branch
 ) -> None:
+    sh.banner("updating workflow files")
     workflow_dir = demo.path / ".github/workflows"
     with sh.cd(workflow_dir):
         for workflow in OSPath(".").glob("*.yml"):
@@ -144,6 +142,9 @@ def edit_slices(
     branch: gh.Branch = None,
     message: gh.Message = None,
 ) -> tuple[gh.Branch, gh.Message]:
+    sh.banner(f"editing slices")
+    for slice in sorted(slices):
+        sh.info(f"  * {slice}")
     if branch:
         branch = f"/{branch}"
     else:

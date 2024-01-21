@@ -2,18 +2,24 @@
 from __future__ import annotations
 
 from manual_tests.lib import tacos_demo
-from manual_tests.lib import tf
 from manual_tests.lib.slice import Slices
 
 TEST_NAME = __name__
 
+from pytest import fixture
 
-def test(pr: tacos_demo.PR, clean_slices: Slices) -> None:
+
+@fixture
+def slices_cleanup():
+    return Slices.force_clean
+
+
+def test(pr: tacos_demo.PR) -> None:
     pr.approve()
-    assert pr.approved()
+    assert pr.is_approved()
 
     # the taco-apply label causes the plan to become clean:
-    assert tf.plan_is_dirty(clean_slices.path)
+    assert not pr.slices.plan_is_clean()
     since = pr.add_label(":taco::apply")
     assert pr.check("Terraform Apply").wait(since).success
-    assert tf.plan_is_clean(clean_slices.path)
+    assert pr.slices.plan_is_clean()

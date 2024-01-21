@@ -1,6 +1,8 @@
 """pytest fixtures specific to tacos-gha demo"""
 from __future__ import annotations
 
+from typing import Callable
+
 from pytest import fixture
 
 from lib import json
@@ -13,7 +15,6 @@ from lib.types import Generator
 from lib.types import OSPath
 from lib.types import Path
 from manual_tests.lib import tacos_demo
-from manual_tests.lib import tf
 from manual_tests.lib.gh import gh
 from manual_tests.lib.slice import Slices
 
@@ -71,9 +72,21 @@ def slices_subpath(user: str) -> Path:
 
 
 @fixture
-def slices(workdir: OSPath, slices_subpath: Path) -> Slices:
-    slices = Slices.from_path(workdir, slices_subpath)
-    return slices.random()
+def slices_cleanup() -> Callable[[Slices], None]:
+    """called before and after selected slices are used in test"""
+    return Slices.force_unlock
+
+
+@fixture
+def slices(
+    workdir: OSPath,
+    slices_subpath: Path,
+    slices_cleanup: Callable[[Slices], None],
+) -> Generator[Slices]:
+    slices = Slices.from_path(workdir, slices_subpath).random()
+    slices_cleanup(slices)
+    yield slices
+    slices_cleanup(slices)
 
 
 @fixture
@@ -158,17 +171,3 @@ def cli_auth_gh() -> None:
     from os import environ
 
     environ["GITHUB_TOKEN"] = sh.stdout(("gh", "auth", "token"))
-
-
-@fixture
-def clean_slices(slices: Slices) -> Generator[Slices]:
-    """Ensure that all (relevant) slices are terraform clean."""
-    tf.apply(slices.path)
-
-    try:
-        yield slices
-    finally:
-        # cleanup: apply main in case the test left things in a dirty state
-        sh.banner("Cleanup: roll back the infrastructure changes")
-        sh.run(("git", "-C", slices.path, "reset", "--hard", "origin/main"))
-        tf.apply(slices.path)
