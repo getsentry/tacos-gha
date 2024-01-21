@@ -7,7 +7,13 @@ if [[ "${DEBUG:-}" ]]; then
   set -x
 fi
 
-if [[ $# -lt 2 ]]; then
+if [[ "${2:-}" = "--" ]]; then
+  slice="$1"
+  shift 2
+else
+  slice="."
+fi
+if [[ $# -lt 1 ]]; then
   ESC=$'\033'
   cat >&2 <<EOF
 usage: tf-lock COMMAND ...
@@ -25,11 +31,6 @@ lock will continue to be held after the command finishes.
 
 EOF
   exit 1
-elif [[ "${2:-}" = "--" ]]; then
-  slice="$1"
-  shift 2
-else
-  slice="."
 fi
 
 set -x
