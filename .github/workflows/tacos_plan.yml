@@ -100,6 +100,12 @@ jobs:
         run: |
           "$TACOS_GHA_HOME/"lib/ci/tacos-plan
 
+      - name: Update PR
+        uses: thollander/actions-comment-pull-request@v2.4.3
+        with:
+          message: ${{ fromJSON(steps.main.outputs.summary) }}
+          comment_tag: plan(${{env.TF_ROOT_MODULE}})
+
       - name: Store `tfplan`
         uses: actions/upload-artifact@v4
         with:
