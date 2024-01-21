@@ -87,7 +87,9 @@ class CheckRun:
 
         # failures and incomplete jobs _must_ show up before successes
         result.append(
-            ("COMPLETED", "QUEUED", "IN_PROGRESS").index(self.status)
+            ("COMPLETED", "PENDING", "QUEUED", "IN_PROGRESS").index(
+                self.status
+            )
         )
         result.append(
             ("NEUTRAL", "SUCCESS", "", "FAILURE").index(self.conclusion)

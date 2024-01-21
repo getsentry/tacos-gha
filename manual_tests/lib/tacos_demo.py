@@ -8,21 +8,17 @@ from typing import Self
 
 from lib.constants import NOW
 from lib.constants import USER
-from lib.functions import one
+from lib.parse import after
+from lib.parse import before
 from lib.sh import sh
 from lib.types import Generator
 from lib.types import OSPath
 from manual_tests.lib.gh import gh
+from manual_tests.lib.slice import Slice
 from manual_tests.lib.slice import Slices
 
 # FIXME: we need a better way to demarcate tf-plan in comments
-PLAN_MESSAGE = """\
-<details>
-<summary>Execution result of "run-all plan" in "."</summary>
-
-```terraform
-"""
-
+COMMENT_TAG = '<!-- thollander/actions-comment-pull-request "'
 APP_INSTALLATION_REVIEWER = "op://Team Tacos gha dev/gh-app--tacos-gha-reviewer/app-installation/sentryio-org"
 
 
@@ -81,19 +77,26 @@ class PR(gh.PR):
             finally:
                 pr.close()
 
-    def get_plan(self, since: datetime | None = None) -> str:
-        """Return the body of the github PR comment containing the tf plan."""
+    def get_plans(
+        self, since: datetime | None = None
+    ) -> dict[Slice, gh.Comment]:
+        """Map Slices to the text of PR comments containing their tf-plan."""
         if since is None:
             since = self.since
 
-        assert self.check("Terraform Plan").wait(since).success
-        plan = [
-            comment
-            for comment in self.comments(since)
-            if comment.startswith(PLAN_MESSAGE)
-        ]
-        # there should be just one plan in that timeframe
-        return one(plan)
+        assert self.check("Terraform Plan").wait(since, timeout=180).success
+        plan_tag = COMMENT_TAG + "plan("
+        result: dict[Slice, gh.Comment] = {}
+        for comment in self.comments(since):
+            lastline = after(comment, "\n")
+            if not lastline.startswith(plan_tag):
+                continue
+
+            slice = Slice(before(after(lastline, plan_tag), ")"))
+            slice = slice.relative_to(self.slices.subpath)
+
+            result[slice] = comment
+        return result
 
     def approve(
         self,
