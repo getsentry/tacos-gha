@@ -2,16 +2,9 @@
 set -euxo pipefail
 
 gha-log-as-step-summary \
-  tf-lock \
-    "$TF_ROOT_MODULE" \
-    -- \
-    terragrunt-noninteractive \
-      --terragrunt-include-dir="$TF_ROOT_MODULE" \
-      run-all \
-        plan -out tfplan \
-      \
-    \
-  \
+  tf-lock "$TF_ROOT_MODULE" -- \
+  env --chdir="$TF_ROOT_MODULE" \
+  terragrunt-noninteractive run-all plan -out tfplan \
 ;
 
 artifact_path="$TF_ROOT_MODULE/tfplan"
