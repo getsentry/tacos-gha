@@ -83,10 +83,11 @@ def slices(
     slices_subpath: Path,
     slices_cleanup: Callable[[Slices], None],
 ) -> Generator[Slices]:
-    slices = Slices.from_path(workdir, slices_subpath).random()
-    slices_cleanup(slices)
+    slices_all = Slices.from_path(workdir, slices_subpath)
+    slices = slices_all.random()
+    slices_cleanup(slices_all)
     yield slices
-    slices_cleanup(slices)
+    slices_cleanup(slices_all)
 
 
 @fixture
