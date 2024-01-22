@@ -7,7 +7,7 @@ shift 1
 val="$("$@")"
 
 # show output variables in the log, if they're not big
-( if (( $(val | wc -c) < 999 )); then
+( if (( $(wc -c <<< "$val") < 999 )); then
     tee -a "$GITHUB_OUTPUT"
   else
     cat >> "$GITHUB_OUTPUT"
