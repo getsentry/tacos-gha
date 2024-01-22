@@ -41,6 +41,13 @@ def banner(*msg: object) -> None:
     info(ansi.GREEN, "=" * 8, *msg, "=" * 8, ansi.RESET)
 
 
+def _stringify(o: object) -> str:
+    if isinstance(o, bytes):
+        return o.decode("US-ASCII")  # other bytes are ambiguous
+    else:
+        return str(o)
+
+
 def quote(cmd: Command) -> str:
     """Escape a command to copy-pasteable shell form.
 
@@ -49,7 +56,7 @@ def quote(cmd: Command) -> str:
     """
     import shlex
 
-    return " ".join(shlex.quote(str(arg)) for arg in cmd)
+    return " ".join(shlex.quote(_stringify(arg)) for arg in cmd)
 
 
 def xtrace(cmd: Command) -> None:

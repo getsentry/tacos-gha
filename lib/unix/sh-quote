@@ -1,0 +1,10 @@
+#!/bin/bash
+# print a shell-quoted form of the arguments
+set -euo pipefail
+
+# print the command to stderr via xtrace, then strip the prefix
+( PS4='+ '
+  set -x
+  : "$@"
+) 2>&1 |
+  sed 's/^+ : //'
