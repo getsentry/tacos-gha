@@ -1,0 +1,13 @@
+#!/bin/bash
+set -euxo pipefail
+
+gha-log-as-step-summary \
+  tf-lock "$TF_ROOT_MODULE" -- \
+  env --chdir="$TF_ROOT_MODULE" \
+  terragrunt-noninteractive run-all plan -out tfplan \
+;
+
+artifact_path="$TF_ROOT_MODULE/tfplan"
+gha-set-output artifact_path cat <<< "$artifact_path"
+# Invalid characters include: " : < > | * ? \r \n \ /
+gha-set-output artifact_name tr / ' ' <<< "$artifact_path"

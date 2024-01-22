@@ -8,7 +8,6 @@ import pytest
 from lib import wait
 from lib.sh import sh
 from manual_tests.lib import tacos_demo
-from manual_tests.lib import tf
 from manual_tests.lib.gh import workflow
 from manual_tests.lib.slice import Slices
 from manual_tests.lib.xfail import XFailed
@@ -17,7 +16,7 @@ from manual_tests.lib.xfail import XFailed
 def create_drift(slices: Slices) -> datetime:
     sh.banner("somebody changes infrastructure out of band")
     slices.edit()
-    tf.apply(slices.path)
+    slices.apply()
 
     sh.banner("pretend an hour passed: trigger the drift-scan job")
     return workflow.run("terraform_detect_drift.yml")
@@ -59,7 +58,7 @@ def test_roll_back(slices: Slices) -> None:
     sh.banner("re-apply from main branch")
     sh.run(("git", "remote", "update"))
     sh.run(("git", "reset", "--hard", "origin/main"))
-    tf.apply(slices.path)
+    slices.apply()
 
     sh.banner("request unlock")
     try:

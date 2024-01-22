@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+# Run the wrapped command and use it as our step summary.
+# also, set a `summary` output
+set -euo pipefail
+
+( set -x; "$@" ) 2>&1 |
+  # copy the log to the usual github-actions log, but also...
+  # (I get "permission denied" if I use /dev/stderr... Weird.)
+  tee >(cat >&2) |
+  # ... remove any ANSI formatting, (I can't find a way to convince step summary
+  # to handle ansi colors the same way github logging does)
+  uncolor |
+  ( # ... add markdown markup,
+    echo '```console'
+    # match `console` syntax highlighting by removing '+ ' from xtrace lines
+    sed -r 's/^\++ \$ /$ /'
+    echo '```'
+  ) |
+  # ... send to step summary,
+  tee -a "$GITHUB_STEP_SUMMARY" |
+  # ... and set `summary` output as json-encoded markdown.
+  jq -sRr '"summary=\(. | @json)"' \
+  >> "$GITHUB_OUTPUT" \
+;

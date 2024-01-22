@@ -8,21 +8,17 @@ from typing import Self
 
 from lib.constants import NOW
 from lib.constants import USER
-from lib.functions import one
+from lib.parse import after
+from lib.parse import before
 from lib.sh import sh
 from lib.types import Generator
 from lib.types import OSPath
 from manual_tests.lib.gh import gh
+from manual_tests.lib.slice import Slice
 from manual_tests.lib.slice import Slices
 
 # FIXME: we need a better way to demarcate tf-plan in comments
-PLAN_MESSAGE = """\
-<details>
-<summary>Execution result of "run-all plan" in "."</summary>
-
-```terraform
-"""
-
+COMMENT_TAG = '<!-- thollander/actions-comment-pull-request "'
 APP_INSTALLATION_REVIEWER = "op://Team Tacos gha dev/gh-app--tacos-gha-reviewer/app-installation/sentryio-org"
 
 
@@ -48,8 +44,6 @@ class PR(gh.PR):
         edit_workflow_versions(demo, tacos_branch)
         branch, message = edit_slices(slices, test_name, branch, message)
         gh.commit_and_push(demo, branch, message)
-
-        slices.force_unlock()
         self = cls.open(demo, branch, slices=slices, draft=draft)
 
         sh.banner("PR opened:", self.url)
@@ -58,7 +52,6 @@ class PR(gh.PR):
 
     def close(self) -> None:
         super().close()
-        self.slices.force_unlock()
 
     @classmethod
     @contextmanager
@@ -81,19 +74,26 @@ class PR(gh.PR):
             finally:
                 pr.close()
 
-    def get_plan(self, since: datetime | None = None) -> str:
-        """Return the body of the github PR comment containing the tf plan."""
+    def get_plans(
+        self, since: datetime | None = None
+    ) -> dict[Slice, gh.Comment]:
+        """Map Slices to the text of PR comments containing their tf-plan."""
         if since is None:
             since = self.since
 
-        assert self.check("Terraform Plan").wait(since).success
-        plan = [
-            comment
-            for comment in self.comments(since)
-            if comment.startswith(PLAN_MESSAGE)
-        ]
-        # there should be just one plan in that timeframe
-        return one(plan)
+        assert self.check("Terraform Plan").wait(since, timeout=180).success
+        plan_tag = COMMENT_TAG + "plan("
+        result: dict[Slice, gh.Comment] = {}
+        for comment in self.comments(since):
+            lastline = after(comment, "\n")
+            if not lastline.startswith(plan_tag):
+                continue
+
+            slice = Slice(before(after(lastline, plan_tag), ")"))
+            slice = slice.relative_to(self.slices.subpath)
+
+            result[slice] = comment
+        return result
 
     def approve(
         self,
@@ -113,6 +113,7 @@ class PR(gh.PR):
 def edit_workflow_versions(
     demo: gh.LocalRepo, tacos_branch: gh.Branch
 ) -> None:
+    sh.banner("updating workflow files")
     workflow_dir = demo.path / ".github/workflows"
     with sh.cd(workflow_dir):
         for workflow in OSPath(".").glob("*.yml"):
@@ -141,6 +142,9 @@ def edit_slices(
     branch: gh.Branch = None,
     message: gh.Message = None,
 ) -> tuple[gh.Branch, gh.Message]:
+    sh.banner(f"editing slices")
+    for slice in sorted(slices):
+        sh.info(f"  * {slice}")
     if branch:
         branch = f"/{branch}"
     else:

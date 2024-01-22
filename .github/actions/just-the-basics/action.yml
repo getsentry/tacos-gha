@@ -1,0 +1,21 @@
+name: Just the Basics
+description: used in "determine slices" and "per slice" matrix jobs
+
+inputs:
+  shell:
+    default: env ./tacos-gha/lib/ci/default-shell {0}
+
+runs:
+  using: composite
+
+  steps:
+    - uses: bukzor/direnv-install@v1
+    - name: show env
+      shell: ${{inputs.shell}}
+      run: sort -z /proc/self/environ | tr '\0\n' '\n;' | tee orig.env
+    - shell: ${{inputs.shell}}
+      run: |
+        gha-set-env 'PYTHON_VERSION' grep -v '^#' "$TACOS_GHA_HOME/".python-version
+    - uses: actions/setup-python@v5
+      with:
+        python-version: ${{env.PYTHON_VERSION}}

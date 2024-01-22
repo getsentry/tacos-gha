@@ -25,17 +25,16 @@ def for_(
 ) -> T:
     __tracebackhide__ = True
 
-    # log the first try noisily
-    result = assertion()
-    if result:
-        return result
-
-    if timeout / sleep < 10:
-        sleep = max(1, int(timeout / 10))
-
-    limit = timeout
-
     with sh.uniq():  # suppress repeated messages during the loop
+        result = assertion()
+        if result:
+            return result
+
+        if timeout / sleep < 10:
+            sleep = max(1, int(timeout / 10))
+
+        limit = timeout
+
         while True:
             do_sleep(sleep)
             limit -= sleep

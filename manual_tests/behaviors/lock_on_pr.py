@@ -5,5 +5,5 @@ from manual_tests.lib import tacos_demo
 
 
 def test(pr: tacos_demo.PR) -> None:
-    assert pr.check("Terraform Lock").wait().success
+    assert pr.check("Terraform Plan").wait().success
     pr.slices.assert_locked()
