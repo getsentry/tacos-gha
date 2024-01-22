@@ -5,4 +5,11 @@ shift 1
 
 # NB: separate subprocess substitution, to avoid masking return values
 val="$("$@")"
-tee -a "$GITHUB_OUTPUT" <<< "$var=$val"
+
+# show output variables in the log, if they're not big
+( if (( $(val | wc -c) < 999 )); then
+    tee -a "$GITHUB_OUTPUT"
+  else
+    cat >> "$GITHUB_OUTPUT"
+  fi
+) <<< "$var=$val"

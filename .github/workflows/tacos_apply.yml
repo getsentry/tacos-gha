@@ -92,8 +92,15 @@ jobs:
       ###     run-id: ${{steps.find-plan.output.run-id}}
 
       - name: Terragrunt Apply
+        id: main
         run: |
-          gha-log-as-step-summary "$TACOS_GHA_HOME/"lib/ci/tacos-apply
+          "$TACOS_GHA_HOME/"lib/ci/tacos-apply
+
+      - name: Update PR
+        uses: thollander/actions-comment-pull-request@v2.4.3
+        with:
+          message: ${{ fromJSON(steps.main.outputs.summary) }}
+          comment_tag: apply(${{env.TF_ROOT_MODULE}})
 
   # FIXME: we need a fan-in summary
   # summary:
