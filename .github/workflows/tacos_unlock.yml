@@ -136,15 +136,15 @@ jobs:
       github.event.label.name == ':taco::unlock'
 
     steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: ${{inputs.tacos_gha_repo}}
+          ref: ${{inputs.tacos_gha_ref}}
+          path: tacos-gha
       - name: Reset label
         uses: actions/github-script@v7
         if: always()
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            github.rest.issues.removeLabel({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              name: ':taco::unlock'
-            })
+            const reset_label = require('./tacos-gha/lib/ci/reset-label.js')
+            reset_label({github, context, label: ':taco::unlock'})
