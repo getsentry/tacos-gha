@@ -1,5 +1,6 @@
 #!/bin/bash
 set -euxo pipefail
+export TERRAGRUNT_INCLUDE_MODULE_PREFIX=false
 cmd=(tf-lock "$TF_ROOT_MODULE" -- env --chdir="$TF_ROOT_MODULE" terragrunt-noninteractive run-all plan -out tfplan)
 log=plan-log.hcl
 
