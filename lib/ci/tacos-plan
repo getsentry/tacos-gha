@@ -1,11 +1,32 @@
 #!/bin/bash
 set -euxo pipefail
+cmd=(tf-lock "$TF_ROOT_MODULE" -- env --chdir="$TF_ROOT_MODULE" terragrunt-noninteractive run-all plan -out tfplan)
+log=plan-log.hcl
 
-gha-log-as-step-summary \
-  tf-lock "$TF_ROOT_MODULE" -- \
-  env --chdir="$TF_ROOT_MODULE" \
-  terragrunt-noninteractive run-all plan -out tfplan \
-;
+"${cmd[@]}" 2>&1 | tee "$log"
+
+summary="$(
+  if ! tac "$log" | grep -Ei -m1 'Plan:|No changes'; then
+    echo "summary failed!($?)"
+  fi
+)"
+
+gha-step-summary <<EOF
+### TACOS Plan: $TF_ROOT_MODULE
+
+<details>
+  <summary>$summary</summary>
+
+\`\`\`console
+$ $(sh-quote "${cmd[@]}")
+\`\`\`
+
+\`\`\`hcl
+$(cat apply-log.hcl)
+\`\`\`
+
+</details>
+EOF
 
 artifact_path="$TF_ROOT_MODULE/tfplan"
 gha-set-output artifact_path cat <<< "$artifact_path"
