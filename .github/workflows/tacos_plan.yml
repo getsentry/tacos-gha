@@ -46,7 +46,6 @@ jobs:
       pull-requests: write
 
     name: list slices
-    if: github.event.pull_request.draft == false
     outputs:
       slices: ${{ steps.main.outputs.slices }}
 
