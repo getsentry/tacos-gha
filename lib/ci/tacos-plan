@@ -4,7 +4,7 @@ export TERRAGRUNT_INCLUDE_MODULE_PREFIX=false
 cmd=(tf-lock "$TF_ROOT_MODULE" -- env --chdir="$TF_ROOT_MODULE" terragrunt-noninteractive run-all plan -out tfplan)
 log=plan-log.hcl
 
-"${cmd[@]}" 2>&1 | tee "$log"
+"${cmd[@]}" 2>&1 | tee "$log" && status=$? || status=$?
 
 summary="$(
   if ! tac "$log" | grep -Ei -m1 'Plan:|No changes'; then
@@ -33,3 +33,5 @@ artifact_path="$TF_ROOT_MODULE/tfplan"
 gha-set-output artifact_path cat <<< "$artifact_path"
 # Invalid characters include: " : < > | * ? \r \n \ /
 gha-set-output artifact_name tr / ' ' <<< "$artifact_path"
+
+exit $status
