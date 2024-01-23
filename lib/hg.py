@@ -58,11 +58,40 @@ def update(
 def precommit(
     ui: ui, repo: localrepository, parent1: bytes, **kwargs: object
 ) -> bool:
+    print(1)
     del ui, kwargs
 
+    print(2)
     ctx: changectx = repo[repo.lookup(parent1)]
 
-    if not hg_git_sync(repo, ctx):
-        return True
+    print(3)
+    try:
+        print(3.1)
+        if not hg_git_sync(repo, ctx):
+            print(3.2)
+            return True
+        print(3.3)
+    except Exception:
+        print(3.4)
+        print(">" * 79)
+        import traceback
 
-    return not sh.success(("pre-commit", "run"))
+        print(traceback.format_exc())
+        print("<" * 79)
+        raise
+    print(3.5)
+
+    print(4)
+    print(">" * 79)
+    try:
+        result = not sh.success(("pre-commit", "run"))
+        print("=" * 79)
+    except Exception:
+        print("|" * 79)
+        import traceback
+
+        print(traceback.format_exc())
+        raise
+    print("<" * 79)
+    print("RESULT:", result)
+    return result
