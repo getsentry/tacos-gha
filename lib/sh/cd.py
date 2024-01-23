@@ -9,6 +9,7 @@ from lib import json as JSON
 from lib.types import Environ
 from lib.types import Generator
 from lib.types import OSPath
+from lib.types import Path
 
 from .core import run
 from .io import banner as banner
@@ -22,9 +23,9 @@ Command = tuple[object, ...]
 
 @contextmanager
 def cd(
-    dirname: OSPath, env: Environ = environ, *, direnv: bool = True
-) -> Generator[OSPath]:
-    oldpwd = OSPath(env["PWD"])
+    dirname: Path, env: Environ = environ, *, direnv: bool = True
+) -> Generator[Path]:
+    oldpwd = Path.cwd(env)
 
     newpwd = oldpwd / dirname
     cwd = OSPath.cwd()

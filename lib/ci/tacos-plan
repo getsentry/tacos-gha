@@ -1,7 +1,14 @@
 #!/bin/bash
 set -euxo pipefail
 export TERRAGRUNT_INCLUDE_MODULE_PREFIX=false
-cmd=(tf-lock "$TF_ROOT_MODULE" -- env --chdir="$TF_ROOT_MODULE" terragrunt-noninteractive run-all plan -out tfplan)
+cmd=(
+  env GETSENTRY_SAC_VERB=apply
+  sudo-gcp
+  tf-lock
+  terragrunt-noninteractive run-all plan
+  -lock=true
+  -out tfplan
+)
 log=plan-log.hcl
 
 "${cmd[@]}" 2>&1 | tee "$log" && status=$? || status=$?
@@ -19,6 +26,7 @@ gha-step-summary <<EOF
   <summary>$summary</summary>
 
 \`\`\`console
+$ cd $(sh-quote "$TF_ROOT_MODULE")
 $ $(sh-quote "${cmd[@]}")
 \`\`\`
 
@@ -34,4 +42,4 @@ gha-set-output artifact_path cat <<< "$artifact_path"
 # Invalid characters include: " : < > | * ? \r \n \ /
 gha-set-output artifact_name tr / ' ' <<< "$artifact_path"
 
-exit $status
+exit "$status"
