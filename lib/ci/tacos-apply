@@ -5,8 +5,7 @@ cmd=(tf-lock terragrunt-noninteractive apply --auto-approve)
 log=apply-log.hcl
 
 set -x
-cd "$TF_ROOT_MODULE"
-"${cmd[@]}" 2>&1 | tee "$log"
+"${cmd[@]}" 2>&1 | tee "$log" && status=$? || status=$?
 
 summary="$(
   if ! tac "$log" | grep -Ei -m1 'complete|error'; then
@@ -32,3 +31,5 @@ $(cat apply-log.hcl)
 
 </details>
 EOF
+
+exit "$status"

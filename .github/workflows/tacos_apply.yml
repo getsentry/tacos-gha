@@ -97,6 +97,8 @@ jobs:
           "$TACOS_GHA_HOME/"lib/ci/tacos-apply
 
       - name: Update PR
+        # we want to report failures, too
+        if: always()
         uses: thollander/actions-comment-pull-request@v2.4.3
         with:
           message: ${{ fromJSON(steps.main.outputs.summary) }}
