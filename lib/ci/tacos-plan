@@ -22,7 +22,7 @@ $ $(sh-quote "${cmd[@]}")
 \`\`\`
 
 \`\`\`hcl
-$(cat apply-log.hcl)
+$(cat plan-log.hcl)
 \`\`\`
 
 </details>
