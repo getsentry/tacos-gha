@@ -40,7 +40,7 @@ def hg_git_sync(repo: localrepository, ctx: changectx) -> bool:
     s = repo.status()
     changed = s.added + s.modified + s.removed
     if changed:
-        sh.run(("git", "add") + tuple(sorted(changed)))
+        sh.run(("git", "add", "-f") + tuple(sorted(changed)))
 
     return True
 

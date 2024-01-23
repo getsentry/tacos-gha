@@ -3,28 +3,26 @@ from __future__ import annotations
 
 import typing
 from dataclasses import dataclass
+
+# from functools import cache
 from typing import Callable
 from typing import Iterable
 from typing import NewType
 from typing import Self
 
+from lib.types import Dir
 from lib.types import OSPath
 from lib.types import Path
 
 from .path_filter import PathFilter
 
-# NewTypes exist only during typing, but help keep track of things
-# FIXME: remove pright:ignore, pending https://github.com/microsoft/pyright/issues/6976
-Dir = NewType("Dir", Path)
-TFConfigDir = NewType("TFConfigDir", Dir)  # pyright: ignore
+TFConfigDir = NewType("TFConfigDir", Dir)
 File = NewType("File", Path)
-TFConfigFile = NewType("TFConfigFile", File)  # pyright: ignore
-TFSharedModulesDir = NewType("TFSharedModulesDir", Dir)  # pyright: ignore
-TFModule = NewType("TFModule", Dir)  # pyright: ignore
-TopLevelTFModule = NewType(
-    "TopLevelTFModule", TFModule  # pyright: ignore
-)  # AKA "slice"
-SharedTFModule = NewType("SharedTFModule", TFModule)  # pyright: ignore
+TFConfigFile = NewType("TFConfigFile", File)
+TFSharedModulesDir = NewType("TFSharedModulesDir", Dir)
+TFModule = NewType("TFModule", Dir)
+TopLevelTFModule = NewType("TopLevelTFModule", TFModule)  # AKA "slice"
+SharedTFModule = NewType("SharedTFModule", TFModule)
 
 T = typing.TypeVar("T")
 P = typing.ParamSpec("P")
@@ -34,10 +32,6 @@ SliceDeps = dict[Dir, frozenset[TopLevelTFModule]]
 TF_SUFFIX = ".tf"
 TG_SUFFIX = ".hcl"
 TF_SHARED_DIRNAME = frozenset({"module", "modules"})
-
-
-def parent(path: Path) -> Dir:
-    return Dir(path.parent)
 
 
 @dataclass(frozen=True)
@@ -60,7 +54,7 @@ class FileSystem:
             else:
                 file = File(Path(path))
                 files.add(file)
-                dirs.add(parent(file))
+                dirs.add(file.parent)
 
         return cls(files=frozenset(files), dirs=frozenset(dirs))
 
@@ -84,7 +78,7 @@ class FileSystem:
 
     def ls_files(self, dir: Dir) -> Iterable[File]:
         for file in self.files:
-            if parent(file) == dir:
+            if file.parent == dir:
                 yield file
 
 
@@ -161,7 +155,7 @@ class TFCategorized:
         for file in subject.files:
             if config := is_tf_config(file):
                 # we already track slices
-                if any(parent(config) == slice for slice in slices):
+                if any(config.parent == slice for slice in slices):
                     continue
                 # we already track shared dirs
                 if any(
@@ -206,7 +200,7 @@ class TFCategorized:
     def config_dirs(self) -> frozenset[TFConfigDir]:
         """directories containing a config file or a shared-modules dir"""
         return frozenset(
-            TFConfigDir(parent(path))
+            TFConfigDir(path.parent)
             for paths in (self.shared_dirs, self.config_files)
             for path in paths
         )
