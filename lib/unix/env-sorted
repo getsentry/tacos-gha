@@ -1,0 +1,7 @@
+#!/bin/bash
+set -euo pipefail
+
+env -0 |
+  sort -z |
+  tr '\0\n' '\n;' |
+  tee orig.env

@@ -4,13 +4,12 @@ set -euo pipefail
 HERE="$(dirname "$(readlink -f "$0")")"
 
 # minimal bootstrapping: no envrc is loaded till post-sudo
-export TACOS_GHA_HOME
+export TACOS_GHA_HOME PATH DEBUG
 TACOS_GHA_HOME="$(cd "$HERE"/../..; pwd)"
 PATH="$TACOS_GHA_HOME/bin:${PATH}"
-# take default from GHA settings
-export DEBUG="${DEBUG:-"${ACTIONS_RUNNER_DEBUG:-}"}"
+DEBUG="${DEBUG:-"${RUNNER_DEBUG:-}"}"
 
-# combine stdout to stderr, to prevent out-of-order interleaving
+: combine stdout to stderr, to prevent out-of-order interleaving
 exec >&2
 
 : make sure github command-files are writable
