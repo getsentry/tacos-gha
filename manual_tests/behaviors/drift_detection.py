@@ -1,6 +1,8 @@
 #!/usr/bin/env py.test
 from __future__ import annotations
 
+from typing import Callable
+
 import pytest
 
 from lib import wait
@@ -12,7 +14,7 @@ from manual_tests.lib.xfail import XFailed
 
 
 @pytest.fixture
-def slices_cleanup():
+def slices_cleanup() -> Callable[[Slices], None]:
     return Slices.force_clean
 
 

@@ -1,6 +1,8 @@
 #!/usr/bin/env py.test
 from __future__ import annotations
 
+from typing import Callable
+
 from manual_tests.lib import tacos_demo
 from manual_tests.lib.slice import Slices
 
@@ -10,7 +12,7 @@ from pytest import fixture
 
 
 @fixture
-def slices_cleanup():
+def slices_cleanup() -> Callable[[Slices], None]:
     return Slices.force_clean
 
 

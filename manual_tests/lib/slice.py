@@ -49,7 +49,7 @@ class Slices:
     slices: frozenset[Slice]
 
     @property
-    def path(self):
+    def path(self) -> OSPath:
         return self.workdir / self.subpath
 
     @classmethod

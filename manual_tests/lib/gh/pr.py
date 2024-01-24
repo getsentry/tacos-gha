@@ -3,6 +3,7 @@ from __future__ import annotations
 from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime
+from subprocess import CalledProcessError
 from typing import TYPE_CHECKING
 from typing import Self
 from typing import Sequence
@@ -74,17 +75,28 @@ class PR:
 
     def close(self) -> None:
         sh.banner("deleting branch")
-        sh.run(
-            (
-                "gh",
-                "pr",
-                "close",
-                self.url,
-                "--comment",
-                "automatic test cleanup",
-                "--delete-branch",
+        try:
+            sh.run(
+                (
+                    "gh",
+                    "pr",
+                    "close",
+                    self.url,
+                    "--comment",
+                    "automatic test cleanup",
+                    "--delete-branch",
+                )
             )
+        except CalledProcessError:
+            # might already be closed
+            if not self.is_closed():
+                raise
+
+    def is_closed(self) -> bool:
+        status = sh.stdout(
+            ("gh", "pr", "view", self.url, "--json", "state", "--jq", ".state")
         )
+        return status in ["CLOSED", "MERGED"]
 
     def approve(
         self, app_installation: app.Installation, jwt: JWT
