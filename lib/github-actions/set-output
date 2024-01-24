@@ -1,0 +1,15 @@
+#!/bin/bash
+set -euo pipefail
+var="$1"
+shift 1
+
+# NB: separate subprocess substitution, to avoid masking return values
+val="$("$@")"
+
+# show output variables in the log, if they're not big
+( if (( $(wc -c <<< "$val") < 999 )); then
+    tee -a "$GITHUB_OUTPUT"
+  else
+    cat >> "$GITHUB_OUTPUT"
+  fi
+) <<< "$var=$val"

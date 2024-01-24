@@ -98,7 +98,7 @@ def get_lock_info(root_module: Path) -> Tuple[bool, dict[str, str]]:
 def tf_lock_release(root_module: Path, env: Environ) -> None:
     lock, lock_info = get_lock_info(root_module)
     if not lock:
-        info(f"success: already unlocked: {root_module}")
+        info(f"tf-lock-release: success: {root_module}")
         return
 
     tf_user = f"{get_current_user(env)}@{get_current_host(env)}"
@@ -114,13 +114,13 @@ def tf_lock_release(root_module: Path, env: Environ) -> None:
             # error message was already printed by subcommand
             raise UserError(code=error.returncode)
 
-        info(f"success: released lock (from {lock_user}): {root_module}")
+        info(f"tf-lock-release: success: {root_module}({lock_user})")
 
     else:
         raise UserError(
             f"""\
-error: lock held: {lock_user} (not {tf_user}): {root_module}
-(hint: to override, set $USER and/or $HOST explicitly)
+tf-lock-release: failure: not {tf_user}: {root_module}({lock_user})
+(hint: to force, set $USER and/or $HOST explicitly)
 """,
             code=TF_LOCK_EHELD,
         )

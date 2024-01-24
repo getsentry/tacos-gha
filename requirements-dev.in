@@ -11,6 +11,7 @@ black
 
 # lint
 pylint
+pre-commit
 
 # test & coverage
 pytest

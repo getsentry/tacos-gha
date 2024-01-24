@@ -23,13 +23,17 @@ error="$(
 
 if grep -Eq <<< "$error" $'ID:'; then
   "$HERE/"lib/error2json <<< "$error"
-elif grep -Eq <<< "$error" \
-    $'^\t\* storage: object doesn'\''t exist$|^Failed to unlock state: LocalState not locked$' \
-; then
+elif grep -Eq <<< "$error" '^Failed to unlock state: LocalState not locked$'
+  then
+  cat >&2 <<EOF
+No remote tfstate configured, path: '$root_module'
+EOF
+  exit 1
+elif grep -Eq <<< "$error" $'^\t\* storage: object doesn'\''t exist$'; then
   echo '{"lock": false}'
 elif grep -Eq <<< "$error" \
-  'Error: .*Backend initialization required, please run "terraform init"' \
-; then
+    'Error: .*Backend initialization required, please run "terraform init"'
+  then
   ( # NB: need to undo the cd to keep relative paths valid
     cd "$root_module"
     if ! noise="$(terraform init 2>&1)"; then
@@ -39,7 +43,7 @@ elif grep -Eq <<< "$error" \
     fi
   )
   exec "$0" "$@"  # start over
-else
+else  # an unexpected error: show it
   set +x
   echo -n >&2 "$fancy_error"  # avoid the appended newline of <<<
   exit "$status"

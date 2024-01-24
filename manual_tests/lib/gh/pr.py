@@ -96,7 +96,7 @@ class PR:
         )
         return since
 
-    def approved(self) -> bool:
+    def is_approved(self) -> bool:
         status = sh.stdout(
             (
                 "gh",

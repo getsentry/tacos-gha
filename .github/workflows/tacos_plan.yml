@@ -24,53 +24,97 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
   cancel-in-progress: true
 
+# FIXME: don't use the apply terraformer for the plan workflow
+# discussion: https://sentry.slack.com/archives/C05GNJCN9LM/p1705787896980429
+# problem: currently the plan terraformer is very strictly readonly but we need
+#     to be able to lock/unlock the tfstate in this workflow
+# proposals:
+#   1. add a third "planlock" member to the terraformer? We want to grant write
+#       permissions just enough for locking state.
+#   2. add an ACL to grant this specific permission, but this is deprecated
+#       https://cloud.google.com/storage/docs/access-control/lists
+#   3. use conditional IAM (i.e. add some CEL code) to condtionally grant the
+#       planner write to just the lock file
+env:
+  GETSENTRY_SAC_VERB: apply
+
 jobs:
+  determine-tf-root-modules:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+
+    name: list slices
+    outputs:
+      slices: ${{ steps.main.outputs.slices }}
+
+    steps:
+      - name: Checkout IAC
+        uses: actions/checkout@v4
+      - name: Checkout tacos-gha
+        uses: actions/checkout@v4
+        with:
+          repository: ${{inputs.tacos_gha_repo}}
+          ref: ${{inputs.tacos_gha_ref}}
+          path: tacos-gha
+
+      - name: Determine Slices
+        id: main
+        uses: ./tacos-gha/.github/actions/determine-slices
+
   tacos_plan:
+    # note: we want to plan draft PRs, too
+
+    needs: [determine-tf-root-modules]
     runs-on: ubuntu-latest
     permissions:
       contents: read
       pull-requests: write
       id-token: write
 
+    strategy:
+      fail-fast: false
+      matrix:
+        tf-root-module:
+          ${{ fromJSON(needs.determine-tf-root-modules.outputs.slices) }}
+
+    env:
+      TF_ROOT_MODULE: ${{matrix.tf-root-module}}
+
     steps:
-      - uses: bukzor/direnv-install@v1
-      - uses: actions/checkout@v4
-      - uses: actions/checkout@v4
+      - name: Checkout IAC
+        uses: actions/checkout@v4
+      - name: Checkout tacos-gha
+        uses: actions/checkout@v4
         with:
           repository: ${{inputs.tacos_gha_repo}}
           ref: ${{inputs.tacos_gha_ref}}
           path: tacos-gha
-
-      - name: show event
-        run: |
-          : <<'EOF'
-            ${{toJSON(github.event)}}
-          EOF
-
-      - name: set workload identity provider
-        id: set-workload-identity-provider
-        run: ./tacos-gha/lib/ci/set-workload-identity-provider
-
-      - name: set terraformer
-        id: set-terraformer
-        run: ./tacos-gha/lib/ci/set-terraformer
-
-      - name: gcp auth
-        id: auth
-        uses: google-github-actions/auth@v1
-        with:
-          workload_identity_provider: ${{env.GETSENTRY_SAC_OIDC}}
-          service_account: ${{env.SUDO_GCP_SERVICE_ACCOUNT}}
-
-      # this should really be default behavior:
-      - run: |
-          gha-set-env 'TERRAGRUNT_VERSION' cat .terragrunt-version
-          gha-set-env 'TF_VERSION' cat .terraform-version
+      - name: Setup
+        uses: ./tacos-gha/.github/actions/setup
 
       - name: Plan
-        uses: gruntwork-io/terragrunt-action@v2
+        id: main
+        run: |
+          "$TACOS_GHA_HOME/"lib/ci/tacos-plan
+
+      - name: Update PR
+        # we want to report failures, too
+        if: always()
+        uses: thollander/actions-comment-pull-request@v2.4.3
         with:
-          tf_version: ${{ env.TF_VERSION }}
-          tg_version: ${{ env.TERRAGRUNT_VERSION }}
-          tg_command: "run-all plan"
-          tg_comment: 1
+          message: ${{ fromJSON(steps.main.outputs.summary) }}
+          comment_tag: plan(${{env.TF_ROOT_MODULE}})
+
+      - name: Store `tfplan`
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{steps.main.outputs.artifact_name}}
+          path: ${{steps.main.outputs.artifact_path}}
+          if-no-files-found: error
+          overwrite: true # we only want the latest plan
+
+
+  # FIXME: we need a fan-in summary
+  # summary:

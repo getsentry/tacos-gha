@@ -10,9 +10,9 @@ from lib.sh import sh
 from lib.tacos.dependent_slices import TFCategorized
 from lib.tf_lock import tf_lock
 from lib.tf_lock.tf_lock import get_lock_info
-from lib.types import Generator
 from lib.types import OSPath
 from lib.types import Path
+from manual_tests.lib import tf
 
 if TYPE_CHECKING:
     from typing import Iterator
@@ -65,7 +65,7 @@ class Slices:
     def random(self, seed: object = None, count: int | None = None) -> Self:
         random = Random(seed)
         if count is None:
-            count = random.randint(1, len(self.slices))
+            count = random.randint(1, len(self.slices) - 1)
 
         cls = type(self)
         slices = random.sample(tuple(self.slices), count)
@@ -90,10 +90,27 @@ class Slices:
 
     def force_unlock(self) -> None:
         """Unlock these slices, forcefully."""
-        sh.banner("forcefully unlocking slices...")
+        sh.banner("forcefully unlocking slices")
         with sh.cd(self.path):
             for slice in self:
                 tf_lock.force_unlock(slice)
+
+    def plan_is_clean(self) -> bool:
+        with sh.cd(self.path):
+            return tf.plan_is_clean(sorted(self))
+
+    def apply(self) -> None:
+        sh.banner("applying slices")
+        with sh.cd(self.path):
+            tf.apply(sorted(self))
+
+    def force_clean(self) -> None:
+        # cleanup: apply main in case the test left things in a dirty state
+        sh.banner("cleanup: roll back any drift")
+        sh.run(("git", "-C", self.path, "reset", "--hard", "origin/main"))
+        self.force_unlock()
+        self.apply()
+        sh.banner("cleanup complete")
 
     def __iter__(self) -> Iterator[Slice]:
         return iter(self.slices)

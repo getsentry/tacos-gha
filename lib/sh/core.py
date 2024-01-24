@@ -92,6 +92,13 @@ def success(cmd: Command, returncode: int = 0) -> bool:
     return _returncode(cmd) == returncode
 
 
+def _stringify(o: object) -> bytes:
+    if isinstance(o, bytes):
+        return o
+    else:
+        return str(o).encode("US-ASCII")  # other bytes are ambiguous
+
+
 def _popen(
     cmd: Command,
     capture_output: bool = False,
@@ -120,7 +127,7 @@ def _popen(
     del tmp
 
     return subprocess.Popen(
-        tuple(str(arg) for arg in cmd),
+        tuple(_stringify(arg) for arg in cmd),
         text=True,
         encoding=encoding,
         stdout=stdout,
