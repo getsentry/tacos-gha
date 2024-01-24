@@ -57,8 +57,8 @@ def test(
             since = pr2.add_label(":taco::apply")
             pr2.check("Terraform Apply").wait(since).success
 
-            since = pr.approve()
-            assert pr.is_approved()
+            since = pr2.approve()
+            assert pr2.is_approved()
 
             # Merge the second PR
             sh.banner("Merge the second PR")
