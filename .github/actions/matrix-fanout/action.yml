@@ -1,0 +1,18 @@
+name: 'Matrix Fanout'
+description: 'Uploads a JSON file as an artifact with a unique name.'
+inputs:
+  json-file:
+    description: 'The JSON file to upload.'
+    required: true
+runs:
+  using: 'composite'
+  steps:
+    - name: Process input
+      shell: bash
+      run: |
+        echo "JSON_FILE_NAME=$(echo '${{ inputs.json-file }}' | tr / ' ')" >> "$GITHUB_ENV"
+    - name: Upload JSON file
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ env.JSON_FILE_NAME }}
+        path: ${{ inputs.json-file }}.json
