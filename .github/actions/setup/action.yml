@@ -56,3 +56,7 @@ runs:
       uses: autero1/action-terragrunt@v1.3.2
       with:
         terragrunt_version: ${{env.TERRAGRUNT_VERSION}}
+
+    - name: set draft variable
+      shell: ${{inputs.shell}}
+      run: gha-set-env 'GITHUB_PR_DRAFT' ${{github.event.pull_request.draft}}
