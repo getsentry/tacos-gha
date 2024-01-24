@@ -21,11 +21,6 @@ from lib.sh import sh
 
 
 def hg_git_sync(repo: localrepository, ctx: changectx) -> bool:
-    try:
-        bookmark = ctx.bookmarks()[0]
-    except IndexError:
-        return False
-
     git = repo.githandler  # type: ignore
     git.export_commits()  # equivalent to hg-push, but without network access
     sha = git.map_git_get(ctx.hex())
@@ -34,13 +29,18 @@ def hg_git_sync(repo: localrepository, ctx: changectx) -> bool:
 
     sh.run(("git", "checkout", "-q", "--detach"))
     sh.run(("git", "reset", "-q", "--mixed", sha))
-    sh.run(("git", "checkout", "-q", sha, "-B", bookmark))
+
+    try:
+        bookmark = ctx.bookmarks()[0]
+    except IndexError:
+        pass
+    else:
+        sh.run(("git", "checkout", "-q", sha, "-B", bookmark))
 
     s = repo.status()
-    if s.added or s.modified:
-        sh.run(("git", "add") + tuple(s.added + s.modified))
-    if s.removed:
-        sh.run(("git", "rm") + tuple(s.removed))
+    changed = s.added + s.modified + s.removed
+    if changed:
+        sh.run(("git", "add") + tuple(sorted(changed)))
 
     return True
 
