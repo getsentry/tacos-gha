@@ -166,10 +166,10 @@ jobs:
         run: echo "artifact_name=$(echo '${{ matrix.tf-root-module }}' | tr '/' '-')" >> $GITHUB_OUTPUT
 
       - name: Upload lock result
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: lock_result_${{ steps.artifact_name.outputs.artifact_name }}
-          path: lock_result.txt
+          name: lock_result/${{ steps.artifact_name.outputs.artifact_name }}.json
+          path: lock_result
           retention-days: 1
 
   comment_summary:
@@ -191,7 +191,7 @@ jobs:
       - name: Prepare summary
         uses: ./tacos-gha/.github/actions/prepare-summary
         with:
-          artifact-path: lock_result_*/lock_result.txt
+          artifact-path: lock_result
           process-file-command: ./tacos-gha/lib/ci/process-lock-result
 
       - name: Comment summary

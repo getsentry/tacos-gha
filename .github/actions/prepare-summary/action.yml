@@ -11,17 +11,20 @@ runs:
   using: 'composite'
   steps:
     - name: 'Download artifacts'
-      uses: 'actions/download-artifact@v3'
+      uses: 'actions/download-artifact@v4'
+      with: 
+        merge-multiple: true
+        pattern: ${{ inputs.artifact-path }}/*
+        path: ${{ inputs.artifact-path }}
     
     - name: 'Prepare summary'
       shell: bash
       run: |
-        summary=""
+        ls -laR ${{ inputs.artifact-path }} || true
 
-        for file in ${{ inputs.artifact-path }}; do
-          # Process the file using the provided command or script
-          result=$(bash -c '${{ inputs.process-file-command }} "$0"' "$file")
-          summary+="$result,"
-        done
+        printf "SUMMARY=" >> "$GITHUB_ENV"
+        jq -cs add ${{ inputs.artifact-path }}/*.json |
+          tee -a "$GITHUB_ENV" |
+          jq . \
+        ;
 
-        echo "SUMMARY=$summary" >> "$GITHUB_ENV"
