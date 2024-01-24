@@ -48,9 +48,7 @@ runs:
     # this should really be default behavior:
     - shell: ${{inputs.shell}}
       run: |
-        if ! gha-set-env 'TF_VERSION' cat "$(nearest-config-file .terraform-version)"; then
-          : TODO: how exactly does ops terragrunt choose a terraform version?
-        fi
+        gha-set-env 'TF_VERSION' cat "$(nearest-config-file .terraform-version)"
         gha-set-env 'TERRAGRUNT_VERSION' cat "$(nearest-config-file .terragrunt-version)"
 
     - name: Setup Terragrunt

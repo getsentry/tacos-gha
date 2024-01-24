@@ -29,9 +29,7 @@ def test(
         since = pr.add_label(":taco::apply")
 
         # The terraform_apply check should not run automatically when the PR is a draft
-        assert (
-            pr.check("Terraform Apply", "tacos_apply").wait(pr.since).skipped
-        )
+        assert pr.check("Terraform Apply", "tacos_apply").wait(since).skipped
 
         # Another user should be able to aquire the lock(s)
         sh.banner("Open a second, non-draft PR for the same slices")

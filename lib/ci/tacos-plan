@@ -10,7 +10,9 @@ else
     cmd=(tf-lock "$TF_ROOT_MODULE" -- )
 fi
 
-cmd+=(env --chdir="$TF_ROOT_MODULE" terragrunt-noninteractive run-all plan -out tfplan -lock="$lock")
+cmd+=(env --chdir="$TF_ROOT_MODULE"
+      terragrunt-noninteractive run-all
+      plan -out tfplan -lock="$lock")
 
 log=plan-log.hcl
 
