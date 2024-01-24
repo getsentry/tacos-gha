@@ -52,10 +52,18 @@ runs:
         gha-set-env 'TF_VERSION' cat .terraform-version || true
         gha-set-env 'TERRAGRUNT_VERSION' cat .terragrunt-version
 
+    - name: version before
+      shell: ${{inputs.shell}}
+      run: terraform --version || true
+
     - name: Setup Terragrunt
       uses: autero1/action-terragrunt@v1.3.2
       with:
         terragrunt_version: ${{env.TERRAGRUNT_VERSION}}
+
+    - name: version after
+      shell: ${{inputs.shell}}
+      run: terraform --version || true
 
     - name: set draft variable
       shell: ${{inputs.shell}}
