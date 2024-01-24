@@ -1,18 +1,19 @@
 #!/bin/bash
 set -euxo pipefail
 export TERRAGRUNT_INCLUDE_MODULE_PREFIX=false
-if "$GITHUB_PR_DRAFT"
-then
-    lock="false"
-    cmd=()
+if "$GITHUB_PR_DRAFT"; then
+  lock="false"
+  cmd=()
 else
-    lock="true"
-    cmd=(tf-lock "$TF_ROOT_MODULE" -- )
+  lock="true"
+  cmd=(tf-lock "$TF_ROOT_MODULE" -- )
 fi
 
-cmd+=(env --chdir="$TF_ROOT_MODULE"
-      terragrunt-noninteractive run-all
-      plan -out tfplan -lock="$lock")
+cmd+=(
+  env --chdir="$TF_ROOT_MODULE"
+  terragrunt-noninteractive run-all
+  plan -out tfplan -lock="$lock"
+)
 
 log=plan-log.hcl
 
