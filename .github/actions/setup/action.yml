@@ -48,9 +48,10 @@ runs:
     # this should really be default behavior:
     - shell: ${{inputs.shell}}
       run: |
-        # TODO: how exactly does ops terragrunt choose a terraform version?
-        gha-set-env 'TF_VERSION' cat .terraform-version || true
-        gha-set-env 'TERRAGRUNT_VERSION' cat .terragrunt-version
+        if ! gha-set-env 'TF_VERSION' cat "$(nearest-config-file .terraform-version)"; then
+          : TODO: how exactly does ops terragrunt choose a terraform version?
+        fi
+        gha-set-env 'TERRAGRUNT_VERSION' cat "$(nearest-config-file .terragrunt-version)"
 
     - name: Setup Terragrunt
       uses: autero1/action-terragrunt@v1.3.2
@@ -61,6 +62,7 @@ runs:
       uses: hashicorp/setup-terraform@v3
       with:
         terraform_wrapper: false
+        terraform_version: ${{ env.TF_VERSION }}
 
     - name: set draft variable
       shell: ${{inputs.shell}}
