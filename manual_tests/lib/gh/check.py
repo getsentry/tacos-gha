@@ -37,7 +37,11 @@ class CheckFilter:
                 True
                 and run.started_at > since
                 and run.workflow == self.workflow
-                and (self.name is None or run.name == self.name)
+                and (
+                    self.name is None
+                    or run.name == self.name
+                    or run.job.startswith(self.name)
+                )
             ):
                 buckets[run.name].append(run)
 

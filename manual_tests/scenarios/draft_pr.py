@@ -29,7 +29,9 @@ def test(
         since = pr.add_label(":taco::apply")
 
         # The terraform_apply check should not run automatically when the PR is a draft
-        assert pr.check("Terraform Apply").wait(pr.since).skipped
+        assert (
+            pr.check("Terraform Apply", "tacos_apply").wait(pr.since).skipped
+        )
 
         # Another user should be able to aquire the lock(s)
         sh.banner("Open a second, non-draft PR for the same slices")
@@ -54,6 +56,9 @@ def test(
             sh.banner("Apply the plan for the second PR")
             since = pr2.add_label(":taco::apply")
             pr2.check("Terraform Apply").wait(since).success
+
+            since = pr.approve()
+            assert pr.is_approved()
 
             # Merge the second PR
             sh.banner("Merge the second PR")
