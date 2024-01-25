@@ -11,8 +11,13 @@ Callback = typing.Callable[[], T]
 
 
 class Path(PurePosixPath):
-    pass
+    @classmethod
+    def cwd(cls, environ: Environ) -> typing.Self:
+        return cls(environ["PWD"])
 
 
-class OSPath(Path, PosixPath):
-    pass
+class OSPath(PosixPath, Path):
+    @classmethod
+    def cwd(cls, environ: object = None) -> typing.Self:
+        del environ
+        return super().cwd()

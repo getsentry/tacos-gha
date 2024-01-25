@@ -6,11 +6,12 @@ if "$GITHUB_PR_DRAFT"; then
   cmd=()
 else
   lock="true"
-  cmd=(tf-lock "$TF_ROOT_MODULE" -- )
+  cmd=(tf-lock)
 fi
 
 cmd+=(
-  env --chdir="$TF_ROOT_MODULE"
+  env GETSENTRY_SAC_VERB=apply
+  sudo-gcp
   terragrunt-noninteractive run-all
   plan -out tfplan -lock="$lock"
 )
@@ -32,6 +33,7 @@ gha-step-summary <<EOF
   <summary>$summary</summary>
 
 \`\`\`console
+$ cd $(sh-quote "$TF_ROOT_MODULE")
 $ $(sh-quote "${cmd[@]}")
 \`\`\`
 

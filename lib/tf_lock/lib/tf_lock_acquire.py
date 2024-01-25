@@ -9,7 +9,7 @@ ExitCode = str | int
 
 TF_SLEEP = 10  # terraform has a ten-second sleep loop
 EOF = b""
-DEBUG = int(getenv("DEBUG", "0"))
+DEBUG: int = int(getenv("DEBUG") or "1")
 
 if DEBUG >= 3:
     TIMEOUT = 1

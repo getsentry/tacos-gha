@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from lib.types import Environ
+from lib.types import OSPath
 
 from .constant import US_ASCII
 from .io import xtrace
@@ -19,6 +20,14 @@ if TYPE_CHECKING:
     # strict encapsulation: limit run-time access to just one function each
     from subprocess import CompletedProcess
     from subprocess import Popen
+
+
+def get_HERE(__file__: str) -> OSPath:
+    """Return the containing directory of a moudle, given its __file__.
+
+    A substitute for the common HERE variable shell-scripting pattern.
+    """
+    return OSPath(__file__).parent.resolve()
 
 
 def run(cmd: Command, env: Environ | None = None) -> None:

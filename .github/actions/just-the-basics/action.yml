@@ -9,13 +9,48 @@ runs:
   using: composite
 
   steps:
-    - uses: bukzor/direnv-install@v1
-    - name: show env
+    - name: show original environ
+      shell: bash -euxo pipefail {0}
+      if: ${{runner.debug}}
+      run: |
+        export TACOS_GHA_HOME="$PWD/tacos-gha"
+        ./tacos-gha/bin/gha-printenv original
+
+    # default-shell requires direnv
+    - name: install direnv
+      uses: bukzor/direnv-install@v1
+    - name: show GHA contexts
       shell: ${{inputs.shell}}
-      run: sort -z /proc/self/environ | tr '\0\n' '\n;' | tee orig.env
-    - shell: ${{inputs.shell}}
+      run: |
+
+        : GHA contexts:
+        : DOC: https://docs.github.com/en/actions/learn-github-actions/contexts
+        cat <<'EOF'
+          github:   # too huge, enable debug logging to see
+          env:      ${{ toJSON(env) }},
+          vars:     # not valid in custom action
+          job:      ${{ toJSON(job) }},
+          jobs:     # for reusable workflows only
+          steps:    ${{ toJSON(steps) }},
+          runner:   ${{ toJSON(runner) }},
+          secrets:  # not valid in custom action
+          strategy: ${{ toJSON(strategy) }},
+          matrix:   ${{ toJSON(matrix) }},
+          needs:    # not valid in custom action
+          inputs:   ${{ toJSON(inputs) }},
+        EOF
+    - name: "debug: show `github` context"
+      if: ${{runner.debug}}
+      shell: ${{inputs.shell}}
+      run: |
+        : its huge... expand script, above to view <<'EOF'
+          github:   ${{ toJSON(github) }},
+        EOF
+    - name: get python version
+      shell: ${{inputs.shell}}
       run: |
         gha-set-env 'PYTHON_VERSION' grep -v '^#' "$TACOS_GHA_HOME/".python-version
-    - uses: actions/setup-python@v5
+    - name: install python ${{env.PYTHON_VERSION}}
+      uses: actions/setup-python@v5
       with:
         python-version: ${{env.PYTHON_VERSION}}

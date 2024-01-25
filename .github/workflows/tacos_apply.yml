@@ -67,7 +67,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        tf-root-module: ${{ fromJSON(needs.determine-tf-root-modules.outputs.slices) }}
+        tf-root-module:
+          ${{ fromJSON(needs.determine-tf-root-modules.outputs.slices) }}
 
     env:
       TF_ROOT_MODULE: ${{matrix.tf-root-module}}
@@ -96,6 +97,8 @@ jobs:
           "$TACOS_GHA_HOME/"lib/ci/tacos-apply
 
       - name: Update PR
+        # we want to report failures, too
+        if: always()
         uses: thollander/actions-comment-pull-request@v2.4.3
         with:
           message: ${{ fromJSON(steps.main.outputs.summary) }}
