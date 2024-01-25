@@ -124,6 +124,6 @@ jobs:
   reset-label:
     uses: ./.github/workflows/reset-label.yml
     with:
-      label: ":taco::apply"
+      label: ":taco::plan"
       tacos_gha_repo: ${{inputs.tacos_gha_repo}}
       tacos_gha_ref: ${{inputs.tacos_gha_ref}}
