@@ -118,10 +118,3 @@ jobs:
 
   # FIXME: we need a fan-in summary
   # summary:
-  
-  reset-label:
-    uses: ./.github/workflows/reset-label.yml
-    with:
-      label: ":taco::plan"
-      tacos_gha_repo: ${{inputs.tacos_gha_repo}}
-      tacos_gha_ref: ${{inputs.tacos_gha_ref}}
