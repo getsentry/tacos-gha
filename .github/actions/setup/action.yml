@@ -67,3 +67,5 @@ runs:
       run:
         gha-set-env 'GITHUB_PR_DRAFT' gh pr view ${{
         github.event.pull_request.html_url }} --json isDraft --jq .isDraft
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

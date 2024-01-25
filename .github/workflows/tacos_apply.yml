@@ -103,6 +103,8 @@ jobs:
             jq 'map(.author.login) | join(", ")' |
             gha-set-env 'GITHUB_PR_APPROVERS' cat \
           ;
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Terragrunt Apply
         id: main
         run: |
