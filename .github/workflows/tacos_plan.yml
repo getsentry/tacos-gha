@@ -69,7 +69,7 @@ jobs:
       true
       && (
         github.event.label.name == ':taco::plan'
-        || github.event.action in ('opened', 'synchronize', 'reopened')
+        || github.event.action == 'reopened'
       )
     needs: [determine-tf-root-modules]
     runs-on: ubuntu-latest
