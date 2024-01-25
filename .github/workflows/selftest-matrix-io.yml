@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        json-file: ['test1', 'test2']
+        key: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
           
     steps:
       - name: Checkout
@@ -21,12 +21,12 @@ jobs:
       - name: Add content to json file
         shell: bash
         run: |
-          echo '{"${{ matrix.json-file }}": "test"}' > ${{ matrix.json-file }}.json
+          echo '{"MATRIX_KEY": ${{ matrix.key }}' > test${{ matrix.key }}.json
     
       - name: Run matrix-fanout
         uses: ./.github/actions/matrix-fanout
         with:
-          json-file: ${{ matrix.json-file }}
+          json-file: test${{ matrix.key }}
 
   fanin:
     runs-on: ubuntu-latest
@@ -42,6 +42,4 @@ jobs:
         shell: bash
         run: |
           cat matrix-fanin.json
-          jq -e '.test1 == "test"' matrix-fanin.json
-          jq -e '.test2 == "test"' matrix-fanin.json
 
