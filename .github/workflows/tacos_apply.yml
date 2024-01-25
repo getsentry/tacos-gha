@@ -67,7 +67,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        tf-root-module: ${{ fromJSON(needs.determine-tf-root-modules.outputs.slices) }}
+        tf-root-module:
+          ${{ fromJSON(needs.determine-tf-root-modules.outputs.slices) }}
 
     env:
       TF_ROOT_MODULE: ${{matrix.tf-root-module}}
@@ -101,7 +102,7 @@ jobs:
             # prettify
             jq 'map(.author.login) | join(", ")' |
             gha-set-env 'GITHUB_PR_APPROVERS' cat \
-
+          ;
       - name: Terragrunt Apply
         id: main
         run: |
