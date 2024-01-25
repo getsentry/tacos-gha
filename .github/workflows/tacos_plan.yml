@@ -69,7 +69,10 @@ jobs:
       true
       && (
         github.event.label.name == ':taco::plan'
-        || github.event.action == 'reopened'
+        || (
+          github.event_name == 'pull_request'
+          && github.event.action == 'reopened'
+        )
       )
     needs: [determine-tf-root-modules]
     runs-on: ubuntu-latest
@@ -130,13 +133,3 @@ jobs:
       label: ":taco::plan"
       tacos_gha_repo: ${{inputs.tacos_gha_repo}}
       tacos_gha_ref: ${{inputs.tacos_gha_ref}}
-
-  printJob:    
-    name: Print event
-    runs-on: ubuntu-latest
-    steps:
-    - name: Dump GitHub context
-      env:
-        GITHUB_CONTEXT: ${{ toJson(github) }}
-      run: |
-        echo "$GITHUB_CONTEXT"
