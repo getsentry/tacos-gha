@@ -14,7 +14,7 @@ def test(pr: tacos_demo.PR) -> None:
     assert pr.check("Terraform Lock").wait().success
 
     since = pr.approve()
-    assert pr.approved()
+    assert pr.is_approved()
 
     pr.merge()
 

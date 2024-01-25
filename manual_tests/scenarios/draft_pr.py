@@ -1,16 +1,12 @@
 #!/usr/bin/env py.test
 from __future__ import annotations
 
-import pytest
-
 from lib.sh import sh
 from manual_tests.lib import tacos_demo
 from manual_tests.lib.gh import gh
 from manual_tests.lib.slice import Slices
-from manual_tests.lib.xfail import XFailed
 
 
-@pytest.mark.xfail(raises=XFailed)
 def test(
     slices: Slices, test_name: str, demo: gh.LocalRepo, tacos_branch: gh.Branch
 ) -> None:
@@ -23,16 +19,17 @@ def test(
         sh.banner("Wait for the terraform_plan check to complete")
         assert pr.check("Terraform Plan").wait(pr.since).success
 
-        # The terraform_lock check should not run automatically when the PR is a draft
-        sh.banner("Make sure the terraform_lock check did not run")
-        assert pr.check("Terraform Lock").wait(pr.since).skipped
+        # The slices should not be locked
+        sh.banner("Make sure the slices are not locked")
+        for slice in slices:
+            assert not slice.is_locked()
 
         # Since this PR is a draft, it should not be able to apply the plan
         sh.banner("Try to apply the plan for a draft PR")
         since = pr.add_label(":taco::apply")
 
         # The terraform_apply check should not run automatically when the PR is a draft
-        assert pr.check("Terraform Apply").wait(pr.since).skipped
+        assert pr.check("Terraform Apply", "tacos_apply").wait(since).skipped
 
         # Another user should be able to aquire the lock(s)
         sh.banner("Open a second, non-draft PR for the same slices")
@@ -51,12 +48,15 @@ def test(
 
             # This PR should aquire the lock
             sh.banner("Make sure the terraform_lock checks ran successfully")
-            assert pr2.check("Terraform Lock").wait().success
+            pr2.slices.assert_locked()
 
             # Since this is not a draft PR, it should be able to apply the plan
             sh.banner("Apply the plan for the second PR")
             since = pr2.add_label(":taco::apply")
             pr2.check("Terraform Apply").wait(since).success
+
+            since = pr2.approve()
+            assert pr2.is_approved()
 
             # Merge the second PR
             sh.banner("Merge the second PR")

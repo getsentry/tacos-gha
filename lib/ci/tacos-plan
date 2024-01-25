@@ -1,7 +1,20 @@
 #!/bin/bash
 set -euxo pipefail
 export TERRAGRUNT_INCLUDE_MODULE_PREFIX=false
-cmd=(tf-lock "$TF_ROOT_MODULE" -- env --chdir="$TF_ROOT_MODULE" terragrunt-noninteractive run-all plan -out tfplan)
+if "$GITHUB_PR_DRAFT"; then
+  lock="false"
+  cmd=()
+else
+  lock="true"
+  cmd=(tf-lock "$TF_ROOT_MODULE" -- )
+fi
+
+cmd+=(
+  env --chdir="$TF_ROOT_MODULE"
+  terragrunt-noninteractive run-all
+  plan -out tfplan -lock="$lock"
+)
+
 log=plan-log.hcl
 
 "${cmd[@]}" 2>&1 | tee "$log" && status=$? || status=$?
@@ -34,4 +47,4 @@ gha-set-output artifact_path cat <<< "$artifact_path"
 # Invalid characters include: " : < > | * ? \r \n \ /
 gha-set-output artifact_name tr / ' ' <<< "$artifact_path"
 
-exit $status
+exit "$status"
