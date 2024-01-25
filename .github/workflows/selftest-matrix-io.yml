@@ -41,12 +41,8 @@ jobs:
       - name: Check matrix-fanin.json
         shell: bash
         run: |
-          cat matrix-fanin.json
-
-          : sum all of the values
           sum=$(jq -r 'to_entries | map(.value) | add' matrix-fanin.json)
 
-          : check that the sum is 55
           if [[ $sum -ne 55 ]]; then
             echo "ERROR: sum is $sum, expected 55"
             exit 1
