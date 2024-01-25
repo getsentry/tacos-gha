@@ -91,6 +91,18 @@ jobs:
       ###     # TODO: github-script to fetch run-id of the most recent tfplan
       ###     run-id: ${{steps.find-plan.output.run-id}}
 
+      - name: set $GITHUB_PR_APPROVERS
+        run: |
+          # value is prettified listing of approvers or empty-string
+
+          # get all reviews
+          gh pr view https://github.com/${{ github.pull_request.repository.full_name }}/pull/${{ github.pull_request.number }} --json reviews |
+            # keep only the approving reviews
+            jq '.reviews | map(select(.state == "APPROVED"))' |
+            # prettify
+            jq 'map(.author.login) | join(", ")' |
+            gha-set-env 'GITHUB_PR_APPROVERS' cat \
+          ;
       - name: Terragrunt Apply
         id: main
         run: |
