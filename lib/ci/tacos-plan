@@ -1,14 +1,21 @@
 #!/bin/bash
 set -euxo pipefail
 export TERRAGRUNT_INCLUDE_MODULE_PREFIX=false
-cmd=(
+if "$GITHUB_PR_DRAFT"; then
+  lock="false"
+  cmd=()
+else
+  lock="true"
+  cmd=(tf-lock)
+fi
+
+cmd+=(
   env GETSENTRY_SAC_VERB=apply
   sudo-gcp
-  tf-lock
-  terragrunt-noninteractive run-all plan
-  -lock=true
-  -out tfplan
+  terragrunt-noninteractive run-all
+  plan -out tfplan -lock="$lock"
 )
+
 log=plan-log.hcl
 
 "${cmd[@]}" 2>&1 | tee "$log" && status=$? || status=$?
