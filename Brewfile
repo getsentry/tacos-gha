@@ -7,3 +7,6 @@ brew "pyenv"
 # used during formatting & lint
 brew "shellcheck"
 brew "prettier"
+
+# used to run tests
+brew "gh"
