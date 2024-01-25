@@ -65,7 +65,9 @@ jobs:
 
   tacos_plan:
     # note: we want to plan draft PRs, too
-
+    if: |
+      true
+      && github.event.label.name == ':taco::plan'
     needs: [determine-tf-root-modules]
     runs-on: ubuntu-latest
     permissions:
@@ -118,3 +120,10 @@ jobs:
 
   # FIXME: we need a fan-in summary
   # summary:
+
+  reset-label:
+    uses: ./.github/workflows/reset-label.yml
+    with:
+      label: ":taco::apply"
+      tacos_gha_repo: ${{inputs.tacos_gha_repo}}
+      tacos_gha_ref: ${{inputs.tacos_gha_ref}}
