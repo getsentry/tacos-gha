@@ -4,11 +4,13 @@ export TERRAGRUNT_INCLUDE_MODULE_PREFIX=false
 cmd=(tf-lock terragrunt-noninteractive apply --auto-approve)
 log=apply-log.hcl
 
-if [ "$GITHUB_PR_APPROVALS" = "0" ]; then
+if ! [[ "$GITHUB_PR_APPROVERS" ]]; then
     gha-step-summary <<EOF
 ### TACOS Apply: $TF_ROOT_MODULE
+Production changes must be peer-reviewed.
+Please try again after code review.
 
-PR not approved, so apply disallowed.
+Apply request refused: PR has no approvals
 EOF
     exit 1
 fi
@@ -36,6 +38,11 @@ $ $(sh-quote "${cmd[@]}")
 
 \`\`\`hcl
 $(cat apply-log.hcl)
+\`\`\`
+
+\`\`\`text
+approvers:
+$GITHUB_PR_APPROVERS
 \`\`\`
 
 </details>
