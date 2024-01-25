@@ -1,0 +1,54 @@
+name: Selftest Matrix IO
+
+on:
+  push:
+    paths:
+      - ".github/actions/matrix-fanout/**"
+      - ".github/actions/matrix-fanin/**"
+      - ".github/workflows/selftest-matrix-io.yml"
+env:
+  JSON_FILE_PREFIX: selftest
+
+jobs:
+  fanout:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        key: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Add content to json file
+        shell: bash
+        run: |
+          mkdir matrix-output
+          echo '{"MATRIX_KEY${{ matrix.key }}": ${{ matrix.key }}}' > matrix-output/${{ env.JSON_FILE_PREFIX }}${{ matrix.key }}.json
+
+      - name: Run matrix-fanout
+        uses: ./.github/actions/matrix-fanout
+        with:
+          json-file: ${{ env.JSON_FILE_PREFIX }}${{ matrix.key }}
+
+  fanin:
+    runs-on: ubuntu-latest
+    needs: fanout
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run matrix-fanin
+        uses: ./.github/actions/matrix-fanin
+        with:
+          json-file-prefix: ${{ env.JSON_FILE_PREFIX }}
+
+      - name: Check matrix-fanin.json
+        shell: bash
+        run: |
+          sum=$(jq -r 'to_entries | map(.value) | add' matrix-fanin.json)
+
+          if [[ $sum -ne 55 ]]; then
+            echo "ERROR: sum is $sum, expected 55"
+            exit 1
+          fi
