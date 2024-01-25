@@ -96,13 +96,15 @@ jobs:
           # value is prettified listing of approvers or empty-string
 
           # get all reviews
-          gh pr view https://github.com/${{ github.pull_request.repository.full_name }}/pull/${{ github.pull_request.number }} --json reviews |
+          gh pr view ${{ github.event.pull_request.html_url }} --json reviews |
             # keep only the approving reviews
             jq '.reviews | map(select(.state == "APPROVED"))' |
             # prettify
             jq 'map(.author.login) | join(", ")' |
             gha-set-env 'GITHUB_PR_APPROVERS' cat \
           ;
+        env:
+          GH_TOKEN: ${{ github.token }}
       - name: Terragrunt Apply
         id: main
         run: |
