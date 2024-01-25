@@ -64,4 +64,6 @@ runs:
 
     - name: set draft variable
       shell: ${{inputs.shell}}
-      run: gha-set-env 'GITHUB_PR_DRAFT' gh pr view ${{ github.pull_request.html_url }} --json isDraft --jq .isDraft
+      run:
+        gha-set-env 'GITHUB_PR_DRAFT' gh pr view ${{
+        github.pull_request.html_url }} --json isDraft --jq .isDraft
