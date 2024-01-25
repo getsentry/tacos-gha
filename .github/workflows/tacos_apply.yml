@@ -96,7 +96,7 @@ jobs:
           # value is prettified listing of approvers or empty-string
 
           # get all reviews
-          gh pr view ${{ github.pull_request.html_url }} --json reviews |
+          gh pr view ${{ github.event.pull_request.html_url }} --json reviews |
             # keep only the approving reviews
             jq '.reviews | map(select(.state == "APPROVED"))' |
             # prettify
