@@ -66,13 +66,10 @@ jobs:
   tacos_plan:
     # note: we want to plan draft PRs, too
     if: |
-      true
-      && (
-        github.event.label.name == ':taco::plan'
-        || (
-          github.event_name == 'pull_request'
-          && github.event.action == 'reopened'
-        )
+      github.event.label.name == ':taco::plan'
+      || (
+        github.event_name == 'pull_request'
+        && contains(['opened', 'synchronize', 'reopened'], github.event.action)
       )
     needs: [determine-tf-root-modules]
     runs-on: ubuntu-latest
