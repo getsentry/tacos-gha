@@ -69,7 +69,7 @@ jobs:
       github.event.label.name == ':taco::plan'
       || (
         github.event_name == 'pull_request'
-        && contains(('opened' 'synchronize' 'reopened'), github.event.action)
+        && contains(fromJson('["opened", "synchronize", "reopened"]'), github.event.action)
       )
     needs: [determine-tf-root-modules]
     runs-on: ubuntu-latest
