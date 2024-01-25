@@ -4,6 +4,15 @@ export TERRAGRUNT_INCLUDE_MODULE_PREFIX=false
 cmd=(tf-lock terragrunt-noninteractive apply --auto-approve)
 log=apply-log.hcl
 
+if [ "$GITHUB_PR_APPROVALS" = "0" ]; then
+    gha-step-summary <<EOF
+### TACOS Apply: $TF_ROOT_MODULE
+
+PR not approved, so apply disallowed.
+EOF
+    exit 1
+fi
+
 set -x
 "${cmd[@]}" 2>&1 | tee "$log" && status=$? || status=$?
 
