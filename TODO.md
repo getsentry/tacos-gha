@@ -1,14 +1,10 @@
-testing:
+correctness:
 
-1. environment fixture
-1. chdir fixture
-1. PR fixture, with cleanup
-1. unit tests for all lib/ functions
+- [ ] refuse apply without review
 
-auth:
+ease of use (UI/UX):
 
-1. create role-ops-planner / applier roles
-2. add roles to ops bucket(s)
+- [ ] explain declined applies (due to draft or due to review)
 
 terragrunt:
 

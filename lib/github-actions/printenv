@@ -1,0 +1,12 @@
+#!/bin/bash
+set -euo pipefail
+
+if [[ "$*" ]]; then
+  suffix=" ($*)"
+else
+  suffix=""
+fi
+
+echo ::group::GitHub Actions Environment"$suffix"
+"$TACOS_GHA_HOME/"lib/unix/env-sorted
+echo ::endgroup::

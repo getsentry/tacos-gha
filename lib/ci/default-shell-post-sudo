@@ -4,6 +4,9 @@
 set -euo pipefail
 HERE="$(dirname "$(readlink -f "$0")")"
 
+if [[ "${DEBUG}" ]]; then
+  gha-printenv post-sudo
+fi
 
 # prefix debug lines with a fancy-looking "prompt", randomly colored
 export PS4
@@ -14,18 +17,22 @@ export TERM=xterm-256color
 export CLICOLOR=truecolor
 export COLORTERM=truecolor
 
-# bring in the user's environment
-eval "$(direnv allow; direnv export bash)"
+if [[ "${TF_ROOT_MODULE:-}" ]]; then
+  (set -x; cd "$TF_ROOT_MODULE")  # just so it shows in logs
+  cd "$TF_ROOT_MODULE"
+fi
 
-# prevent direnv from undoing what's done
-unset DIRENV_DIFF DIRENV_WATCHES DIRENV_FILE DIRENV_DIR
+: bring in the users environment
+eval="$(direnv allow; direnv export bash)"
+eval "$eval"
+unset DIRENV_DIFF  # give direnv amnesia
 
-# bring in the tacos-gha environment vars
-eval "$(cd "$HERE"; direnv allow; direnv export bash)"
+: bring in the tacos-gha environment vars
+eval="$(cd "$HERE"; direnv allow; direnv export bash)"
+eval "$eval"
+unset DIRENV_DIFF  # give direnv amnesia
 
-# prevent direnv from undoing what's done
-unset DIRENV_DIFF DIRENV_WATCHES DIRENV_FILE DIRENV_DIR
-
+gha-printenv
 
 # the default shell (under github actions) is:
 # bash --noprofile --norc -eo pipefail {0}

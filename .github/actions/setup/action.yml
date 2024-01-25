@@ -64,4 +64,5 @@ runs:
 
     - name: set draft variable
       shell: ${{inputs.shell}}
-      run: gha-set-env 'GITHUB_PR_DRAFT' echo ${{github.event.pull_request.draft}}
+      run:
+        gha-set-env 'GITHUB_PR_DRAFT' echo ${{github.event.pull_request.draft}}
