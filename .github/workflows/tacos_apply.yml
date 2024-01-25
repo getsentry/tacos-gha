@@ -104,7 +104,7 @@ jobs:
             gha-set-env 'GITHUB_PR_APPROVERS' cat \
           ;
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
       - name: Terragrunt Apply
         id: main
         run: |
