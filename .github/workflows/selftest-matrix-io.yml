@@ -21,7 +21,7 @@ jobs:
       - name: Add content to json file
         shell: bash
         run: |
-          echo '{"MATRIX_KEY": ${{ matrix.key }}}' > test${{ matrix.key }}.json
+          echo '{"MATRIX_KEY${{ matrix.key }}": ${{ matrix.key }}}' > test${{ matrix.key }}.json
     
       - name: Run matrix-fanout
         uses: ./.github/actions/matrix-fanout
