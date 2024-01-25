@@ -104,7 +104,7 @@ class PR:
         since = now()
         sh.run(
             ("gh", "pr", "review", "--approve", self.url),
-            env={"GITHUB_TOKEN": app_installation.token(jwt)},
+            env={"GH_TOKEN": app_installation.token(jwt)},
         )
         return since
 
