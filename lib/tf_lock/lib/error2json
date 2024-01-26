@@ -1,0 +1,8 @@
+#!/bin/bash
+set -eEuo pipefail
+HERE="$(dirname "$(readlink -f "$0")")"
+
+printf '{'
+"$HERE/"error2json.sed |
+  tr -d '\n'
+echo '"lock":true}'

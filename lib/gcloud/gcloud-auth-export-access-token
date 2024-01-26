@@ -51,7 +51,7 @@ eval "$(
 )"
 origin_identity="${configuration_properties_core_account:-}"
 token="$credential_access_token"
-target_identity="${target_identity:-$origin_identity}"
+target_identity="${target_identity:-}"
 
 if ! [[ "$origin_identity" =~ @ ]]; then
   info "Please authenticate by running: gcloud login"
@@ -77,11 +77,11 @@ elif [[ "$target_identity" =~ \.iam\.gserviceaccount\.com$ ]]; then
     )"; then
     token="$(jq .accessToken --raw-output <<< "$response")"
   else
-    error "FAILED: unable to authenticate as $target_identity
+    error "FAILED: unable to authenticate as '$target_identity'
 $response"
   fi
 else
-  error "FAILED: don't know how to authenticate as $target_identity"
+  error "FAILED: don't know how to authenticate as '$target_identity'"
 fi
 
 # NOTE: CLOUDSDK_CORE_ACCOUNT is necessary to get the right user during 

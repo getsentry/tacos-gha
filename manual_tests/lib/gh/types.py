@@ -8,3 +8,5 @@ Branch = object
 Message = object
 Label = str
 CheckName = str
+WorkflowName = str
+Comment = str  # a PR comment

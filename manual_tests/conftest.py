@@ -1,10 +1,12 @@
 """pytest fixtures specific to tacos-gha demo"""
 from __future__ import annotations
 
+from typing import Callable
+
 from pytest import fixture
 
 from lib import json
-from lib.constants import REPO_TOP
+from lib.constants import TACOS_GHA_HOME
 from lib.functions import one
 from lib.sh import sh
 from lib.sh.cd import cd
@@ -15,6 +17,21 @@ from lib.types import Path
 from manual_tests.lib import tacos_demo
 from manual_tests.lib.gh import gh
 from manual_tests.lib.slice import Slices
+
+# you forgot to commit if these paths have pending edits
+GHA_RELEVANT_PATHS = (
+    ".envrc",
+    ".github",
+    "bin",
+    "lib/ci",
+    "lib/gcloud",
+    "lib/getsentry-sac",
+    "lib/github-actions",
+    "lib/tacos",
+    "lib/terragrunt",
+    "lib/tf_lock",
+    "lib/unix",
+)
 
 
 @fixture
@@ -36,7 +53,7 @@ def demo(cwd: OSPath, git_remote: gh.RemoteRepo) -> Generator[gh.LocalRepo]:
 
 @fixture
 def workdir(demo: gh.LocalRepo, environ: Environ) -> Generator[OSPath]:
-    with cd(REPO_TOP, environ):
+    with cd(TACOS_GHA_HOME, environ):
         # disallow direnv from unloading our test environment:
         for var in environ:
             if var.startswith("DIRENV_"):
@@ -47,40 +64,58 @@ def workdir(demo: gh.LocalRepo, environ: Environ) -> Generator[OSPath]:
 
 
 @fixture
-def slice_subpath(user: str) -> Path:
+def slices_subpath(user: str) -> Path:
     """which subpath of workdir should we search for slices?"""
     # TODO: update actions for minimal slice names
-    ###return Path(f"env.{user}/prod")
-    return Path(f"terraform/env.{user}/prod")
+    ###return Path(f"env.{user}")
+    return Path(f"terraform/env.{user}")
 
 
 @fixture
-def slices(workdir: OSPath, slice_subpath: Path) -> Slices:
-    slices = Slices.from_path(workdir, slice_subpath)
-    return slices.random()
+def slices_cleanup() -> Callable[[Slices], None]:
+    """called before and after selected slices are used in test"""
+    return Slices.force_unlock
+
+
+@fixture
+def slices(
+    workdir: OSPath,
+    slices_subpath: Path,
+    slices_cleanup: Callable[[Slices], None],
+) -> Generator[Slices]:
+    slices_all = Slices.from_path(workdir, slices_subpath)
+    slices = slices_all.random()
+    slices_cleanup(slices_all)
+    yield slices
+    slices_cleanup(slices_all)
 
 
 @fixture
 def tacos_branch() -> str:
-    with sh.cd(REPO_TOP):
+    with sh.cd(TACOS_GHA_HOME):
         result = one(
             sh.lines(("git", "symbolic-ref", "-q", "--short", "HEAD"))
         )
         # push any GHA-relevant changes
         if result != "main":
-            if not sh.success(("git", "diff", "--quiet", "HEAD", ".github")):
+            if not sh.success(
+                ("git", "diff", "--quiet", "HEAD") + GHA_RELEVANT_PATHS
+            ):
+                # TODO: amend if the previous commit was a similar auto-commit
                 sh.run(
                     (
                         "git",
                         "commit",
-                        ".github",
-                        "--message=auto-commit: .github, for test",
+                        "--message=auto-commit: GHA deps, for test",
                     )
+                    + GHA_RELEVANT_PATHS
                 )
                 sh.run(("git", "show", "--stat"))
 
             # either way, ensure that what we committed will be used
-            sh.run(("git", "push"))
+            sh.run(
+                ("git", "push", "--force-with-lease", "--force-if-includes")
+            )
     return result
 
 

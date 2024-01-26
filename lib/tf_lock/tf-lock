@@ -1,0 +1,40 @@
+#!/bin/bash
+set -eEuo pipefail
+HERE="$(dirname "$(readlink -f "$0")")"
+. "$HERE/"lib/env.sh
+
+if [[ "${DEBUG:-}" ]]; then
+  set -x
+fi
+
+if [[ "${2:-}" = "--" ]]; then
+  slice="$1"
+  shift 2
+else
+  slice="."
+fi
+if [[ $# -lt 1 ]]; then
+  ESC=$'\033'
+  cat >&2 <<EOF
+usage: tf-lock COMMAND ...
+       tf-lock TF_MODULE -- COMMAND ...
+
+Run COMMAND while holding the state lock of TF_MODULE (default: .).
+
+This command will succeed if the terraform state lock is currently unheld or if
+it is currently held by ${ESC}[34m$(whoami)@$(hostname -f)${ESC}[m (i.e.
+${ESC}[32m\$(whoami)@\$(hostname -f)${ESC}[m). It will fail if anyone else holds
+the lock.
+
+COMMAND should take the state lock, itself (e.g. \`terraform apply\`). The state
+lock will continue to be held after the command finishes.
+
+EOF
+  exit 1
+fi
+
+set -x
+tf-lock-release "$slice"
+"$@" && status=$? || status=$?
+tf-lock-acquire "$slice"
+exit "$status"

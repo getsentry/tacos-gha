@@ -4,6 +4,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from lib.types import Environ
+from lib.types import OSPath
+
 from .constant import US_ASCII
 from .io import xtrace
 from .types import Command
@@ -19,7 +22,15 @@ if TYPE_CHECKING:
     from subprocess import Popen
 
 
-def run(cmd: Command) -> None:
+def get_HERE(__file__: str) -> OSPath:
+    """Return the containing directory of a moudle, given its __file__.
+
+    A substitute for the common HERE variable shell-scripting pattern.
+    """
+    return OSPath(__file__).parent.resolve()
+
+
+def run(cmd: Command, env: Environ | None = None) -> None:
     """Run a command to completion. Raises on error.
 
     >>> run(('echo', 'ok'))
@@ -28,7 +39,7 @@ def run(cmd: Command) -> None:
         ...
     subprocess.CalledProcessError: Command '('false', 'not ok')' returned non-zero exit status 1.
     """
-    _wait(_popen(cmd))
+    _wait(_popen(cmd, env=env))
 
 
 def stdout(cmd: Command) -> str:
@@ -90,8 +101,18 @@ def success(cmd: Command, returncode: int = 0) -> bool:
     return _returncode(cmd) == returncode
 
 
+def _stringify(o: object) -> bytes:
+    if isinstance(o, bytes):
+        return o
+    else:
+        return str(o).encode("US-ASCII")  # other bytes are ambiguous
+
+
 def _popen(
-    cmd: Command, capture_output: bool = False, encoding: str = US_ASCII
+    cmd: Command,
+    capture_output: bool = False,
+    encoding: str = US_ASCII,
+    env: Environ | None = None,
 ) -> Popen[str]:
     import subprocess
 
@@ -106,11 +127,20 @@ def _popen(
     else:
         stdout = None
 
+    from os import environ
+
+    tmp = env
+    env = environ.copy()
+    if tmp:
+        env.update(tmp)
+    del tmp
+
     return subprocess.Popen(
-        tuple(str(arg) for arg in cmd),
+        tuple(_stringify(arg) for arg in cmd),
         text=True,
         encoding=encoding,
         stdout=stdout,
+        env=env,
     )
 
 

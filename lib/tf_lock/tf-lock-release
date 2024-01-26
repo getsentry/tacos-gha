@@ -1,0 +1,5 @@
+#!/bin/bash
+set -euo pipefail
+
+# FIXME: we need pip packaging
+python3.12 -m lib.tf_lock.release "$@"

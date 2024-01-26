@@ -1,15 +1,12 @@
 #!/bin/bash
 set -euo pipefail
 
-HERE="$(cd "$(dirname "$0")"; pwd)"
-set-env() {
-  "$HERE/"../github/set-env "$@"
-}
-
-if set-env TF_LOCK_ID "$HERE/"../tf-lock/tf-lock-acquire "$@"; then
-  set-env TF_LOCK echo true
+set -x
+cd "$TF_ROOT_MODULE"
+if gha-set-env TF_LOCK_ID tf-lock-acquire "$@"; then
+  gha-set-env TF_LOCK echo true
 else
   status="$?"
-  set-env TF_LOCK echo false
+  gha-set-env TF_LOCK echo false
   exit "$status"
 fi

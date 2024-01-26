@@ -1,3 +1,0 @@
-#!/bin/bash
-sac_terraformer="${GETSENTRY_SAC_TERRAFORMER:-"$(sac-terraformer)"}"
-sudo-gcp -u "$sac_terraformer" "$@"

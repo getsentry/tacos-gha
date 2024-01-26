@@ -182,7 +182,7 @@ class TestDependentSlices:
         )
 
     def test_unique(self) -> None:
-        # we editted everything!
+        # we edited everything!
         slices = tuple(D.dependent_slices(PATHS, FS))
         assert slices == (
             D.TopLevelTFModule(D.TFModule(D.Dir(Path("env/dev/slice-0")))),

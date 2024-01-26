@@ -1,0 +1,8 @@
+#!/bin/sh
+set -eu
+HERE="$(dirname "$(readlink -f "$0")")"
+
+{
+  git ls-files '*.py'
+  "$HERE/"ls-mimetype 'text/x-script\.python'
+} | sort -u

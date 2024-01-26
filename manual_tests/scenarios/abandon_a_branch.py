@@ -15,7 +15,7 @@ def test(pr: tacos_demo.PR) -> None:
     assert pr.approved()
 
     since = pr.add_label(":taco::apply")
-    assert pr.check("tacos_apply").wait(since).success
+    assert pr.check("Terraform Apply").wait(since).success
 
     sh.banner("For various reasons, the PR is not merged. Time passes")
     # TODO: there should be a better way of simulating the PR being marked as stale.

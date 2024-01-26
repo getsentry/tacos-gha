@@ -1,0 +1,21 @@
+#!/bin/bash
+set -euo pipefail
+BRANCH_NAME=tacos/drift
+
+set -x
+cd "$TF_ROOT_MODULE"
+tf-lock terragrunt-noninteractive plan -detailed-exitcode | tee .drift
+
+if (( $? == 2 )); then
+  : drift detected!
+else
+  : all is swell.
+  exit 0
+fi
+
+# FIXME: this really should be done in a fan-in summary job
+git add .drift
+git commit .drift -m "fix(drift): terraform drift autodetected!"
+git checkout -b "$BRANCH_NAME"
+git push origin -f
+gh pr create --fill-first --head "$BRANCH_NAME"

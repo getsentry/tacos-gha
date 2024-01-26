@@ -3,11 +3,10 @@ from __future__ import annotations
 from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime
+from subprocess import CalledProcessError
 from typing import TYPE_CHECKING
 from typing import Self
 from typing import Sequence
-from urllib.request import Request
-from urllib.request import urlopen
 
 from lib import json
 from lib import wait
@@ -23,6 +22,7 @@ from .types import URL
 from .types import Branch
 from .types import CheckName
 from .types import Label
+from .types import WorkflowName
 
 APP_INSTALLATION_REVIEWER = (
     "op://Team Tacos gha dev/tacos-gha-reviewer/installation.json"
@@ -32,7 +32,7 @@ APP_INSTALLATION_REVIEWER = (
 Comment = str  # a PR comment
 
 if TYPE_CHECKING:
-    from .check import Check
+    from .check import CheckFilter
     from .check_run import CheckRun
 
 # mypy doesn't understand ParamSpec :(
@@ -45,6 +45,7 @@ class PR:
     branch: Branch
     url: URL
     since: datetime
+    draft: bool
 
     @classmethod
     def open(
@@ -61,56 +62,54 @@ class PR:
                 ("gh", "pr", "create", "--fill-first", "--head", branch)
                 + (("--draft",) if draft else ())
             )
-        return cls(branch, url, since, **attrs)
+        return cls(branch, url, since, draft, **attrs)
 
     @contextmanager
     @classmethod
     def opened(cls, repo: LocalRepo, branch: Branch) -> Generator[Self]:
         pr = cls.open(repo, branch)
         sh.banner("PR opened:", pr.url)
-        yield pr
-        pr.close()
+        try:
+            yield pr
+        finally:
+            pr.close()
 
     def close(self) -> None:
         sh.banner("deleting branch")
-        sh.run(
-            (
-                "gh",
-                "pr",
-                "close",
-                self.url,
-                "--comment",
-                "automatic test cleanup",
-                "--delete-branch",
+        try:
+            sh.run(
+                (
+                    "gh",
+                    "pr",
+                    "close",
+                    self.url,
+                    "--comment",
+                    "automatic test cleanup",
+                    "--delete-branch",
+                )
             )
+        except CalledProcessError:
+            # might already be closed
+            if not self.is_closed():
+                raise
+
+    def is_closed(self) -> bool:
+        status = sh.stdout(
+            ("gh", "pr", "view", self.url, "--json", "state", "--jq", ".state")
         )
+        return status in ["CLOSED", "MERGED"]
 
     def approve(
         self, app_installation: app.Installation, jwt: JWT
     ) -> datetime:
-        parts = self.url.split("/")
-        owner = parts[-4]
-        repo = parts[-3]
-        num = parts[-1]
-
-        sh.banner("approving PR:")
-        url = (
-            f"https://api.github.com/repos/{owner}/{repo}/pulls/{num}/reviews"
-        )
-        headers = {
-            "Accept": "application/vnd.github+json",
-            "Authorization": f"Bearer {app_installation.token(jwt)}",
-            "X-GitHub-Api-Version": "2022-11-28",
-        }
-        req = Request(
-            url, method="POST", headers=headers, data=b'{"event":"APPROVE"}'
-        )
         since = now()
-        with urlopen(req) as resp:
-            resp.read()
+        sh.run(
+            ("gh", "pr", "review", "--approve", self.url),
+            env={"GH_TOKEN": app_installation.token(jwt)},
+        )
         return since
 
-    def approved(self) -> bool:
+    def is_approved(self) -> bool:
         status = sh.stdout(
             (
                 "gh",
@@ -185,15 +184,38 @@ class PR:
                 result.append(comment["body"])
         return tuple(result)
 
-    def check(self, check_name: CheckName) -> Check:
-        from .check import Check
+    def check(
+        self, workflow: WorkflowName, check_name: CheckName | None = None
+    ) -> CheckFilter:
+        from .check import CheckFilter
 
-        return Check(self, check_name)
+        return CheckFilter(self, workflow, check_name)
+
+    def toggle_draft(self) -> datetime:
+        since = now()
+        if self.draft:
+            sh.run(("gh", "pr", "ready", self.url))
+        else:
+            sh.run(("gh", "pr", "ready", "--undo", self.url))
+        return since
 
     @classmethod
     def from_branch(cls, branch: Branch, since: datetime) -> Self:
         url = sh.stdout(("gh", "pr", "view", branch, "--json", "url"))
-        return cls(branch, url, since)
+        draft = sh.json(
+            (
+                "gh",
+                "pr",
+                "view",
+                branch,
+                "--json",
+                "isDraft",
+                "--jq",
+                ".isDraft",
+            )
+        )
+        assert isinstance(draft, bool)
+        return cls(branch, url, since, draft)
 
     @classmethod
     def wait_for(cls, branch: str, since: datetime, timeout: int = 60) -> Self:
@@ -214,8 +236,7 @@ class PR:
 
         for obj in check_run.get_runs_json(self.url):
             run = check_run.CheckRun.from_json(obj)
-            if run.started > since:
-                sh.debug(f"  {run}")
+            if run.started_at > since:
                 yield run
 
 
