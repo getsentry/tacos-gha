@@ -5,11 +5,6 @@ HERE="$(dirname "$(readlink -f "$0")")"
 . "$HERE/"lib/env.sh
 
 root_module="${1:-"."}"
-
-if [[ "${DEBUG:-}" ]]; then
-  set -x
-fi
-
 lock_info="$("$HERE/"tf-lock-info "$root_module")"
 lock="$(jq .lock <<< "$lock_info")"
 
@@ -27,7 +22,7 @@ if "$lock"; then
   fi
 fi
 
-( cd "$root_module"
+( cd "$(tf_working_dir "$root_module")"
   "$HERE/"lib/tf_lock_acquire.py
 )
 exec "$0" "$@"  # start over
