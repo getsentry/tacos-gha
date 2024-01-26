@@ -51,7 +51,7 @@ jobs:
       - name: Determine Slices
         id: main
         uses: ./tacos-gha/.github/actions/determine-slices
-  
+
   tacos_unlock:
     runs-on: ubuntu-latest
     permissions:
@@ -66,14 +66,8 @@ jobs:
       summary: ${{ steps.release-terraform-lock.outputs.summary }}
     needs: [determine-tf-root-modules]
 
-    strategy:
-      fail-fast: false
-      matrix:
-        tf-root-module:
-          ${{ fromJSON(needs.determine-tf-root-modules.outputs.slices) }}
-
     env:
-      TF_ROOT_MODULE: ${{matrix.tf-root-module}}
+      SLICE_TF_ROOTS: ${{ needs.determine-tf-root-modules.outputs.slices }}
 
     steps:
       - uses: bukzor/direnv-install@v1
@@ -90,20 +84,20 @@ jobs:
       - name: Release Terraform lock
         id: release-terraform-lock
         run: |
-          log=plan-log.hcl
-          sudo-gcp sh -c '
-            tf-lock-release | tee plan-log.hcl || : unlock failed
-          '
-          summary="$(cat $log)"
-          gha-step-summary $summary 
+          ./tacos-gha/lib/ci/tacos-unlock
 
+  summary:
+    name: summarize
+    needs: [tacos_unlock]
+    runs-on: ubuntu-latest
+    steps:
       - name: Comment on PR regarding lock state
         uses: actions/github-script@v7
         env:
-          summary: ${{ fromJSON(steps.release-terraform-lock.outputs.summary) }}
+          summary: ${{ needs.tacos_unlock.outputs.summary }}
         with:
           script: |
-            const summary = process.env.summary
+            const summary = JSON.parse(process.env.summary)
             const body = `\
             Terraform lock state:
 
