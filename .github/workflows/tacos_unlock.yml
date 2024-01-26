@@ -49,43 +49,9 @@ jobs:
           repository: ${{inputs.tacos_gha_repo}}
           ref: ${{inputs.tacos_gha_ref}}
           path: tacos-gha
-      - name: tell TF username and PR
-        uses: ./tacos-gha/.github/actions/set-username-and-hostname
-      - name: environment config
-        run: |
-          "$TACOS_GHA_HOME/"lib/ci/setenv
 
-      ###- name: Setup Terraform
-      ###  uses: hashicorp/setup-terraform@v3
-      ###  with:
-      ###    terraform_wrapper: false
-
-      - uses: actions/setup-python@v5
-        with:
-          python-version: ${{env.PYTHON_VERSION}}
-
-      - name: Setup Terragrunt
-        uses: autero1/action-terragrunt@v1.3.2
-        with:
-          terragrunt_version: ${{env.TERRAGRUNT_VERSION}}
-
-      - name: gcp auth
-        id: auth
-        uses: google-github-actions/auth@v1
-        with:
-          workload_identity_provider: ${{env.GETSENTRY_SAC_OIDC}}
-          service_account: ${{env.SUDO_GCP_SERVICE_ACCOUNT}}
-
-      - name: set gcloud identity
-        run: |
-          # TODO: upstream feature request on google-github-actions/auth -- this
-          #   should be a default behavior
-          gcloud config get account || : code $?
-          gcloud config set account "$SUDO_GCP_SERVICE_ACCOUNT"
-
-          # also: mask the access token (NOTE: use cat to avoid xtrace'ing the token)
-          # TODO: ditto
-          cat <<< "::add-mask::$(gcloud auth print-access-token)"
+      - name: setup
+        uses: ./tacos-gha/.github/actions/setup
 
       - name: Release Terraform lock
         id: release-terraform-lock
