@@ -7,6 +7,10 @@ name: TACOS Plan
 on:
   workflow_call:
     inputs:
+      ssh-private-key:
+        description: "Private SSH key to use for git clone"
+        type: string
+        default: ""
       tacos_gha_repo:
         type: string
         default: getsentry/tacos-gha
@@ -95,6 +99,8 @@ jobs:
           path: tacos-gha
       - name: Setup
         uses: ./tacos-gha/.github/actions/setup
+        with:
+          ssh-private-key: ${{ inputs.ssh-private-key }}
 
       - name: Plan
         id: main
