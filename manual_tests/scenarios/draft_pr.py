@@ -61,3 +61,14 @@ def test(
             # Merge the second PR
             sh.banner("Merge the second PR")
             pr2.merge()
+
+        sh.banner("Convert Draft PR to non-draft")
+        since = pr.toggle_draft()
+
+        # The terraform_plan check should run automatically when the PR is marked ready
+        sh.banner("Wait for the terraform_plan check to complete")
+        assert pr.check("Terraform Plan").wait(since).success
+
+        # This PR should aquire the lock
+        sh.banner("Make sure the terraform_lock checks ran successfully")
+        pr.slices.assert_locked()

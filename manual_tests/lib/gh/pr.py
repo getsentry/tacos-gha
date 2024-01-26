@@ -45,6 +45,7 @@ class PR:
     branch: Branch
     url: URL
     since: datetime
+    draft: bool
 
     @classmethod
     def open(
@@ -61,7 +62,7 @@ class PR:
                 ("gh", "pr", "create", "--fill-first", "--head", branch)
                 + (("--draft",) if draft else ())
             )
-        return cls(branch, url, since, **attrs)
+        return cls(branch, url, since, draft, **attrs)
 
     @contextmanager
     @classmethod
@@ -190,10 +191,31 @@ class PR:
 
         return CheckFilter(self, workflow, check_name)
 
+    def toggle_draft(self) -> datetime:
+        since = now()
+        if self.draft:
+            sh.run(("gh", "pr", "ready", self.url))
+        else:
+            sh.run(("gh", "pr", "ready", "--undo", self.url))
+        return since
+
     @classmethod
     def from_branch(cls, branch: Branch, since: datetime) -> Self:
         url = sh.stdout(("gh", "pr", "view", branch, "--json", "url"))
-        return cls(branch, url, since)
+        draft = sh.json(
+            (
+                "gh",
+                "pr",
+                "view",
+                branch,
+                "--json",
+                "isDraft",
+                "--jq",
+                ".isDraft",
+            )
+        )
+        assert isinstance(draft, bool)
+        return cls(branch, url, since, draft)
 
     @classmethod
     def wait_for(cls, branch: str, since: datetime, timeout: int = 60) -> Self:
