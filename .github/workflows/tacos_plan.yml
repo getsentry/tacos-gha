@@ -2,7 +2,7 @@ name: TACOS Plan
 
 # downstream projects should use events:
 ###pull_request:
-###  types: [opened, synchronize, reopened]
+###  types: [opened, synchronize, reopened, ready_for_review]
 
 on:
   workflow_call:
@@ -64,7 +64,6 @@ jobs:
         uses: ./tacos-gha/.github/actions/determine-slices
 
   tacos_plan:
-    # note: we want to plan draft PRs, too
     if: |
       false
       || github.event_name != 'label'
@@ -117,7 +116,6 @@ jobs:
           path: ${{steps.main.outputs.artifact_path}}
           if-no-files-found: error
           overwrite: true # we only want the latest plan
-
 
   # FIXME: we need a fan-in summary
   # summary:
