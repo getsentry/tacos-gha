@@ -39,8 +39,6 @@ jobs:
 
       - name: Run matrix-fanin
         uses: ./.github/actions/matrix-fanin
-        with:
-          json-file-prefix: ${{ env.JSON_FILE_PREFIX }}
       
       - name: Check matrix-fanin.json
         shell: bash
