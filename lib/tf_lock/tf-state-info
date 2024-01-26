@@ -1,2 +1,9 @@
 #!/bin/bash
+set -euo pipefail
+HERE="$(dirname "$(readlink -f "$0")")"
+. "$HERE/"lib/env.sh
+
+root_module="${1:-"."}"
+
+cd "$(tf_working_dir "$root_module")"
 hcl2json ./*.tf | jq '.terraform | add | .backend'
