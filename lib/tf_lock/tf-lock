@@ -3,10 +3,6 @@ set -eEuo pipefail
 HERE="$(dirname "$(readlink -f "$0")")"
 . "$HERE/"lib/env.sh
 
-if [[ "${DEBUG:-}" ]]; then
-  set -x
-fi
-
 if [[ "${2:-}" = "--" ]]; then
   slice="$1"
   shift 2

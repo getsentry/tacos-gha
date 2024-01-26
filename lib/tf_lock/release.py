@@ -7,7 +7,9 @@ from typing import ParamSpec
 from typing import Tuple
 from typing import TypeVar
 
+from lib import json
 from lib.sh import sh
+from lib.types import OSPath
 from lib.types import Path
 
 HERE = sh.get_HERE(__file__)
@@ -105,7 +107,7 @@ def tf_lock_release(root_module: Path, env: Environ) -> None:
     lock_user = lock_info["Who"]
     if tf_user == lock_user:
         try:
-            with sh.cd(root_module):
+            with sh.cd(tf_working_dir(root_module)):
                 sh.run(
                     (
                         "terraform",
@@ -129,6 +131,18 @@ tf-lock-release: failure: not {tf_user}: {root_module}({lock_user})
 """,
             code=TF_LOCK_EHELD,
         )
+
+
+def tf_working_dir(root_module: Path) -> Path:
+    """dereference terragrunt indirection, if any"""
+
+    if OSPath(root_module / "terragrunt.hcl").exists():
+        with sh.cd(root_module):
+            info = sh.json(("terragrunt", "terragrunt-info"))
+            info = json.assert_dict_of_strings(info)
+            return Path(info["WorkingDir"])
+    else:
+        return root_module
 
 
 @UserError.handler
