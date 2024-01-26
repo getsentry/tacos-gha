@@ -4,6 +4,17 @@ export TERRAGRUNT_INCLUDE_MODULE_PREFIX=false
 cmd=(tf-lock terragrunt-noninteractive apply --auto-approve)
 log=apply-log.hcl
 
+if ! [[ "$GITHUB_PR_APPROVERS" ]]; then
+    gha-step-summary <<EOF
+### TACOS Apply: $TF_ROOT_MODULE
+Production changes must be peer-reviewed.
+Please try again after code review.
+
+Apply request refused: PR has no approvals
+EOF
+    exit 1
+fi
+
 set -x
 "${cmd[@]}" 2>&1 | tee "$log" && status=$? || status=$?
 
@@ -16,6 +27,8 @@ summary="$(
 # note: this renders twice: step summary in GHA, and comment in PR
 gha-step-summary <<EOF
 ### TACOS Apply: $TF_ROOT_MODULE
+
+approvers: $GITHUB_PR_APPROVERS
 
 <details>
   <summary>$summary</summary>

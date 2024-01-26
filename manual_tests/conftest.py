@@ -171,4 +171,4 @@ def cli_auth_gcloud() -> None:
 def cli_auth_gh() -> None:
     from os import environ
 
-    environ["GITHUB_TOKEN"] = sh.stdout(("gh", "auth", "token"))
+    environ["GH_TOKEN"] = sh.stdout(("gh", "auth", "token"))

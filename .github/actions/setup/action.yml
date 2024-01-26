@@ -62,7 +62,10 @@ runs:
         terraform_wrapper: false
         terraform_version: ${{ env.TF_VERSION }}
 
-    - name: set draft variable
+    - name: set GITHUB_PR_DRAFT
       shell: ${{inputs.shell}}
-      run:
-        gha-set-env 'GITHUB_PR_DRAFT' echo ${{github.event.pull_request.draft}}
+      run: |
+        gha-set-env 'GITHUB_PR_DRAFT' \
+          gh pr view ${{ github.event.pull_request.html_url }} --json isDraft --jq .isDraft
+      env:
+        GH_TOKEN: ${{ github.token }}
