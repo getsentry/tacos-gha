@@ -202,7 +202,7 @@ class PR:
     @classmethod
     def from_branch(cls, branch: Branch, since: datetime) -> Self:
         url = sh.stdout(("gh", "pr", "view", branch, "--json", "url"))
-        draft_str = sh.stdout(
+        draft = sh.json(
             (
                 "gh",
                 "pr",
@@ -214,12 +214,7 @@ class PR:
                 ".isDraft",
             )
         )
-        if draft_str == "true":
-            draft = True
-        elif draft_str == "false":
-            draft = False
-        else:
-            raise ValueError(f"Unknown value for draft: {draft_str}")
+        assert isinstance(draft, bool)
         return cls(branch, url, since, draft)
 
     @classmethod
