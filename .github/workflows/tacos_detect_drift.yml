@@ -7,16 +7,16 @@ name: TACOS Detect Drift
 on:
   workflow_call:
     inputs:
-      ssh-private-key:
-        description: "Private SSH key to use for git clone"
-        type: string
-        default: ""
       tacos_gha_repo:
         type: string
         default: getsentry/tacos-gha
       tacos_gha_ref:
         type: string
         default: refs/heads/stable
+    secrets:
+      ssh-private-key:
+        description: "Private SSH key to use for git clone"
+        required: false
 
 defaults:
   run:
@@ -71,7 +71,7 @@ jobs:
       - name: setup
         uses: ./tacos-gha/.github/actions/setup
         with:
-          ssh-private-key: ${{ inputs.ssh-private-key }}
+          ssh-private-key: ${{ secrets.ssh-private-key }}
 
       - run: |
           gha-log-as-step-summary "$TACOS_GHA_HOME/"lib/ci/tacos-detect-drift
