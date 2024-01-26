@@ -49,20 +49,6 @@ jobs:
           repository: ${{inputs.tacos_gha_repo}}
           ref: ${{inputs.tacos_gha_ref}}
           path: tacos-gha
-      - name: tell TF username and PR
-        uses: ./tacos-gha/.github/actions/set-username-and-hostname
-      - name: environment config
-        run: |
-          "$TACOS_GHA_HOME/"lib/ci/setenv
-
-      ###- name: Setup Terraform
-      ###  uses: hashicorp/setup-terraform@v3
-      ###  with:
-      ###    terraform_wrapper: false
-
-      - uses: actions/setup-python@v5
-        with:
-          python-version: ${{env.PYTHON_VERSION}}
 
       - name: setup
         uses: ./tacos-gha/.github/actions/setup
