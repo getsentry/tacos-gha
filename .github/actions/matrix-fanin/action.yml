@@ -1,5 +1,9 @@
 name: 'Matrix Fanin'
 description: 'Collect all JSON files from the matrix and combine them into a single file (matrix-fanin.json).'
+inputs:
+  json-file-prefix:
+    description: 'The prefix of the JSON files to combine.'
+    required: true
 runs:
   using: 'composite'
   steps:
@@ -7,10 +11,9 @@ runs:
       uses: 'actions/download-artifact@v4'
       with:
         merge-multiple: true
-        pattern: matrix-output/*
-        name: matrix-output
+        pattern: ${{ inputs.json-file-prefix }}*
 
     - name: Combine JSON files
       shell: bash
       run: |
-        jq -s add *.json > matrix-fanin.json
+        jq -s add $(find . -name "*.json") > matrix-fanin.json

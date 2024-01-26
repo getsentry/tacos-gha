@@ -23,7 +23,8 @@ jobs:
       - name: Add content to json file
         shell: bash
         run: |
-          echo '{"MATRIX_KEY${{ matrix.key }}": ${{ matrix.key }}}' > ${{ env.JSON_FILE_PREFIX }}${{ matrix.key }}.json
+          mkdir matrix-output
+          echo '{"MATRIX_KEY${{ matrix.key }}": ${{ matrix.key }}}' > matrix-output/${{ env.JSON_FILE_PREFIX }}${{ matrix.key }}.json
     
       - name: Run matrix-fanout
         uses: ./.github/actions/matrix-fanout
@@ -39,6 +40,8 @@ jobs:
 
       - name: Run matrix-fanin
         uses: ./.github/actions/matrix-fanin
+        with:
+          json-file-prefix: ${{ env.JSON_FILE_PREFIX }}
       
       - name: Check matrix-fanin.json
         shell: bash

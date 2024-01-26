@@ -14,5 +14,6 @@ runs:
     - name: Upload JSON file
       uses: actions/upload-artifact@v4
       with:
-        name: matrix-output/${{ env.JSON_FILE_NAME }}.json
-        path: matrix-output
+        name: ${{ env.JSON_FILE_NAME }}
+        path: matrix-output/${{ inputs.json-file }}.json
+        retention-days: 1
