@@ -97,16 +97,10 @@ jobs:
           repository: ${{inputs.tacos_gha_repo}}
           ref: ${{inputs.tacos_gha_ref}}
           path: tacos-gha
-
-      - name: Set up SSH agent
-        if: inputs.ssh-private-key != ''
-        uses: webfactory/ssh-agent@v0.8.0
-        with:
-          ssh-private-key: |
-            ${{ inputs.ssh-private-key }}
-
       - name: Setup
         uses: ./tacos-gha/.github/actions/setup
+        with:
+          ssh-private-key: ${{ inputs.ssh-private-key }}
 
       - name: Plan
         id: main
