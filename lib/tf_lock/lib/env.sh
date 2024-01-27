@@ -15,9 +15,11 @@ export PATH="$TACOS_GHA_HOME/bin${PATH:+:$PATH}}"
 tf_working_dir() {
   root_module="$1"
   if [[ -e "$root_module/terragrunt.hcl" ]]; then
-    terragrunt validate-inputs
-    env --chdir "$root_module" terragrunt terragrunt-info |
-      jq -r .WorkingDir
+    ( cd "$root_module"
+      terragrunt validate-inputs
+      terragrunt terragrunt-info |
+        jq -r .WorkingDir
+    )
   else
     echo "$root_module"
   fi
