@@ -1,19 +1,28 @@
 #!/bin/bash
 set -euxo pipefail
 export TERRAGRUNT_INCLUDE_MODULE_PREFIX=false
+
+
+cmd=(
+  # FIXME: need a lower-privilege way to enable locking
+  env GETSENTRY_SAC_VERB=apply
+  sudo-gcp
+)
+
 if "$GITHUB_PR_DRAFT"; then
   lock="false"
-  cmd=()
 else
   lock="true"
-  cmd=(tf-lock)
+  cmd+=(tf-lock)
 fi
 
 cmd+=(
-  env GETSENTRY_SAC_VERB=apply
-  sudo-gcp
   terragrunt-noninteractive run-all
-  plan -out tfplan -lock="$lock"
+
+  # "bare" slices will evaluate relative paths with respect to the terragrunt
+  # cache directory, making the plan file hard to find, so an absolute path is
+  # essential here.
+  plan -out "$PWD/tfplan" -lock="$lock"
 )
 
 log=plan-log.hcl
