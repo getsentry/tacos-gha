@@ -17,22 +17,11 @@ export TERM=xterm-256color
 export CLICOLOR=truecolor
 export COLORTERM=truecolor
 
-if [[ "${TF_ROOT_MODULE:-}" ]]; then
-  (set -x; cd "$TF_ROOT_MODULE")  # just so it shows in logs
-  cd "$TF_ROOT_MODULE"
-fi
-
-: bring in the users environment
-eval="$(direnv allow; direnv export bash)"
+: load the tacos-gha environment vars as defaults
+eval="$(cd "$TACOS_GHA_HOME"; direnv allow; direnv export bash)"
 eval "$eval"
-unset DIRENV_DIFF  # give direnv amnesia
-
-: bring in the tacos-gha environment vars
-eval="$(cd "$HERE"; direnv allow; direnv export bash)"
-eval "$eval"
-unset DIRENV_DIFF  # give direnv amnesia
-
-gha-printenv
+# give direnv amnesia, to prevent settings from being undone
+unset DIRENV_DIFF DIRENV_WATCHES DIRENV_FILE DIRENV_DIR
 
 # the default shell (under github actions) is:
 # bash --noprofile --norc -eo pipefail {0}

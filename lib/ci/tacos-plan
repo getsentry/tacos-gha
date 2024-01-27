@@ -1,61 +1,77 @@
 #!/bin/bash
-set -euxo pipefail
+set -euo pipefail
 export TERRAGRUNT_INCLUDE_MODULE_PREFIX=false
-
-
-cmd=(
-  # FIXME: need a lower-privilege way to enable locking
-  env GETSENTRY_SAC_VERB=apply
-  sudo-gcp
-)
 
 if "$GITHUB_PR_DRAFT"; then
   lock="false"
+  cmd=(sudo-gcp)
 else
   lock="true"
-  cmd+=(tf-lock)
+  : FIXME: need a lower-privilege way to enable locking
+  cmd=(
+    env GETSENTRY_SAC_VERB=apply
+    sudo-gcp
+    tf-lock
+  )
 fi
-
 cmd+=(
   terragrunt-noninteractive run-all
 
-  # "bare" slices will evaluate relative paths with respect to the terragrunt
-  # cache directory, making the plan file hard to find, so an absolute path is
-  # essential here.
-  plan -out "$PWD/tfplan" -lock="$lock"
+  # terragrunt in "bare" slices will evaluate relative paths with respect to its
+  # hidden terraform working directory, making the plan file hard to find, so
+  # it's essential to use an absolute path here.
+  plan -out "$PWD/$TF_ROOT_MODULE/tfplan" -lock="$lock"
 )
 
-log=plan-log.hcl
-
-"${cmd[@]}" 2>&1 | tee "$log" && status=$? || status=$?
+tf_log=tf-log.hcl
+console_log=console.log
+with-user-env "$TF_ROOT_MODULE" \
+    "${cmd[@]}" 2>&1 >"$tf_log" |
+  tee "$console_log" \
+  && status=$? \
+  || status=$? \
+;
 
 summary="$(
-  if ! tac "$log" | grep -Ei -m1 'Plan:|No changes'; then
+  if tac "$tf_log" | grep -E -im1 'Plan:|No changes'; then
+    : :D
+  elif cat "$console_log" "$tf_log" | grep -E -im1 'error'; then
+    : D:
+  else
     echo "summary failed!($?)"
   fi
 )"
 
-gha-step-summary <<EOF
+# TODO: hide "commands" on exit code 0
+gha-step-summary >/dev/null <<EOF
 ### TACOS Plan: $TF_ROOT_MODULE
 
 <details>
   <summary>$summary</summary>
 
+  Commands: (exit code: $status)
+
 \`\`\`console
-$ cd $(sh-quote "$TF_ROOT_MODULE")
-$ $(sh-quote "${cmd[@]}")
+$(
+  # match `console` syntax highlighting by removing '+ ' from xtrace lines
+  uncolor "$console_log" |
+    sed -r 's/^\++ \$ /\n$ /'
+)
 \`\`\`
 
+  Result:
+
 \`\`\`hcl
-$(cat plan-log.hcl)
+$(cat "$tf_log")
 \`\`\`
 
 </details>
 EOF
 
-artifact_path="$TF_ROOT_MODULE/tfplan"
-gha-set-output artifact_path cat <<< "$artifact_path"
-# Invalid characters include: " : < > | * ? \r \n \ /
-gha-set-output artifact_name tr / ' ' <<< "$artifact_path"
+gha-set-output artifact_path <<< "$TF_ROOT_MODULE/tfplan" |
+  # Invalid characters include: " : < > | * ? \r \n \ /
+  tr / ' ' |
+  gha-set-output artifact_name \
+;
 
 exit "$status"

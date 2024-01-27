@@ -1,9 +1,15 @@
 #!/bin/bash
+# stdin: json listing of all files editted
 set -euo pipefail
 
 jq '.[]' --raw-output |
   python3 -m lib.tacos.dependent_slices |
   # transform newline-delimited list into json:
   jq -R |
-  jq -cs \
+  jq -cs |
+  gha-set-env TF_ROOT_MODULES |
+  gha-set-output slices |
+  # prettify
+  jq . |
+  gha-step-summary \
 ;

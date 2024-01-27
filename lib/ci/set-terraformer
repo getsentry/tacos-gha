@@ -1,6 +1,4 @@
 #!/bin/bash
 set -euo pipefail
 
-exec gha-set-env SUDO_GCP_SERVICE_ACCOUNT \
-  "$TACOS_GHA_HOME/"lib/gcloud/sudo-gcp-service-account \
-;
+sudo-gcp-service-account | gha-set-env SUDO_GCP_SERVICE_ACCOUNT

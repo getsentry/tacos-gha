@@ -20,7 +20,9 @@ jobs:
       pull-requests: write
 
     if: |
-      github.event.label.name == inputs.label
+      true
+      && github.event_name == 'label'
+      && github.event.label.name == inputs.label
 
     env:
       LABEL: ${{ inputs.label }}

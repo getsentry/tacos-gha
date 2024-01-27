@@ -1,9 +1,6 @@
 #!/bin/bash
 set -euo pipefail
 
-exec \
-  gha-set-env \
-  GETSENTRY_SAC_OIDC \
-  "$TACOS_GHA_HOME/"lib/getsentry-sac/oidc-provider \
-  "$@" \
+"$TACOS_GHA_HOME/"lib/getsentry-sac/oidc-provider "$@" |
+  gha-set-env GETSENTRY_SAC_OIDC \
 ;
