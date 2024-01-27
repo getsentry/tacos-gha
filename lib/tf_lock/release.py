@@ -138,6 +138,7 @@ def tf_working_dir(root_module: Path) -> Path:
 
     if OSPath(root_module / "terragrunt.hcl").exists():
         with sh.cd(root_module):
+            sh.run(("terragrunt", "validate-inputs"))
             info = sh.json(("terragrunt", "terragrunt-info"))
             info = json.assert_dict_of_strings(info)
             return Path(info["WorkingDir"])
