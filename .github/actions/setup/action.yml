@@ -3,10 +3,10 @@ name: Setup
 inputs:
   shell:
     default: env ./tacos-gha/lib/ci/default-shell {0}
-    ssh-private-key:
-      description: "Private SSH key to use for git clone"
-      type: string
-      default: ""
+  ssh-private-key:
+    description: "Private SSH key to use for git clone"
+    type: string
+    default: ""
 
 runs:
   using: composite
