@@ -41,7 +41,15 @@ class RemoteRepo:
         dest = dest / self.name
         # git will fail if the repo already exists, and that's a feature
         sh.run(
-            ("git", "clone", "git@github.com:getsentry/tacos-gha.demo", dest)
+            (
+                "git",
+                "clone",
+                # best for build environments where the repository will be
+                # deleted after a single build
+                "--filter=tree:0",
+                "git@github.com:getsentry/tacos-gha.demo",
+                dest,
+            )
         )
         return LocalRepo(remote=self, path=dest)
 
