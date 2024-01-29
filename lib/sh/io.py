@@ -7,6 +7,10 @@ from typing import Iterable
 
 from lib import ansi
 
+from .constant import STDERR as STDERR
+from .constant import STDIN as STDIN
+from .constant import STDOUT as STDOUT
+from .types import FD as FD
 from .types import Command
 from .types import Generator
 
@@ -119,3 +123,22 @@ def uniq() -> Generator[Uniq]:
         yield newvalue
     finally:
         UNIQ = orig
+
+
+@contextlib.contextmanager
+def redirect(from_: FD, to: FD) -> Generator[FD]:
+    """Enable translating shell syntax `2>&1` to `redirect(2, 1)`."""
+    from os import close
+    from os import dup
+    from os import dup2
+
+    tmp = dup(from_)
+
+    debug2(f"{PS4}exec {tmp}>&{from_} {from_}>&{to}")
+    dup2(to, from_)
+    try:
+        yield tmp
+    finally:
+        dup2(tmp, from_)
+        close(tmp)
+        debug2(f"{PS4}exec {from_}>&{tmp}")
