@@ -141,6 +141,7 @@ def _popen(
         encoding=encoding,
         stdout=stdout,
         env=env,
+        close_fds=False,
     )
 
 

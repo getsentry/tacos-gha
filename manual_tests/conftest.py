@@ -70,21 +70,22 @@ def slices_subpath(workdir: OSPath, user: str, test_name: str) -> Path:
     ###return Path(f"env.{user}")
     subpath = OSPath(f"terraform/env.{user}/{test_name}")
     if not subpath.exists():
-        sh.banner(f"first-time setup: {subpath}")
-        # note: macos cp has no -r option
-        sh.run(("cp", "-a", "terraform/env/prod", subpath))
-        sh.run(("git", "add", subpath))
+        with gh.up_to_date():
+            sh.banner(f"first-time setup: {subpath}")
+            # note: macos cp has no -r option
+            sh.run(("cp", "-a", "terraform/env/prod", subpath))
+            sh.run(("git", "add", subpath))
 
-        # NOTE: terragrunt apply renders templates, causing some diff
-        Slices.from_path(workdir, subpath).apply()
+            # NOTE: terragrunt apply renders templates, causing some diff
+            Slices.from_path(workdir, subpath).apply()
 
-        sh.banner("first-time setup: commit and push")
-        sh.run(("git", "diff", subpath))
-        sh.run(("git", "add", subpath))
-        sh.run(("git", "commit", "-m", f"auto setup: {subpath}"))
+            sh.banner("first-time setup: commit and push")
+            sh.run(("git", "diff", subpath))
+            sh.run(("git", "add", subpath))
+            sh.run(("git", "commit", "-m", f"auto setup: {subpath}"))
 
-        # NOTE: repo config allows force-push to main by all writers
-        sh.run(("git", "push", "-f", "origin", "HEAD:main"))
+            # NOTE: repo config allows force-push to main by all writers
+            sh.run(("git", "push", "-f", "origin", "HEAD:main"))
 
     return subpath
 

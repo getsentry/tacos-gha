@@ -8,5 +8,6 @@ brew "pyenv"
 brew "shellcheck"
 brew "prettier"
 
-# used to run tests
+# used during test
 brew "gh"
+brew "util-linux"
