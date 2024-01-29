@@ -28,7 +28,7 @@ skip_covered = false
 minversion = "6.0"
 markers = []
 xfail_strict = true
-addopts = "--durations-min=10 -vv --doctest-modules --capture=no --last-failed"
+addopts = "-p lib.pytest.cap1fd_plugin --durations-min=10 -vv --doctest-modules --capture=no --last-failed"
 testpaths = ["."]
 norecursedirs = [
     "**/__pycache__",

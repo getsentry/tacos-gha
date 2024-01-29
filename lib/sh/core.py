@@ -101,11 +101,11 @@ def success(cmd: Command, returncode: int = 0) -> bool:
     return _returncode(cmd) == returncode
 
 
-def _stringify(o: object) -> bytes:
+def _stringify(o: object) -> str:
     if isinstance(o, bytes):
-        return o
+        return o.decode("US-ASCII")  # other bytes are ambiguous
     else:
-        return str(o).encode("US-ASCII")  # other bytes are ambiguous
+        return str(o)
 
 
 def _popen(
