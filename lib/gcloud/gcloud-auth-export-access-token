@@ -44,8 +44,7 @@ eval "$(
   unset CLOUDSDK_CORE_ACCOUNT
   unset CLOUDSDK_AUTH_ACCESS_TOKEN
   # enable interactive reauth, iff we have a controlling tty
-  if ( : < /dev/tty ) 2>/dev/null; then exec < /dev/tty; fi
-  gcloud config config-helper \
+  tty-attach gcloud config config-helper \
     --format 'config[export](configuration.properties.core.account,credential.access_token)' \
   ;
 )"

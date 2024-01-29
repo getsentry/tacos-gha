@@ -13,6 +13,7 @@ from lib import wait
 from lib.functions import now
 from lib.sh import sh
 from lib.types import Generator
+from manual_tests.lib.gh import gh
 from manual_tests.lib.xfail import XFailed
 
 from . import app
@@ -245,5 +246,6 @@ def commit_and_push(
 ) -> None:
     with sh.cd(repo.path):
         sh.run(("git", "commit", "-m", message))
-        sh.run(("git", "show", "--stat"))
-        sh.run(("git", "push", "origin", f"{branch}:{branch}"))
+        with gh.up_to_date():
+            sh.run(("git", "show", "--stat"))
+            sh.run(("git", "push", "origin", f"{branch}:{branch}"))

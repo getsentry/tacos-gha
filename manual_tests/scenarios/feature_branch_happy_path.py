@@ -5,7 +5,6 @@ import pytest
 
 from lib.sh import sh
 from manual_tests.lib import tacos_demo
-from manual_tests.lib import tf
 from manual_tests.lib.gh import gh
 from manual_tests.lib.slice import Slices
 from manual_tests.lib.xfail import XFailed
@@ -14,12 +13,12 @@ from manual_tests.lib.xfail import XFails
 
 def apply(pr: tacos_demo.PR, xfails: XFails) -> None:
     # the taco-apply label causes the plan to become clean:
-    assert tf.plan_is_dirty(pr.slices.path)
+    assert not pr.slices.plan_is_clean()
     since = pr.add_label(":taco::apply")
     assert pr.check("Terraform Apply").wait(since).success
 
     try:
-        assert tf.plan_is_clean(pr.slices.path)
+        assert pr.slices.plan_is_clean()
     except AssertionError:
         xfails.append(("assert tf.plan_clean()", "plan not clean"))
 
@@ -39,12 +38,12 @@ def test(pr: tacos_demo.PR, repo: gh.LocalRepo) -> None:
     xfails: XFails = []
 
     sh.banner("look at your plan")
-    plan = pr.get_plan()
+    plan = pr.get_plans()
     assert plan
 
     sh.banner("apply")
     pr.approve()  # needs at least one approval
-    assert pr.approved()
+    assert pr.is_approved()
     apply(pr, xfails)
 
     sh.banner("edit, more")
@@ -63,7 +62,7 @@ def test(pr: tacos_demo.PR, repo: gh.LocalRepo) -> None:
 
     sh.banner("show terraform-plan really is clean")
     try:
-        assert tf.plan_is_clean(pr.slices.path)
+        assert pr.slices.plan_is_clean()
     except AssertionError:
         xfails.append(("assert tf.plan_clean()", "plan not clean"))
 
