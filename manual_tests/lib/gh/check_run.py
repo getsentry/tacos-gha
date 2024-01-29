@@ -4,9 +4,9 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Self
 
-import lib.parse
 from lib import json
 from lib.json import assert_dict_of_strings
+from lib.parse import Parse
 from lib.sh import sh
 
 from .types import URL
@@ -108,7 +108,7 @@ class CheckRun:
 
     @property
     def job(self) -> str:
-        return lib.parse.after(self.name, " / ")
+        return Parse(self.name).after.last(" / ")
 
 
 def get_runs_json(pr_url: URL) -> Generator[json.Value]:
