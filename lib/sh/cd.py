@@ -12,8 +12,7 @@ from lib.types import OSPath
 from lib.types import Path
 
 from .core import run
-from .io import banner as banner
-from .io import info as info
+from .io import debug2
 from .io import xtrace
 from .json import json
 
@@ -55,5 +54,5 @@ def cd(
     finally:  # undo the cd and log it
         chdir(oldpwd)
         env["PWD"] = str(oldpwd)
-        xtrace(("popd",))
-        info(oldpwd, "<-", newpwd)
+        xtrace(("popd",), level=2)
+        debug2(oldpwd, "<-", newpwd)

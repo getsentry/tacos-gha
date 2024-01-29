@@ -3,6 +3,7 @@ from __future__ import annotations
 import contextlib
 from os import getenv
 from typing import ContextManager
+from typing import Iterable
 
 from lib import ansi
 
@@ -60,17 +61,33 @@ def quote(cmd: Command) -> str:
     return " ".join(shlex.quote(_stringify(arg)) for arg in cmd)
 
 
-def xtrace(cmd: Command) -> None:
+def xtrace(cmd: Command, *, level: int = 1) -> None:
     """Simulate bash's xtrace: show a command with copy-pasteable escaping.
 
-    Output is suppressed when `sh.DEBUG` is False.
+    Output is suppressed when `sh.DEBUG` (default 1) is less than `level`.
     """
-    debug("".join((PS4, quote(cmd))))
+    debug("".join((PS4, quote(cmd))), level=level)
 
 
-def debug(*msg: object) -> None:
-    if DEBUG:
+def debugN(msg: Iterable[object], level: int) -> None:
+    if DEBUG >= level:
         info(*msg)
+
+
+def debug(*msg: object, level: int = 1) -> None:
+    debugN(msg, level)
+
+
+def debug1(*msg: object) -> None:
+    debugN(msg, 1)
+
+
+def debug2(*msg: object) -> None:
+    debugN(msg, 2)
+
+
+def debug3(*msg: object) -> None:
+    debugN(msg, 3)
 
 
 @contextlib.contextmanager
