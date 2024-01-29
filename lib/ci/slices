@@ -10,6 +10,5 @@ jq '.[]' --raw-output |
   gha-set-env TF_ROOT_MODULES |
   gha-set-output slices |
   # prettify
-  jq . |
-  gha-step-summary \
+  jq . \
 ;
