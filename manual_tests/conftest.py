@@ -159,6 +159,7 @@ def cli_auth_gcloud() -> None:
     # https://fig.io/manual/gcloud/config/config-helper
     gcloud_config = sh.json(
         (
+            "tty-attach",
             "gcloud",
             "config",
             "config-helper",
