@@ -6,12 +6,11 @@ exec >&2  # all output is logging
 cmd=(
   coverage-enabled
   ./lib/make/test
-  -p no:cacheprovider
-  # TODO: add pytest-xdist
-  #-n $((NPROC))
 
-  # matches what we have in pyproject.toml, minus: --capture=no --last-failed
-  --override-ini="addopts=--durations-min=10 -vv --doctest-modules"
+  # HACK: countermand our default --last-failed option, which is usually useful,
+  #   but quite unhelpful during coverage collection
+  -o cache_dir=/
+
   "$@"
 )
 
