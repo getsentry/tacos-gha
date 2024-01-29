@@ -1,0 +1,10 @@
+#!/bin/bash
+set -euo pipefail
+
+jq <<< "$SLICE_TF_ROOTS" '.[]' -r |
+  sudo-gcp xargs -n1 sh -exc '
+      echo Slice "$1"
+      tf-lock-release "$1" || : unlock failed
+      echo "\n\n"
+  ' - |
+  tee >( gha-step-summary )

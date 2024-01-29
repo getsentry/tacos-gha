@@ -28,6 +28,30 @@ env:
   GETSENTRY_SAC_VERB: apply
 
 jobs:
+  determine-tf-root-modules:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+
+    name: list slices
+    outputs:
+      slices: ${{ steps.main.outputs.slices }}
+
+    steps:
+      - name: Checkout IAC
+        uses: actions/checkout@v4
+      - name: Checkout tacos-gha
+        uses: actions/checkout@v4
+        with:
+          repository: ${{inputs.tacos_gha_repo}}
+          ref: ${{inputs.tacos_gha_ref}}
+          path: tacos-gha
+
+      - name: Determine Slices
+        id: main
+        uses: ./tacos-gha/.github/actions/determine-slices
+
   tacos_unlock:
     runs-on: ubuntu-latest
     permissions:
@@ -40,6 +64,10 @@ jobs:
       github.event.label.name == ':taco::unlock'
     outputs:
       summary: ${{ steps.release-terraform-lock.outputs.summary }}
+    needs: [determine-tf-root-modules]
+
+    env:
+      SLICE_TF_ROOTS: ${{ needs.determine-tf-root-modules.outputs.slices }}
 
     steps:
       - uses: bukzor/direnv-install@v1
@@ -56,17 +84,7 @@ jobs:
       - name: Release Terraform lock
         id: release-terraform-lock
         run: |
-          # release all tfstate locks currently held
-          # FIXME: matrix strategy, surface unexpected unlock failures
-          terragrunt-slices |
-            xargs gha-log-as-step-summary \
-              sudo-gcp sh -c '
-                for slice in "$@"; do
-                  tf-lock-release "$slice" || : unlock failed
-                done
-              ' \
-            \
-          ;
+          ./tacos-gha/lib/ci/tacos-unlock
 
   summary:
     name: summarize
