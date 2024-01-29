@@ -107,7 +107,7 @@ jobs:
         uses: thollander/actions-comment-pull-request@v2.4.3
         with:
           message: ${{ fromJSON(steps.main.outputs.summary) }}
-          comment_tag: unlock(*)
+          comment_tag: unlock(${{env.TF_ROOT_MODULE}})
 
   reset-label:
     uses: ./.github/workflows/reset-label.yml
