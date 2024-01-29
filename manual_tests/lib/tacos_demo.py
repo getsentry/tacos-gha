@@ -8,8 +8,7 @@ from typing import Self
 
 from lib.constants import NOW
 from lib.constants import USER
-from lib.parse import after
-from lib.parse import before
+from lib.parse import Parse
 from lib.sh import sh
 from lib.types import Generator
 from lib.types import OSPath
@@ -85,11 +84,11 @@ class PR(gh.PR):
         plan_tag = COMMENT_TAG + "plan("
         result: dict[Slice, gh.Comment] = {}
         for comment in self.comments(since):
-            lastline = after(comment, "\n")
+            lastline = Parse(comment).after.last("\n")
             if not lastline.startswith(plan_tag):
                 continue
 
-            slice = Slice(before(after(lastline, plan_tag), ")"))
+            slice = Slice(Parse(lastline).between(plan_tag, ")"))
             slice = slice.relative_to(self.slices.subpath)
 
             result[slice] = comment

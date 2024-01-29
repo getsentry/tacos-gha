@@ -4,7 +4,7 @@ from __future__ import annotations
 from contextlib import contextmanager
 from dataclasses import dataclass
 
-from lib.parse import after
+from lib.parse import Parse
 from lib.sh import sh
 from lib.types import OSPath
 from lib.types import Path
@@ -35,7 +35,7 @@ class RemoteRepo:
 
     @property
     def name(self) -> str:
-        return after(self.url, ":", "/")
+        return Parse(self.url).after.last(":", "/")
 
     def clone(self, dest: OSPath) -> LocalRepo:
         dest = dest / self.name
