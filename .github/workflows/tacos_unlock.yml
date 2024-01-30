@@ -66,7 +66,7 @@ jobs:
   tacos_unlock:
     if: |
       false
-      || github.event_name != 'label'
+      || github.event.action != 'labeled'
       || github.event.label.name == ':taco::unlock'
     needs: [determine-tf-root-modules]
     runs-on: ubuntu-latest

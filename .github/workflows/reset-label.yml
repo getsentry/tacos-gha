@@ -21,7 +21,7 @@ jobs:
 
     if: |
       true
-      && github.event_name == 'label'
+      && github.event.action == 'labeled'
       && github.event.label.name == inputs.label
 
     env:

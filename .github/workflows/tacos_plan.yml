@@ -70,7 +70,7 @@ jobs:
   tacos_plan:
     if: |
       false
-      || github.event_name != 'label'
+      || github.event.action != 'labeled'
       || github.event.label.name == ':taco::plan'
     needs: [determine-tf-root-modules]
     runs-on: ubuntu-latest
