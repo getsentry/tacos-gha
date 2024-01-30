@@ -25,7 +25,6 @@ concurrency:
   cancel-in-progress: true
 
 # FIXME: don't use the apply terraformer for the plan workflow
-# discussion: https://sentry.slack.com/archives/C05GNJCN9LM/p1705787896980429
 # problem: currently the plan terraformer is very strictly readonly but we need
 #     to be able to lock/unlock the tfstate in this workflow
 # proposals:
