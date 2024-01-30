@@ -11,3 +11,4 @@ from .pr import commit_and_push as commit_and_push
 from .repo import LocalRepo as LocalRepo
 from .repo import RemoteRepo as RemoteRepo
 from .types import *
+from .up_to_date import up_to_date as up_to_date

@@ -1,9 +1,13 @@
 #!/bin/bash
-# Run the wrapped command to generate the GHA step summary.
-# The summary is also saved to the .summary output of this step.
+# Forward stdin to the GHA step summary, and save it to the .summary output of
+# this step.
 set -euxo pipefail
 
-# these can't handle ansi-color like GHA logging does =(
-uncolor |
-tee -a "$GITHUB_STEP_SUMMARY" |
-  gha-set-output summary jq -sR
+tee >(
+  # step summary and PR comments can't handle ansi-color like GHA logging does =(
+  uncolor |
+    tee -a "$GITHUB_STEP_SUMMARY" |
+    jq -sR |
+    gha-set-output summary \
+  >/dev/null
+)

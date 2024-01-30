@@ -4,4 +4,4 @@ exec >&2  # all output is logging
 
 set -x
 
-py.test "$@"
+py.test --capture=fd -n "$((NPROC * 2))" "$@"

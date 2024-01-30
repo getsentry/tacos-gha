@@ -108,8 +108,8 @@ jobs:
             # keep only the approving reviews
             jq '.reviews | map(select(.state == "APPROVED"))' |
             # prettify
-            jq 'map(.author.login) | join(", ")' |
-            gha-set-env 'GITHUB_PR_APPROVERS' cat \
+            jq 'map(.author.login) | join(", ")' -r |
+            gha-set-env 'GITHUB_PR_APPROVERS' \
           ;
         env:
           GH_TOKEN: ${{ github.token }}

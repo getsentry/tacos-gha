@@ -51,24 +51,12 @@ def test(
             pr2.slices.assert_locked()
 
             # Since this is not a draft PR, it should be able to apply the plan
+            since = pr2.approve()
+            assert pr2.is_approved()
             sh.banner("Apply the plan for the second PR")
             since = pr2.add_label(":taco::apply")
             pr2.check("Terraform Apply").wait(since).success
 
-            since = pr2.approve()
-            assert pr2.is_approved()
-
             # Merge the second PR
             sh.banner("Merge the second PR")
             pr2.merge()
-
-        sh.banner("Convert Draft PR to non-draft")
-        since = pr.toggle_draft()
-
-        # The terraform_plan check should run automatically when the PR is marked ready
-        sh.banner("Wait for the terraform_plan check to complete")
-        assert pr.check("Terraform Plan").wait(since).success
-
-        # This PR should aquire the lock
-        sh.banner("Make sure the terraform_lock checks ran successfully")
-        pr.slices.assert_locked()

@@ -29,7 +29,6 @@ concurrency:
   cancel-in-progress: true
 
 # FIXME: don't use the apply terraformer for the plan workflow
-# discussion: https://sentry.slack.com/archives/C05GNJCN9LM/p1705787896980429
 # problem: currently the plan terraformer is very strictly readonly but we need
 #     to be able to lock/unlock the tfstate in this workflow
 # proposals:
@@ -70,7 +69,7 @@ jobs:
   tacos_plan:
     if: |
       false
-      || github.event_name != 'label'
+      || github.event.action != 'labeled'
       || github.event.label.name == ':taco::plan'
     needs: [determine-tf-root-modules]
     runs-on: ubuntu-latest

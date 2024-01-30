@@ -3,9 +3,14 @@ from __future__ import annotations
 import contextlib
 from os import getenv
 from typing import ContextManager
+from typing import Iterable
 
 from lib import ansi
 
+from .constant import STDERR as STDERR
+from .constant import STDIN as STDIN
+from .constant import STDOUT as STDOUT
+from .types import FD as FD
 from .types import Command
 from .types import Generator
 
@@ -60,17 +65,33 @@ def quote(cmd: Command) -> str:
     return " ".join(shlex.quote(_stringify(arg)) for arg in cmd)
 
 
-def xtrace(cmd: Command) -> None:
+def xtrace(cmd: Command, *, level: int = 1) -> None:
     """Simulate bash's xtrace: show a command with copy-pasteable escaping.
 
-    Output is suppressed when `sh.DEBUG` is False.
+    Output is suppressed when `sh.DEBUG` (default 1) is less than `level`.
     """
-    debug("".join((PS4, quote(cmd))))
+    debug("".join((PS4, quote(cmd))), level=level)
 
 
-def debug(*msg: object) -> None:
-    if DEBUG:
+def debugN(msg: Iterable[object], level: int) -> None:
+    if DEBUG >= level:
         info(*msg)
+
+
+def debug(*msg: object, level: int = 1) -> None:
+    debugN(msg, level)
+
+
+def debug1(*msg: object) -> None:
+    debugN(msg, 1)
+
+
+def debug2(*msg: object) -> None:
+    debugN(msg, 2)
+
+
+def debug3(*msg: object) -> None:
+    debugN(msg, 3)
 
 
 @contextlib.contextmanager
@@ -102,3 +123,22 @@ def uniq() -> Generator[Uniq]:
         yield newvalue
     finally:
         UNIQ = orig
+
+
+@contextlib.contextmanager
+def redirect(from_: FD, to: FD) -> Generator[FD]:
+    """Enable translating shell syntax `2>&1` to `redirect(2, 1)`."""
+    from os import close
+    from os import dup
+    from os import dup2
+
+    tmp = dup(from_)
+
+    debug2(f"{PS4}exec {tmp}>&{from_} {from_}>&{to}")
+    dup2(to, from_)
+    try:
+        yield tmp
+    finally:
+        dup2(tmp, from_)
+        close(tmp)
+        debug2(f"{PS4}exec {from_}>&{tmp}")

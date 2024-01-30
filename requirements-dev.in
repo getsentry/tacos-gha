@@ -15,6 +15,7 @@ pre-commit
 
 # test & coverage
 pytest
+pytest-xdist
 coverage_enable_subprocess
 coverage
 covdefaults

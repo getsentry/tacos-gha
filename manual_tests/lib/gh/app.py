@@ -8,8 +8,8 @@ from typing import Self
 from urllib.request import Request
 from urllib.request import urlopen
 
-import lib.parse
 from lib.functions import one
+from lib.parse import Parse
 from lib.sh import sh
 
 from .jwt import JWT
@@ -28,7 +28,7 @@ class Installation:
     def from_1password(cls, op_url: URL) -> Self:
         id = one(sh.lines(("op", "read", op_url)))
 
-        app = lib.parse.before(op_url, "/", "/")
+        app = Parse(op_url).before.last("/", "/")
         app_id = one(sh.lines(("op", "read", f"{app}/id")))
         app_secret = sh.stdout(("op", "read", f"{app}/private key"))
 

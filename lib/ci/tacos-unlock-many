@@ -1,0 +1,8 @@
+#!/bin/bash
+set -euo pipefail
+
+cd "$GITHUB_WORKSPACE"
+jq <<< "$TF_ROOT_MODULES" '.[]' -r |
+  xargs -n1 tacos-unlock-one |
+  gha-step-summary \
+;

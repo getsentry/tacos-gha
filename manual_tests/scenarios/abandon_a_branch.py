@@ -12,7 +12,7 @@ from manual_tests.lib.xfail import XFailed
 def test(pr: tacos_demo.PR) -> None:
     sh.banner("PR is approved and applied")
     pr.approve()
-    assert pr.approved()
+    assert pr.is_approved()
 
     since = pr.add_label(":taco::apply")
     assert pr.check("Terraform Apply").wait(since).success

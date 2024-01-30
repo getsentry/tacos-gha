@@ -1,25 +1,24 @@
 #!/usr/bin/env py.test
 from __future__ import annotations
 
-import pytest
-
+from lib.parse import Parse
 from manual_tests.lib import tacos_demo
-from manual_tests.lib.xfail import XFailed
-
-TEST_NAME = __name__
 
 
-@pytest.mark.xfail(raises=XFailed)
 def test(pr: tacos_demo.PR) -> None:
     assert pr.check("Terraform Plan").wait().success
-    # pr.assert_locked()
+    pr.slices.assert_locked()
 
     since = pr.add_label(":taco::unlock")
     assert pr.check("Terraform Unlock").wait(since).success
+    pr.slices.assert_unlocked()
 
-    try:
-        assert "INFO: Main branch clean, unlock successful." in pr.comments(
-            since=since
-        )
-    except AssertionError:
-        raise XFailed("still need to post message from unlock")
+    unlock_comments = pr.get_comments_for_job("unlock", since)
+    assert set(unlock_comments) == pr.slices.slices
+
+    for slice, comment in sorted(unlock_comments.items()):
+        assert "\nTerraform state has been successfully unlocked!\n" in comment
+
+        last_line = Parse(comment).before.last("\n```").after.last("\n")
+        assert last_line.startswith("tf-lock-release: success: ")
+        assert f"/{slice}(" in last_line

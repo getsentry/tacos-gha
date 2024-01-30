@@ -8,8 +8,8 @@ from typing import Self
 
 from lib.constants import NOW
 from lib.constants import USER
-from lib.parse import after
-from lib.parse import before
+from lib.functions import one
+from lib.parse import Parse
 from lib.sh import sh
 from lib.types import Generator
 from lib.types import OSPath
@@ -19,6 +19,7 @@ from manual_tests.lib.slice import Slices
 
 # FIXME: we need a better way to demarcate tf-plan in comments
 COMMENT_TAG = '<!-- thollander/actions-comment-pull-request "'
+COMMENT_TAG_END = '" -->'
 APP_INSTALLATION_REVIEWER = "op://Team Tacos gha dev/gh-app--tacos-gha-reviewer/app-installation/sentryio-org"
 
 
@@ -74,26 +75,45 @@ class PR(gh.PR):
             finally:
                 pr.close()
 
-    def get_plans(
-        self, since: datetime | None = None
-    ) -> dict[Slice, gh.Comment]:
+    def get_comments_by_job(
+        self, since: datetime | None = None, job: str | None = None
+    ) -> dict[gh.CheckName, dict[Slice, gh.Comment]]:
         """Map Slices to the text of PR comments containing their tf-plan."""
         if since is None:
             since = self.since
 
-        assert self.check("Terraform Plan").wait(since, timeout=180).success
-        plan_tag = COMMENT_TAG + "plan("
-        result: dict[Slice, gh.Comment] = {}
+        comments: dict[gh.CheckName, dict[Slice, gh.Comment]] = {}
         for comment in self.comments(since):
-            lastline = after(comment, "\n")
-            if not lastline.startswith(plan_tag):
+            lastline = Parse(comment).after.last("\n")
+            if not lastline.startswith(COMMENT_TAG):
                 continue
 
-            slice = Slice(before(after(lastline, plan_tag), ")"))
+            tag = Parse(lastline).after.between(COMMENT_TAG, COMMENT_TAG_END)
+            job2 = tag.before.first("(")  # )
+            if job is not None and job2 != job:
+                continue
+
+            job_comments = comments.setdefault(job2, {})
+
+            slice = Slice(tag.between("(", ")"))
             slice = slice.relative_to(self.slices.subpath)
 
-            result[slice] = comment
-        return result
+            job_comments[slice] = comment
+        return comments
+
+    def get_comments_for_job(
+        self, job: str, since: datetime | None = None
+    ) -> dict[Slice, gh.Comment]:
+        comments = self.get_comments_by_job(since, job)
+        assert one(comments) == job
+        return comments[job]
+
+    def get_plans(
+        self, since: datetime | None = None
+    ) -> dict[Slice, gh.Comment]:
+        """Map Slices to the text of PR comments containing their tf-plan."""
+        assert self.check("Terraform Plan").wait(since).success
+        return self.get_comments_for_job("plan")
 
     def approve(
         self,
@@ -133,7 +153,6 @@ def edit_workflow_versions(
                     workflow,
                 )
             )
-        sh.run(("git", "add", "-u", "."))
 
 
 def edit_slices(

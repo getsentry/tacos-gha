@@ -1,0 +1,31 @@
+#!/bin/bash
+set -euo pipefail
+user_dir="$1"
+shift 1
+
+(set -x; cd "$user_dir")  # just so it shows in logs
+cd "$user_dir"
+
+if (( DEBUG >= 3 )); then
+  set -x
+fi
+
+: bring in the users environment
+eval="$(direnv allow; direnv export bash)"
+eval "$eval"
+# give direnv amnesia, to prevent settings from being undone
+unset DIRENV_DIFF DIRENV_WATCHES DIRENV_FILE DIRENV_DIR
+
+
+: overlay the tacos-gha environment vars
+eval="$(cd "$TACOS_GHA_HOME"; direnv allow; direnv export bash)"
+eval "$eval"
+# give direnv amnesia, to prevent settings from being undone
+unset DIRENV_DIFF DIRENV_WATCHES DIRENV_FILE DIRENV_DIR
+
+if (( DEBUG >= 1 )); then
+  gha-printenv final
+fi
+
+# Run the wrapped command
+"$@"

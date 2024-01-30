@@ -7,10 +7,13 @@ from pytest import fixture
 import lib.pytest.configure_pytest_repr_length
 import lib.pytest.doctest
 import lib.pytest.hook
+from lib.constants import TACOS_GHA_HOME
 from lib.sh import sh
 from lib.types import Environ
 from lib.types import Generator
 from lib.types import OSPath
+
+TEST_HOME = TACOS_GHA_HOME / "manual_tests"
 
 
 @fixture
@@ -48,8 +51,10 @@ def test_name(request: pytest.FixtureRequest) -> str:
     assert isinstance(
         request.node, pytest.Item  # pyright:ignore[reportUnknownMemberType]
     )
-    module_path = request.node.path  # path to the test's module file
-    return module_path.with_suffix("").name
+    module_path = request.node.path  # absolute path to the test's module file
+
+    result = module_path.with_suffix("").relative_to(TEST_HOME)
+    return str(result).replace("/", "-")
 
 
 @fixture

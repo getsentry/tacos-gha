@@ -24,73 +24,89 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
   cancel-in-progress: true
 
+# FIXME: don't use the apply terraformer for the plan workflow
+# problem: currently the plan terraformer is very strictly readonly but we need
+#     to be able to lock/unlock the tfstate in this workflow
+# proposals:
+#   1. add a third "planlock" member to the terraformer? We want to grant write
+#       permissions just enough for locking state.
+#   2. add an ACL to grant this specific permission, but this is deprecated
+#       https://cloud.google.com/storage/docs/access-control/lists
+#   3. use conditional IAM (i.e. add some CEL code) to condtionally grant the
+#       planner write to just the lock file
 env:
   GETSENTRY_SAC_VERB: apply
 
 jobs:
+  determine-tf-root-modules:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+
+    name: list slices
+    outputs:
+      slices: ${{ steps.main.outputs.slices }}
+
+    steps:
+      - name: Checkout IAC
+        uses: actions/checkout@v4
+      - name: Checkout tacos-gha
+        uses: actions/checkout@v4
+        with:
+          repository: ${{inputs.tacos_gha_repo}}
+          ref: ${{inputs.tacos_gha_ref}}
+          path: tacos-gha
+
+      - name: Determine Slices
+        id: main
+        uses: ./tacos-gha/.github/actions/determine-slices
+
   tacos_unlock:
+    if: |
+      false
+      || github.event.action != 'labeled'
+      || github.event.label.name == ':taco::unlock'
+    needs: [determine-tf-root-modules]
     runs-on: ubuntu-latest
     permissions:
       contents: read
       pull-requests: write
       id-token: write
 
-    # note: we want to let people unlock even if they converted to draft first
-    if: |
-      github.event.label.name == ':taco::unlock'
-    outputs:
-      summary: ${{ steps.release-terraform-lock.outputs.summary }}
+    strategy:
+      fail-fast: false
+      matrix:
+        tf-root-module:
+          ${{ fromJSON(needs.determine-tf-root-modules.outputs.slices) }}
+
+    env:
+      TF_ROOT_MODULE: ${{matrix.tf-root-module}}
 
     steps:
-      - uses: bukzor/direnv-install@v1
-      - uses: actions/checkout@v4
-      - uses: actions/checkout@v4
+      - name: Checkout IAC
+        uses: actions/checkout@v4
+      - name: Checkout tacos-gha
+        uses: actions/checkout@v4
         with:
           repository: ${{inputs.tacos_gha_repo}}
           ref: ${{inputs.tacos_gha_ref}}
           path: tacos-gha
-
-      - name: setup
+      - name: Setup
         uses: ./tacos-gha/.github/actions/setup
 
-      - name: Release Terraform lock
-        id: release-terraform-lock
+      - name: Unlock
+        id: main
         run: |
-          # release all tfstate locks currently held
-          # FIXME: matrix strategy, surface unexpected unlock failures
-          terragrunt-slices |
-            xargs gha-log-as-step-summary \
-              sudo-gcp sh -c '
-                for slice in "$@"; do
-                  tf-lock-release "$slice" || : unlock failed
-                done
-              ' \
-            \
-          ;
+          "$TACOS_GHA_HOME/"lib/ci/tacos-unlock
 
-  summary:
-    name: summarize
-    needs: [tacos_unlock]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Comment on PR regarding lock state
-        uses: actions/github-script@v7
-        env:
-          summary: ${{ needs.tacos_unlock.outputs.summary }}
+      - name: Update PR
+        # we want to report failures, too
+        if: always()
+        uses: thollander/actions-comment-pull-request@v2.4.3
         with:
-          script: |
-            const summary = JSON.parse(process.env.summary)
-            const body = `\
-            Terraform lock state:
-
-            ${summary}
-            `
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: body,
-            });
+          message: ${{ fromJSON(steps.main.outputs.summary) }}
+          comment_tag: unlock(${{env.TF_ROOT_MODULE}})
 
   reset-label:
     uses: ./.github/workflows/reset-label.yml

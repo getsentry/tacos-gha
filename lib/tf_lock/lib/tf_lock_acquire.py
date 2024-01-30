@@ -112,7 +112,7 @@ async def tf_lock_acquire() -> ExitCode:
 def main() -> ExitCode:
     import logging
 
-    logging.basicConfig(level=logging.DEBUG if DEBUG else logging.INFO)
+    logging.basicConfig(level=logging.DEBUG if DEBUG >= 2 else logging.INFO)
     return asyncio.run(tf_lock_acquire(), debug=DEBUG > 0)
 
 

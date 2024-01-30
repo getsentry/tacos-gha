@@ -1,0 +1,16 @@
+#!/bin/bash
+set -euo pipefail
+# attach subcommand to an interactive terminal, if possible
+
+if (( DEBUG >= 2 )); then
+  set -x
+fi
+
+# NOTE: a simple readabilty check (i.e. [ -r) gives false positives
+if ( : < /dev/tty ) 2>/dev/null; then
+  exec 0</dev/tty 2>/dev/tty
+  flock /dev/tty "$@"
+else
+  "$@"
+fi
+

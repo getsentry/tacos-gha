@@ -1,0 +1,16 @@
+#!/bin/bash
+set -euo pipefail
+
+if [[ "$DEBUG" ]]; then
+  set -x
+fi
+
+with-user-env "$TF_ROOT_MODULE" sudo-gcp tf-lock-release 2>&1 |
+  (
+    echo '```console'
+    # match `console` syntax highlighting by removing '+ ' from xtrace lines
+    uncolor | sed -r 's/^\++ \$ /\n$ /'
+    echo '```'
+  ) |
+  gha-step-summary \
+;

@@ -4,7 +4,7 @@ from __future__ import annotations
 from contextlib import contextmanager
 from dataclasses import dataclass
 
-from lib.parse import after
+from lib.parse import Parse
 from lib.sh import sh
 from lib.types import OSPath
 from lib.types import Path
@@ -35,13 +35,21 @@ class RemoteRepo:
 
     @property
     def name(self) -> str:
-        return after(self.url, ":", "/")
+        return Parse(self.url).after.last(":", "/")
 
     def clone(self, dest: OSPath) -> LocalRepo:
         dest = dest / self.name
         # git will fail if the repo already exists, and that's a feature
         sh.run(
-            ("git", "clone", "git@github.com:getsentry/tacos-gha.demo", dest)
+            (
+                "git",
+                "clone",
+                # best for build environments where the repository will be
+                # deleted after a single build
+                "--filter=tree:0",
+                "git@github.com:getsentry/tacos-gha.demo",
+                dest,
+            )
         )
         return LocalRepo(remote=self, path=dest)
 
