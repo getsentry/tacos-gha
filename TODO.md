@@ -2,6 +2,10 @@ correctness:
 
 - [ ] refuse apply without review
 
+testing:
+
+- [ ] tacos-gha.demo should set a terraformer at a repo-subpath .envrc
+
 ease of use (UI/UX):
 
 - [ ] explain declined applies (due to draft or due to review)
