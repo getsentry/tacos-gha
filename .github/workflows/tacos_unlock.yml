@@ -2,7 +2,7 @@ name: TACOS Unlock
 
 # downstream projects should use events:
 ###pull_request:
-###  types: [labeled]
+###  types: [closed, converted_to_draft, labeled]
 
 on:
   workflow_call:
