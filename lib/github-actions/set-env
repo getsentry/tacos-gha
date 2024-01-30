@@ -2,7 +2,14 @@
 set -euo pipefail
 var="$1"
 shift 1
+trap 'echo "ERROR($?)"' ERR
 
-# NB: separate subprocess substitution, to avoid masking return values
-val="$("$@")"
-tee -a "$GITHUB_ENV" <<< "$var=$val"
+
+# capture a copy of stdin, while streaming it to stdout, too
+exec 3>&1  # copy stdout
+val="$(tee >(cat >&3))"
+
+
+# NOTE: separate subprocess substitution, above, to avoid separating var from
+#   value due to reentrancy
+cat >> "$GITHUB_ENV" <<< "$var=$val"

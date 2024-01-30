@@ -79,14 +79,21 @@ class Slices:
         for slice in self:
             slice.edit(self.path)
 
-    def assert_locked(self) -> None:
+    @property
+    def all(self) -> Self:
         cls = type(self)
-        with sh.cd(self.path):
-            for slice in cls.from_path(self.workdir, self.subpath):
-                locked = slice.is_locked()
-                should_lock = slice in self
+        return cls.from_path(self.workdir, self.subpath)
 
-                assert locked == should_lock, (locked, slice)
+    def assert_locked(self) -> None:
+        for slice in self.all:
+            locked = slice.is_locked()
+            should_lock = slice in self
+
+            assert locked == should_lock, (locked, slice)
+
+    def assert_unlocked(self) -> None:
+        for slice in self.all:
+            assert not slice.is_locked()
 
     def force_unlock(self) -> None:
         """Unlock these slices, forcefully."""

@@ -1,12 +1,12 @@
 #!/bin/bash
 set -euo pipefail
 export TERRAGRUNT_INCLUDE_MODULE_PREFIX=false
-cmd=(tf-lock terragrunt-noninteractive apply --auto-approve)
-log=apply-log.hcl
 
 if ! [[ "$GITHUB_PR_APPROVERS" ]]; then
-    gha-step-summary <<EOF
+    : no approvers! bail.
+    gha-step-summary >/dev/null <<EOF
 ### TACOS Apply: $TF_ROOT_MODULE
+
 Production changes must be peer-reviewed.
 Please try again after code review.
 
@@ -15,31 +15,56 @@ EOF
     exit 1
 fi
 
-set -x
-"${cmd[@]}" 2>&1 | tee "$log" && status=$? || status=$?
+cmd=(
+  env GETSENTRY_SAC_VERB=apply
+  sudo-gcp
+  tf-lock
+  terragrunt-noninteractive run-all
+  apply --lock=true --auto-approve
+)
+
+tf_log=tf-log.hcl
+console_log=console.log
+with-user-env "$TF_ROOT_MODULE" \
+    "${cmd[@]}" 2>&1 >"$tf_log" |
+  tee "$console_log" \
+  && status=$? \
+  || status=$? \
+;
 
 summary="$(
-  if ! tac "$log" | grep -Ei -m1 'complete|error'; then
+  if tac "$tf_log" | grep -E -im1 'complete'; then
+    : :D
+  elif cat "$console_log" "$tf_log" | grep -E -im1 'error'; then
+    : D:
+  else
     echo "summary failed!($?)"
   fi
 )"
 
-# note: this renders twice: step summary in GHA, and comment in PR
-gha-step-summary <<EOF
+# TODO: hide "commands" on exit code 0
+gha-step-summary >/dev/null <<EOF
 ### TACOS Apply: $TF_ROOT_MODULE
 
-approvers: $GITHUB_PR_APPROVERS
+Approvers: $GITHUB_PR_APPROVERS
 
 <details>
   <summary>$summary</summary>
 
+  Commands: (exit code: $status)
+
 \`\`\`console
-$ cd $(sh-quote "$TF_ROOT_MODULE")
-$ $(sh-quote "${cmd[@]}")
+$(
+  # match `console` syntax highlighting by removing '+ ' from xtrace lines
+  uncolor "$console_log" |
+    sed -r 's/^\++ \$ /\n$ /'
+)
 \`\`\`
 
+  Result:
+
 \`\`\`hcl
-$(cat apply-log.hcl)
+$(cat "$tf_log")
 \`\`\`
 
 </details>

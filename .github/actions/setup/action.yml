@@ -52,8 +52,8 @@ runs:
     # this should really be default behavior:
     - shell: ${{inputs.shell}}
       run: |
-        gha-set-env 'TF_VERSION' cat "$(nearest-config-file .terraform-version)"
-        gha-set-env 'TERRAGRUNT_VERSION' cat "$(nearest-config-file .terragrunt-version)"
+        gha-set-env 'TF_VERSION' < "$(nearest-config-file .terraform-version)"
+        gha-set-env 'TERRAGRUNT_VERSION' < "$(nearest-config-file .terragrunt-version)"
 
     - name: Setup Terragrunt
       uses: autero1/action-terragrunt@v1.3.2
@@ -66,11 +66,15 @@ runs:
         terraform_wrapper: false
         terraform_version: ${{ env.TF_VERSION }}
 
-    - name: set GITHUB_PR_DRAFT
+    - name: set $GITHUB_PR_DRAFT
       shell: ${{inputs.shell}}
       run: |
-        gha-set-env 'GITHUB_PR_DRAFT' \
-          gh pr view ${{ github.event.pull_request.html_url }} --json isDraft --jq .isDraft
+        gh pr view \
+            ${{ github.event.pull_request.html_url }} \
+            --json isDraft \
+            --jq .isDraft |
+          gha-set-env 'GITHUB_PR_DRAFT' \
+        ;
       env:
         GH_TOKEN: ${{ github.token }}
 

@@ -3,10 +3,10 @@ set -euo pipefail
 
 set -x
 cd "$TF_ROOT_MODULE"
-if gha-set-env TF_LOCK_ID tf-lock-acquire "$@"; then
-  gha-set-env TF_LOCK echo true
+if tf-lock-acquire "$@" | gha-set-env TF_LOCK_ID; then
+  gha-set-env TF_LOCK <<< true
 else
   status="$?"
-  gha-set-env TF_LOCK echo false
+  gha-set-env TF_LOCK <<< false
   exit "$status"
 fi
