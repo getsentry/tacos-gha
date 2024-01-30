@@ -245,7 +245,7 @@ def commit_and_push(
     repo: LocalRepo, branch: Branch, message: object = None
 ) -> None:
     with sh.cd(repo.path):
-        sh.run(("git", "commit", "-m", message))
+        sh.run(("git", "commit", "-am", message))
         with gh.up_to_date():
             sh.run(("git", "show", "--stat"))
             sh.run(("git", "push", "origin", f"{branch}:{branch}"))

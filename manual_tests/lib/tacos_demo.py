@@ -153,15 +153,6 @@ def edit_workflow_versions(
                     workflow,
                 )
             )
-        sh.run(("git", "add", "-u", "."))
-        sh.run(
-            (
-                "git",
-                "commit",
-                "-m",
-                f"point workflows at branch: {tacos_branch}",
-            )
-        )
 
 
 def edit_slices(
