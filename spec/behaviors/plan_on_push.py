@@ -1,9 +1,9 @@
 #!/usr/bin/env py.test
 from __future__ import annotations
 
-from manual_tests.lib import tacos_demo
-from manual_tests.lib.gh import gh
-from manual_tests.lib.slice import Slices
+from spec.lib import tacos_demo
+from spec.lib.gh import gh
+from spec.lib.slice import Slices
 
 
 def test(

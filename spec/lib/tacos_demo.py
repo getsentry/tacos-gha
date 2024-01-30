@@ -13,9 +13,9 @@ from lib.parse import Parse
 from lib.sh import sh
 from lib.types import Generator
 from lib.types import OSPath
-from manual_tests.lib.gh import gh
-from manual_tests.lib.slice import Slice
-from manual_tests.lib.slice import Slices
+from spec.lib.gh import gh
+from spec.lib.slice import Slice
+from spec.lib.slice import Slices
 
 # FIXME: we need a better way to demarcate tf-plan in comments
 COMMENT_TAG = '<!-- thollander/actions-comment-pull-request "'

@@ -53,8 +53,8 @@ repos:
       - id: pyright-verifytypes-spec
         name: "pyright verify: spec"
         language: system
-        entry: ./lib/make/bin/pyright-verifytypes manual_tests
-        files: "^manual_tests/"
+        entry: ./lib/make/bin/pyright-verifytypes spec
+        files: "^spec/"
         pass_filenames: false
 
       - id: pyright-verifytypes-tf-lock

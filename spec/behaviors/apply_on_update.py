@@ -3,8 +3,8 @@ from __future__ import annotations
 
 from typing import Callable
 
-from manual_tests.lib import tacos_demo
-from manual_tests.lib.slice import Slices
+from spec.lib import tacos_demo
+from spec.lib.slice import Slices
 
 TEST_NAME = __name__
 

@@ -14,9 +14,9 @@ from lib.types import Environ
 from lib.types import Generator
 from lib.types import OSPath
 from lib.types import Path
-from manual_tests.lib import tacos_demo
-from manual_tests.lib.gh import gh
-from manual_tests.lib.slice import Slices
+from spec.lib import tacos_demo
+from spec.lib.gh import gh
+from spec.lib.slice import Slices
 
 # you forgot to commit if these paths have pending edits
 GHA_RELEVANT_PATHS = (

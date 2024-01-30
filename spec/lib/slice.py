@@ -12,7 +12,7 @@ from lib.tf_lock import tf_lock
 from lib.tf_lock.tf_lock import get_lock_info
 from lib.types import OSPath
 from lib.types import Path
-from manual_tests.lib import tf
+from spec.lib import tf
 
 if TYPE_CHECKING:
     from typing import Iterator

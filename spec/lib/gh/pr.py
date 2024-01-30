@@ -13,8 +13,8 @@ from lib import wait
 from lib.functions import now
 from lib.sh import sh
 from lib.types import Generator
-from manual_tests.lib.gh import gh
-from manual_tests.lib.xfail import XFailed
+from spec.lib.gh import gh
+from spec.lib.xfail import XFailed
 
 from . import app
 from .jwt import JWT
