@@ -1,7 +1,7 @@
 #!/usr/bin/env py.test
 from __future__ import annotations
 
-from manual_tests.lib import tacos_demo
+from spec.lib import tacos_demo
 
 TEST_NAME = __name__
 

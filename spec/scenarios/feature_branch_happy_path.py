@@ -4,11 +4,11 @@ from __future__ import annotations
 import pytest
 
 from lib.sh import sh
-from manual_tests.lib import tacos_demo
-from manual_tests.lib.gh import gh
-from manual_tests.lib.slice import Slices
-from manual_tests.lib.xfail import XFailed
-from manual_tests.lib.xfail import XFails
+from spec.lib import tacos_demo
+from spec.lib.gh import gh
+from spec.lib.slice import Slices
+from spec.lib.xfail import XFailed
+from spec.lib.xfail import XFails
 
 
 def apply(pr: tacos_demo.PR, xfails: XFails) -> None:

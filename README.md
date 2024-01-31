@@ -13,7 +13,7 @@ make test
 #### Run one test
 
 ```
-./manual_tests/behaviors/lock_on_pr.py
+./spec/behaviors/lock_on_pr.py
 ```
 
 It will also accept all the options pytest does.

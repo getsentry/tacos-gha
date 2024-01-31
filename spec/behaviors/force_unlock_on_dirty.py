@@ -3,8 +3,8 @@ from __future__ import annotations
 
 import pytest
 
-from manual_tests.lib import tacos_demo
-from manual_tests.lib.xfail import XFailed
+from spec.lib import tacos_demo
+from spec.lib.xfail import XFailed
 
 TEST_NAME = __name__
 

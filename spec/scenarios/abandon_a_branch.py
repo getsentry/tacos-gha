@@ -4,8 +4,8 @@ from __future__ import annotations
 import pytest
 
 from lib.sh import sh
-from manual_tests.lib import tacos_demo
-from manual_tests.lib.xfail import XFailed
+from spec.lib import tacos_demo
+from spec.lib.xfail import XFailed
 
 
 @pytest.mark.xfail(raises=XFailed)

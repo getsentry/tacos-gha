@@ -7,10 +7,10 @@ import pytest
 
 from lib import wait
 from lib.sh import sh
-from manual_tests.lib import tacos_demo
-from manual_tests.lib.gh import workflow
-from manual_tests.lib.slice import Slices
-from manual_tests.lib.xfail import XFailed
+from spec.lib import tacos_demo
+from spec.lib.gh import workflow
+from spec.lib.slice import Slices
+from spec.lib.xfail import XFailed
 
 
 def create_drift(slices: Slices) -> datetime:

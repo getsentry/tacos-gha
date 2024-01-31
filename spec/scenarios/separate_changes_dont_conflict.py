@@ -5,9 +5,9 @@ import pytest
 
 from lib.sh import sh
 from lib.types import OSPath
-from manual_tests.lib import tacos_demo
-from manual_tests.lib.gh import gh
-from manual_tests.lib.slice import Slices
+from spec.lib import tacos_demo
+from spec.lib.gh import gh
+from spec.lib.slice import Slices
 
 
 @pytest.mark.xfail(reason="Locking not yet implemented")
