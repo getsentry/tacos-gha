@@ -1,4 +1,4 @@
-FIXME: automate
+FIXME: automated testing for lib/tf_lock
 
 ```console
 cd slice-0-project

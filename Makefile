@@ -8,7 +8,7 @@ export PS4 ?= + \033[31;1m$$\033[m
 python_files := $(shell git ls-files '*.py' 'requirements*.in' 'requirements*.txt')
 
 .PHONY: all
-all: venv .git/hooks/pre-commit
+all: venv .git/hooks/pre-commit TODO.grep.md
 
 
 ### commands: these will always run, even if nothing changed
@@ -24,6 +24,7 @@ requirements-dev.txt: $(makelib)/pip-compile requirements-dev.in
 .done/pyenv: $(makelib)/pyenv .python-version .done/brew
 .done/brew: $(makelib)/brew Brewfile
 .git/hooks/pre-commit: $(makelib)/pre-commit venv
+TODO.grep.md: ${makelib}/todo-grep always
 
 ### test coverage
 # coverage commands
@@ -42,6 +43,10 @@ $(commands) %:
 
 
 ### incidental complexity: you might stop reading here :)
+# useful to represent files that should always rebuild
+.PHONY: always
+always:
+
 # commands: ignore any coincidental files with the same name:
 # TODO: maybe our "commands" should (be able to) report "already done", too?
 .PHONY: $(commands)

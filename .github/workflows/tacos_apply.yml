@@ -93,7 +93,7 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.ssh-private-key }}
 
-      # TODO fetch the `--out tfplan` file from the plan workflow, to use here
+      # TODO: fetch and apply the `--out tfplan` file from plan workflow
       # so that apply matches the plan reviewed by construction
       ### - uses: actions/download-artifact@v4
       ###   with:
