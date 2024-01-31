@@ -4,6 +4,9 @@ inputs:
   shell:
     description: "private -- do not use"
     default: env ./tacos-gha/lib/ci/default-shell {0}
+  allowlist:
+    description: "Config file containing the slice allowlist"
+    type: string
 
 outputs:
   slices:
@@ -26,6 +29,6 @@ runs:
       id: list-slices
       shell: ${{inputs.shell}}
       run: |
-        "$TACOS_GHA_HOME/"lib/ci/list-slices <<'EOF'
+        "$TACOS_GHA_HOME/"lib/ci/list-slices ${{inputs.allowlist}} <<'EOF'
         ${{steps.files.outputs.all_files}}
         EOF

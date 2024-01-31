@@ -6,7 +6,7 @@ from fnmatch import fnmatch
 
 from lib.types import OSPath
 
-CONFIG_PATH = OSPath(".config/tacos-gha/slices.allowlist")
+DEFAULT_PATH = OSPath(".config/tacos-gha/slices.allowlist")
 
 
 @dataclass(frozen=True)
@@ -24,15 +24,14 @@ class PathFilter:
         return False
 
     @classmethod
-    def from_config(cls, path: OSPath = CONFIG_PATH) -> PathFilter:
+    def from_config(cls, path: OSPath) -> PathFilter:
         """Get a list of allowed globs from a file
 
         Hash comments are removed and blank lines are ignored.
         Inline comments are not allowed
-        An empty or missing file is treated as all allowed.
+        If both the provided and default files are missing, allow all.
         Globs are evaluated with the fnmatch module."""
         lines: list[str] = []
-        # remove from the first unescaped # to the end
         try:
             with path.open() as config:
                 for line in config:
@@ -40,14 +39,21 @@ class PathFilter:
                     if line and not line.startswith("#"):
                         lines.append(line)
         except FileNotFoundError:
-            pass
+            try:
+                with DEFAULT_PATH.open() as config:
+                    for line in config:
+                        line = line.strip()
+                        if line and not line.startswith("#"):
+                            lines.append(line)
+            except FileNotFoundError:
+                pass
         return cls(allowed=frozenset(lines))
 
 
 def main() -> int:
     import fileinput
 
-    path_filter = PathFilter.from_config()
+    path_filter = PathFilter.from_config(DEFAULT_PATH)
 
     for line in fileinput.input(encoding="utf-8"):
         line = line.strip()
