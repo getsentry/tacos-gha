@@ -14,7 +14,7 @@ def get_lock_info(root_module: Path) -> Tuple[bool, dict[str, str]]:
     lock = lock_info.pop("lock")
     assert isinstance(lock, bool)
 
-    # TODO: sh.show_json(): use jq to highlight
+    # TODO(P3): sh.show_json(): use jq to highlight
     from json import dumps
 
     if lock:

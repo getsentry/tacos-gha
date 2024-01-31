@@ -17,7 +17,6 @@ from spec.lib.gh import gh
 from spec.lib.slice import Slice
 from spec.lib.slice import Slices
 
-# FIXME: we need a better way to demarcate tf-plan in comments
 COMMENT_TAG = '<!-- thollander/actions-comment-pull-request "'
 COMMENT_TAG_END = '" -->'
 APP_INSTALLATION_REVIEWER = (

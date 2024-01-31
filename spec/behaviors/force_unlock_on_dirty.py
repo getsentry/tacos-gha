@@ -26,4 +26,4 @@ def test(pr: tacos_demo.PR) -> None:
     except AssertionError:
         raise XFailed("Comment not implemented yet.")
 
-    # TODO: maybe check for the opening of the drift remediation branch.
+    # TODO: check for the opening of the drift remediation branch.

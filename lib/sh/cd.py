@@ -16,9 +16,6 @@ from .io import debug2
 from .io import xtrace
 from .json import json
 
-# TODO: centralize reused type aliases
-Command = tuple[object, ...]
-
 
 @contextmanager
 def cd(

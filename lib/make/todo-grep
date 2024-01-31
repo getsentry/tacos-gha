@@ -12,9 +12,9 @@ EOF
 
   ( PS4='$ '
     set -x
-    git grep -Ei '(todo|fixme|xxx)[: ]|raise xfail'
+    git grep -Ei '(todo|fixme|xxx)[: (]|raise xfail'
   ) |
-    grep -E -vw grep |
+    grep -E -v '^[^:]*\.md:|\<grep\>' |
     sed -r 's/^[^:]+:[ #:]*//' |
     sort -u \
   ;

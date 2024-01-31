@@ -18,7 +18,7 @@ def test(pr: tacos_demo.PR) -> None:
     assert pr.check("Terraform Apply").wait(since).success
 
     sh.banner("For various reasons, the PR is not merged. Time passes")
-    # TODO: there should be a better way of simulating the PR being marked as stale.
+    # TODO: workflow to automatically add taco:stale label as appropriate
     since = pr.add_label(":taco::stale")
 
     sh.banner("An attempt is made to notify the PR owner")
@@ -28,7 +28,7 @@ def test(pr: tacos_demo.PR) -> None:
         raise XFailed("notify_owner action does not exist")
 
     sh.banner("More time passes")
-    # TODO: there should be a better way of simulating the PR being marked as abandoned.
+    # TODO: workflow to automatically add taco:abandoned label as appropriate
     since = pr.add_label(":taco::abandoned")
 
     sh.banner("An attempt is made to notify other users of the repo")

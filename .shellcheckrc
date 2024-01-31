@@ -16,7 +16,7 @@ disable=SC2016
 # https://www.shellcheck.net/wiki/SC2001
 # "See if you can use ${variable//search/replace} instead."
 # I dislike ${//}, and I like sed.
-# TODO: Perhaps I should change my mind though, given macOS.
+# NOTE: Perhaps I should prefer ${//} over sed though, given macOS.
 disable=SC2001
 
 

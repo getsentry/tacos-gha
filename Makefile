@@ -48,7 +48,6 @@ $(commands) %:
 always:
 
 # commands: ignore any coincidental files with the same name:
-# TODO: maybe our "commands" should (be able to) report "already done", too?
 .PHONY: $(commands)
 # help debug (make -d) output be readable:
 .SUFFIXES:
