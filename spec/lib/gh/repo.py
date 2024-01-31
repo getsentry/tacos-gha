@@ -1,4 +1,5 @@
 """Representations of git repositories, both remote and local."""
+
 from __future__ import annotations
 
 from contextlib import contextmanager
@@ -40,17 +41,15 @@ class RemoteRepo:
     def clone(self, dest: OSPath) -> LocalRepo:
         dest = dest / self.name
         # git will fail if the repo already exists, and that's a feature
-        sh.run(
-            (
-                "git",
-                "clone",
-                # best for build environments where the repository will be
-                # deleted after a single build
-                "--filter=tree:0",
-                "git@github.com:getsentry/tacos-gha.demo",
-                dest,
-            )
-        )
+        sh.run((
+            "git",
+            "clone",
+            # best for build environments where the repository will be
+            # deleted after a single build
+            "--filter=tree:0",
+            "git@github.com:getsentry/tacos-gha.demo",
+            dest,
+        ))
         return LocalRepo(remote=self, path=dest)
 
     def __str__(self) -> str:
