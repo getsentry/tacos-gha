@@ -40,6 +40,7 @@ elif grep -Eq <<< "$error" \
       exit 1
     fi
   )
+  # FIXME: tf-lock-info infinite regress if providers are undeclared
   exec "$0" "$@"  # start over
 else  # an unexpected error: show it
   set +x

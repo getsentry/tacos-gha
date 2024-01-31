@@ -152,7 +152,7 @@ def pr(
 GCLOUD_CONFIG = Path(".config/gcloud/configurations")
 
 
-# TODO: refactor to an object that takes token in constructor, remove autouse
+# TODO(P3): refactor to an object that takes token in constructor, remove autouse
 @fixture(autouse=True, scope="session")
 def cli_auth_gcloud() -> None:
     from os import environ
@@ -185,7 +185,7 @@ def cli_auth_gcloud() -> None:
     )
 
 
-# TODO: refactor to an object that takes token in constructor, remove autouse
+# TODO(P3): refactor to an object that takes token in constructor, remove autouse
 @fixture(autouse=True, scope="session")
 def cli_auth_gh() -> None:
     from os import environ

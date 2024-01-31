@@ -42,7 +42,8 @@ summary="$(
   fi
 )"
 
-# TODO: hide "commands" on exit code 0
+# TODO: hide "commands" in PR comments when exit code is 0
+# TODO: hide tf-init and tf-refresh outputs from tf log -- run them separate?
 gha-step-summary >/dev/null <<EOF
 ### TACOS Apply: $TF_ROOT_MODULE
 
