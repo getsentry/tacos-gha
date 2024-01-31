@@ -46,7 +46,7 @@ jobs:
 
     name: list slices
     outputs:
-      slices: ${{ steps.main.outputs.slices }}
+      slices: ${{ steps.list-slices.outputs.slices }}
 
     steps:
       - name: Checkout IAC
@@ -58,9 +58,9 @@ jobs:
           ref: ${{inputs.tacos_gha_ref}}
           path: tacos-gha
 
-      - name: Determine Slices
-        id: main
-        uses: ./tacos-gha/.github/actions/determine-slices
+      - name: List Slices
+        id: list-slices
+        uses: ./tacos-gha/.github/actions/list-slices
 
   tacos_unlock:
     if: |
