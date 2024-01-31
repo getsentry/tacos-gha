@@ -1,4 +1,5 @@
 """Define a 'cap1fd' pytest fixture which captures stdout/stderr combined."""
+
 from __future__ import annotations
 
 import contextlib

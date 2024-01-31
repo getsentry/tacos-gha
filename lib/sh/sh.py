@@ -1,4 +1,5 @@
 """The public interface. Import this."""
+
 from __future__ import annotations
 
 from subprocess import CalledProcessError as CalledProcessError

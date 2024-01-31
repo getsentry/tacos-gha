@@ -7,7 +7,7 @@ inputs:
 outputs:
   slices:
     description: "JSON list of paths to relevant TF/TG slices"
-    value: ${{ steps.slices.outputs.slices }}
+    value: ${{ steps.list-slices.outputs.slices }}
 
 runs:
   using: composite
@@ -21,9 +21,10 @@ runs:
         filters: "all: ['**']"
         list-files: json
 
-    - id: slices
+    - name: List Slices
+      id: list-slices
       shell: ${{inputs.shell}}
       run: |
-        "$TACOS_GHA_HOME/"lib/ci/slices <<'EOF'
+        "$TACOS_GHA_HOME/"lib/ci/list-slices <<'EOF'
         ${{steps.files.outputs.all_files}}
         EOF

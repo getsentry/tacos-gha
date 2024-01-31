@@ -2,6 +2,7 @@
 line-length = 79
 target-version = ['py312']
 skip-magic-trailing-comma = true
+preview = true
 
 [tool.isort]
 profile = "black"

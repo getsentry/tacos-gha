@@ -108,15 +108,13 @@ def tf_lock_release(root_module: Path, env: Environ) -> None:
     if tf_user == lock_user:
         try:
             with sh.cd(tf_working_dir(root_module)):
-                sh.run(
-                    (
-                        "terraform",
-                        "force-unlock",
-                        "-force",
-                        "--",
-                        lock_info["ID"],
-                    )
-                )
+                sh.run((
+                    "terraform",
+                    "force-unlock",
+                    "-force",
+                    "--",
+                    lock_info["ID"],
+                ))
         except sh.CalledProcessError as error:
             # error message was already printed by subcommand
             raise UserError(code=error.returncode)

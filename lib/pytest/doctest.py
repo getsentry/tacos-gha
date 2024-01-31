@@ -1,4 +1,5 @@
 """nasty hack to convince pytest-doctest to capture stderr too"""
+
 from __future__ import annotations
 
 from contextlib import contextmanager

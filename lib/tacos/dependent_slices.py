@@ -86,15 +86,9 @@ class FileSystem:
 
 
 @typing.overload
-def paths_containing(path: Dir) -> Generator[Dir]:
-    ...
-
-
+def paths_containing(path: Dir) -> Generator[Dir]: ...
 @typing.overload
-def paths_containing(path: File) -> Generator[Path]:
-    ...
-
-
+def paths_containing(path: File) -> Generator[Path]: ...
 def paths_containing(path: Path) -> Generator[Path]:
     """inclusive"""
     yield path

@@ -78,17 +78,15 @@ class PR:
     def close(self) -> None:
         sh.banner("deleting branch")
         try:
-            sh.run(
-                (
-                    "gh",
-                    "pr",
-                    "close",
-                    self.url,
-                    "--comment",
-                    "automatic test cleanup",
-                    "--delete-branch",
-                )
-            )
+            sh.run((
+                "gh",
+                "pr",
+                "close",
+                self.url,
+                "--comment",
+                "automatic test cleanup",
+                "--delete-branch",
+            ))
         except CalledProcessError:
             # might already be closed
             if not self.is_closed():
@@ -111,18 +109,16 @@ class PR:
         return since
 
     def is_approved(self) -> bool:
-        status = sh.stdout(
-            (
-                "gh",
-                "pr",
-                "view",
-                self.url,
-                "--json",
-                "reviewDecision",
-                "--jq",
-                ".reviewDecision",
-            )
-        )
+        status = sh.stdout((
+            "gh",
+            "pr",
+            "view",
+            self.url,
+            "--json",
+            "reviewDecision",
+            "--jq",
+            ".reviewDecision",
+        ))
         return status == "APPROVED"
 
     def add_label(self, label: Label) -> datetime:
@@ -145,18 +141,16 @@ class PR:
 
     def labels(self) -> Sequence[Label]:
         result: list[Label] = []
-        for label in sh.lines(
-            (
-                "gh",
-                "pr",
-                "view",
-                self.url,
-                "--json",
-                "labels",
-                "--jq",
-                ".labels.[] | .name",
-            )
-        ):
+        for label in sh.lines((
+            "gh",
+            "pr",
+            "view",
+            self.url,
+            "--json",
+            "labels",
+            "--jq",
+            ".labels.[] | .name",
+        )):
             result.append(label)
         return tuple(result)
 
@@ -203,18 +197,16 @@ class PR:
     @classmethod
     def from_branch(cls, branch: Branch, since: datetime) -> Self:
         url = sh.stdout(("gh", "pr", "view", branch, "--json", "url"))
-        draft = sh.json(
-            (
-                "gh",
-                "pr",
-                "view",
-                branch,
-                "--json",
-                "isDraft",
-                "--jq",
-                ".isDraft",
-            )
-        )
+        draft = sh.json((
+            "gh",
+            "pr",
+            "view",
+            branch,
+            "--json",
+            "isDraft",
+            "--jq",
+            ".isDraft",
+        ))
         assert isinstance(draft, bool)
         return cls(branch, url, since, draft)
 

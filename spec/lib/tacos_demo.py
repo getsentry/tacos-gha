@@ -20,7 +20,10 @@ from spec.lib.slice import Slices
 # FIXME: we need a better way to demarcate tf-plan in comments
 COMMENT_TAG = '<!-- thollander/actions-comment-pull-request "'
 COMMENT_TAG_END = '" -->'
-APP_INSTALLATION_REVIEWER = "op://Team Tacos gha dev/gh-app--tacos-gha-reviewer/app-installation/sentryio-org"
+APP_INSTALLATION_REVIEWER = (
+    "op://Team Tacos gha"
+    " dev/gh-app--tacos-gha-reviewer/app-installation/sentryio-org"
+)
 
 
 @dataclass(frozen=True)
@@ -137,22 +140,18 @@ def edit_workflow_versions(
     workflow_dir = demo.path / ".github/workflows"
     with sh.cd(workflow_dir):
         for workflow in OSPath(".").glob("*.yml"):
-            sh.run(
-                (
-                    "sed",
-                    "-ri",
-                    "-e",
-                    "#".join(
-                        (
-                            rf"s",
-                            rf"(@|refs/heads/)[^[:space:]]+[[:space:]]*$",
-                            rf"\1{tacos_branch}",
-                            rf"g",
-                        )
-                    ),
-                    workflow,
-                )
-            )
+            sh.run((
+                "sed",
+                "-ri",
+                "-e",
+                "#".join((
+                    rf"s",
+                    rf"(@|refs/heads/)[^[:space:]]+[[:space:]]*$",
+                    rf"\1{tacos_branch}",
+                    rf"g",
+                )),
+                workflow,
+            ))
 
 
 def edit_slices(

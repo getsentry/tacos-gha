@@ -28,14 +28,12 @@ def force_unlock(root_module: Path) -> None:
     lock, lock_info = get_lock_info(root_module)
     if lock:
         user, host = lock_info["Who"].split("@")
-        sh.run(
-            (
-                "env",
-                f"GETSENTRY_SAC_VERB=apply",
-                f"USER={user}",
-                f"HOST={host}",
-                "sudo-gcp",
-                "tf-lock-release",
-                root_module,
-            )
-        )
+        sh.run((
+            "env",
+            f"GETSENTRY_SAC_VERB=apply",
+            f"USER={user}",
+            f"HOST={host}",
+            "sudo-gcp",
+            "tf-lock-release",
+            root_module,
+        ))

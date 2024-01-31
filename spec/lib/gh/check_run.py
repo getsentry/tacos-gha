@@ -103,7 +103,10 @@ class CheckRun:
         return tuple(result)
 
     def __str__(self) -> str:
-        format = "{workflow} / {name}:\n      {started_at}-{completed_at} {status}({conclusion})"
+        format = (
+            "{workflow} / {name}:\n      {started_at}-{completed_at}"
+            " {status}({conclusion})"
+        )
         return format.format_map(vars(self))
 
     @property
@@ -114,15 +117,13 @@ class CheckRun:
 def get_runs_json(pr_url: URL) -> Generator[json.Value]:
     """Get the json of all runs, for the named check."""
     # https://docs.github.com/en/graphql/reference/objects#statuscheckrollup
-    return sh.jq(
-        (
-            "gh",
-            "pr",
-            "view",
-            pr_url,
-            "--json",
-            "statusCheckRollup",
-            "--jq",
-            ".statusCheckRollup[]",
-        )
-    )
+    return sh.jq((
+        "gh",
+        "pr",
+        "view",
+        pr_url,
+        "--json",
+        "statusCheckRollup",
+        "--jq",
+        ".statusCheckRollup[]",
+    ))

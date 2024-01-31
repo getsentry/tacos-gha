@@ -38,5 +38,5 @@ jobs:
         if: always()
         with:
           script: |
-            const reset_label = require('./tacos-gha/lib/ci/reset-label.js')
+            const reset_label = require('./tacos-gha/.github/workflows/reset-label.js')
             reset_label({github, context, label: process.env.LABEL})

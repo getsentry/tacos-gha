@@ -1,4 +1,5 @@
 """Nasty hack: pytest's default ellipsizing behavior varies with verbosity"""
+
 # mypy: disable_error_code="attr-defined"
 
 from __future__ import annotations

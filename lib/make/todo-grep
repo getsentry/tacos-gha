@@ -1,0 +1,24 @@
+#!/bin/bash
+set -euo pipefail
+exec >&2  # all output is logging
+outfile=TODO.grep.md
+
+{
+  cat <<'EOF'
+Action items in the code:
+
+```console
+EOF
+
+  ( PS4='$ '
+    set -x
+    git grep -Ei '(todo|fixme|xxx)[: ]|raise xfail'
+  ) |
+    grep -E -vw grep |
+    sed -r 's/^[^:]+:[ #:]*//' |
+    sort -u \
+  ;
+
+  echo '```'
+} > "$outfile".tmp 2>&1
+mv "$outfile.tmp" "$outfile"

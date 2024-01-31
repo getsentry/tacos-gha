@@ -23,7 +23,7 @@ sudo=(
   env PATH="$PATH"
 
   # the "inner half" of this script
- "$HERE/"default-shell-post-sudo
+ "$HERE/"lib/default-shell-post-sudo
 
   # pass along our arguments
  "$@"

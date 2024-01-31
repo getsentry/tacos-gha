@@ -56,10 +56,3 @@ repos:
         entry: ./lib/make/bin/pyright-verifytypes spec
         files: "^spec/"
         pass_filenames: false
-
-      - id: pyright-verifytypes-tf-lock
-        name: "pyright verify: tf_lock"
-        language: system
-        entry: ./lib/make/bin/pyright-verifytypes lib/tf_lock/lib
-        files: "^lib/tf_lock/lib/"
-        pass_filenames: false

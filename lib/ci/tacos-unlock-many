@@ -1,8 +1,10 @@
 #!/bin/bash
 set -euo pipefail
 
+# TODO: convert from matrix job to unlock slices "all at once"
+
 cd "$GITHUB_WORKSPACE"
 jq <<< "$TF_ROOT_MODULES" '.[]' -r |
-  xargs -n1 tacos-unlock-one |
+  xargs -n1 "$TACOS_GHA_HOME/"lib/ci/tacos-unlock |
   gha-step-summary \
 ;
