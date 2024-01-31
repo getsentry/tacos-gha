@@ -6,14 +6,12 @@ from spec.lib.gh import gh
 from spec.lib.slice import Slices
 
 
-def test(
-    pr: tacos_demo.PR, test_name: str, slices: Slices, demo: gh.LocalRepo
-) -> None:
+def test(pr: tacos_demo.PR, test_name: str, slices: Slices) -> None:
     branch, message = tacos_demo.edit_slices(
         slices, test_name, message="more code"
     )
 
-    gh.commit_and_push(demo, branch, message)
+    gh.commit_and_push(branch, message)
     plans = pr.get_plans()
     assert plans
     slices_found = set(plans)

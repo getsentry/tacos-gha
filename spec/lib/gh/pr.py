@@ -10,19 +10,17 @@ from typing import Sequence
 
 from lib import json
 from lib import wait
-from lib.functions import now
+from lib.functions import now as mknow
 from lib.sh import sh
 from lib.types import Generator
 from spec.lib.gh import gh
-from spec.lib.xfail import XFailed
 
 from . import app
-from .jwt import JWT
-from .repo import LocalRepo
 from .types import URL
 from .types import Branch
 from .types import CheckName
 from .types import Label
+from .types import Message
 from .types import WorkflowName
 
 APP_INSTALLATION_REVIEWER = (
@@ -51,24 +49,24 @@ class PR:
     @classmethod
     def open(
         cls,
-        repo: LocalRepo,
         branch: Branch,
+        message: Message,
         *,
         draft: bool = False,
         **attrs: object,
     ) -> Self:
-        since = now()
-        with sh.cd(repo.path):
-            url = sh.stdout(
-                ("gh", "pr", "create", "--fill-first", "--head", branch)
-                + (("--draft",) if draft else ())
-            )
+        since = mknow()
+        commit_and_push(branch, message)
+        url = sh.stdout(
+            ("gh", "pr", "create", "--fill-first", "--head", branch)
+            + (("--draft",) if draft else ())
+        )
         return cls(branch, url, since, draft, **attrs)
 
     @contextmanager
     @classmethod
-    def opened(cls, repo: LocalRepo, branch: Branch) -> Generator[Self]:
-        pr = cls.open(repo, branch)
+    def opened(cls, branch: Branch, message: Message) -> Generator[Self]:
+        pr = cls.open(branch, message)
         sh.banner("PR opened:", pr.url)
         try:
             yield pr
@@ -99,12 +97,12 @@ class PR:
         return status in ["CLOSED", "MERGED"]
 
     def approve(
-        self, app_installation: app.Installation, jwt: JWT
+        self, app_installation: app.Installation, now: datetime | None = None
     ) -> datetime:
-        since = now()
+        since = mknow()
         sh.run(
             ("gh", "pr", "review", "--approve", self.url),
-            env={"GH_TOKEN": app_installation.token(jwt)},
+            env={"GH_TOKEN": app_installation.token(now=now)},
         )
         return since
 
@@ -124,20 +122,13 @@ class PR:
     def add_label(self, label: Label) -> datetime:
         """Returns a timestamp from *just before* the label was added."""
         sh.banner(f"adding label {label} to PR:")
-        since = now()
+        since = mknow()
         sh.run(("gh", "pr", "edit", self.url, "--add-label", label))
         return since
 
     def merge(self) -> str:
         sh.banner("merging PR")
-        try:
-            return sh.stdout(("gh", "pr", "merge", self.url, "--squash"))
-        except sh.CalledProcessError:
-            # + $ gh pr merge --squash https://github.com/getsentry/tacos-gha.demo/pull/363
-            # X Pull request #363 is not mergeable: the base branch policy prohibits the merge.
-            # To have the pull request merged after all the requirements have been met, add the `--auto` flag.
-            # To use administrator privileges to immediately merge the pull request, add the `--admin` flag.
-            raise XFailed("terraform changes not yet mergeable")
+        return sh.stdout(("gh", "pr", "merge", self.url, "--squash"))
 
     def labels(self) -> Sequence[Label]:
         result: list[Label] = []
@@ -187,7 +178,7 @@ class PR:
         return CheckFilter(self, workflow, check_name)
 
     def toggle_draft(self) -> datetime:
-        since = now()
+        since = mknow()
         if self.draft:
             sh.run(("gh", "pr", "ready", self.url))
         else:
@@ -233,11 +224,9 @@ class PR:
                 yield run
 
 
-def commit_and_push(
-    repo: LocalRepo, branch: Branch, message: object = None
-) -> None:
-    with sh.cd(repo.path):
-        sh.run(("git", "commit", "-am", message))
-        with gh.up_to_date():
-            sh.run(("git", "show", "--stat"))
-            sh.run(("git", "push", "origin", f"{branch}:{branch}"))
+def commit_and_push(branch: Branch, message: object = None) -> None:
+    sh.run(("git", "checkout", "-qB", branch))
+    sh.run(("git", "commit", "-qam", message))
+    with gh.up_to_date():
+        sh.run(("git", "show", "--stat"))
+        sh.run(("git", "push", "origin", f"{branch}:{branch}"))
