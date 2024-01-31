@@ -47,7 +47,7 @@ def ansi_denoise(ansi_text: bytes) -> bytes:
 async def get_prompt(output: asyncio.StreamReader) -> str:
     while not output.at_eof():
         try:
-            data = await output.read(32)
+            data = await output.read(128)
         except OSError as error:
             if error.errno == 5:  # input/output error, i.e. a broken pipe
                 break
@@ -88,25 +88,27 @@ async def run_terraform(
 async def tf_lock_acquire() -> ExitCode:
     proc, output = await run_terraform(TERRAFORM)
     wait = asyncio.create_task(proc.wait())
-    prompt = asyncio.create_task(get_prompt(output))
+    timer = asyncio.create_task(asyncio.sleep(TIMEOUT))
 
-    await asyncio.wait(
-        [wait, prompt], return_when=asyncio.FIRST_COMPLETED, timeout=TIMEOUT
-    )
-    if wait.done():
-        returncode = wait.result()
-        return f"terraform exitted early, code {returncode}"
-    elif not prompt.done():
-        proc.kill()
-        return f"timeout (seconds): {TIMEOUT}"
-    elif (result := prompt.result()) == "> ":
-        debug("got prompt, exit un-gracefully")
-        assert not wait.done(), wait
-        proc.kill()
-        debug("terraform exitted, code", await proc.wait())
-        return 0
-    else:
-        return f"unexpected output: {repr(result)}"
+    while True:
+        prompt = asyncio.create_task(get_prompt(output))
+        await asyncio.wait(
+            [wait, prompt, timer], return_when=asyncio.FIRST_COMPLETED
+        )
+        if wait.done():
+            returncode = wait.result()
+            return f"terraform exitted early, code {returncode}"
+        elif timer.done() or not prompt.done():
+            proc.kill()
+            return f"timeout (seconds): {TIMEOUT}"
+        elif (result := prompt.result()).endswith("> "):
+            debug("got prompt, exit un-gracefully")
+            assert not wait.done(), wait
+            proc.kill()
+            debug("terraform exitted, code", await proc.wait())
+            return 0
+        else:
+            debug(f"unexpected output: {repr(result)}")
 
 
 def main() -> ExitCode:
