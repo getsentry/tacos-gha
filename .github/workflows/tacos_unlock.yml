@@ -2,7 +2,7 @@ name: TACOS Unlock
 
 # downstream projects should use events:
 ###pull_request:
-###  types: [labeled]
+###  types: [closed, converted_to_draft, labeled]
 
 on:
   workflow_call:
@@ -13,6 +13,10 @@ on:
       tacos_gha_ref:
         type: string
         default: refs/heads/stable
+    secrets:
+      ssh-private-key:
+        description: "Private SSH key to use for git clone"
+        required: false
 
 defaults:
   run:
@@ -46,7 +50,7 @@ jobs:
 
     name: list slices
     outputs:
-      slices: ${{ steps.main.outputs.slices }}
+      slices: ${{ steps.list-slices.outputs.slices }}
 
     steps:
       - name: Checkout IAC
@@ -58,9 +62,9 @@ jobs:
           ref: ${{inputs.tacos_gha_ref}}
           path: tacos-gha
 
-      - name: Determine Slices
-        id: main
-        uses: ./tacos-gha/.github/actions/determine-slices
+      - name: List Slices
+        id: list-slices
+        uses: ./tacos-gha/.github/actions/list-slices
 
   tacos_unlock:
     if: |
@@ -94,6 +98,8 @@ jobs:
           path: tacos-gha
       - name: Setup
         uses: ./tacos-gha/.github/actions/setup
+        with:
+          ssh-private-key: ${{ secrets.ssh-private-key }}
 
       - name: Unlock
         id: main

@@ -41,18 +41,21 @@ jobs:
     name: list slices
     if: github.event.pull_request.draft == false
     outputs:
-      slices: ${{ steps.slices.outputs.slices }}
+      slices: ${{ steps.list-slices.outputs.slices }}
 
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/checkout@v4
+      - name: Checkout IAC
+        uses: actions/checkout@v4
+      - name: Checkout tacos-gha
+        uses: actions/checkout@v4
         with:
           repository: ${{inputs.tacos_gha_repo}}
           ref: ${{inputs.tacos_gha_ref}}
           path: tacos-gha
 
-      - id: slices
-        uses: ./tacos-gha/.github/actions/determine-slices
+      - name: List Slices
+        id: list-slices
+        uses: ./tacos-gha/.github/actions/list-slices
 
   tacos_apply:
     # note: we want to noop if they converted to draft first
@@ -60,7 +63,6 @@ jobs:
       true
       && github.event.pull_request.draft == false
       && github.event.label.name == ':taco::apply'
-
     needs: [determine-tf-root-modules]
     runs-on: ubuntu-latest
     permissions:
@@ -91,7 +93,7 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.ssh-private-key }}
 
-      # TODO fetch the `--out tfplan` file from the plan workflow, to use here
+      # TODO: fetch and apply the `--out tfplan` file from plan workflow
       # so that apply matches the plan reviewed by construction
       ### - uses: actions/download-artifact@v4
       ###   with:

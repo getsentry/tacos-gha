@@ -42,7 +42,8 @@ summary="$(
   fi
 )"
 
-# TODO: hide "commands" on exit code 0
+# TODO: hide "commands" in PR comments when exit code is 0
+# TODO: roll up init / refresh phases from tf log
 gha-step-summary >/dev/null <<EOF
 ### TACOS Plan: $TF_ROOT_MODULE
 

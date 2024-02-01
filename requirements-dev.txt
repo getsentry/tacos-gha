@@ -6,7 +6,7 @@
 #
 astroid==3.0.2
     # via pylint
-black==23.12.1
+black==24.1.1
     # via -r requirements-dev.in
 build==1.0.3
     # via pip-tools
@@ -20,16 +20,16 @@ click==8.1.7
     #   pip-tools
 covdefaults==2.3.0
     # via -r requirements-dev.in
-coverage==7.4.0
+coverage==7.4.1
     # via
     #   -r requirements-dev.in
     #   covdefaults
     #   coverage-enable-subprocess
 coverage-enable-subprocess==1.0
     # via -r requirements-dev.in
-cryptography==42.0.1
+cryptography==42.0.2
     # via pyjwt
-dill==0.3.7
+dill==0.3.8
     # via pylint
 distlib==0.3.8
     # via virtualenv
@@ -66,7 +66,7 @@ pathspec==0.12.1
     # via black
 pip-tools==7.3.0
     # via -r requirements-dev.in
-platformdirs==4.1.0
+platformdirs==4.2.0
     # via
     #   black
     #   pylint
@@ -83,9 +83,9 @@ pylint==3.0.3
     # via -r requirements-dev.in
 pyproject-hooks==1.0.0
     # via build
-pyright==1.1.348
+pyright==1.1.349
     # via -r requirements-dev.in
-pytest==7.4.4
+pytest==8.0.0
     # via
     #   -r requirements-dev.in
     #   pytest-xdist

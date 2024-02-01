@@ -23,6 +23,6 @@ if "$lock"; then
 fi
 
 ( cd "$(tf_working_dir "$root_module")"
-  "$HERE/"lib/tf_lock_acquire.py
+  "$HERE/"acquire.py
 )
 exec "$0" "$@"  # start over

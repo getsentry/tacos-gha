@@ -17,10 +17,9 @@ from .types import Generator
 PS4 = f"+ {ansi.TEAL}${ansi.RESET} "
 
 
-# TODO: use logging module? probs not...
-# 0 - info only
-# 1 - debug
-# 2+ - trace
+# 1 - info
+# 2 - debug
+# 3 - trace
 # note: empty-string vars should be treated as unset
 DEBUG: int = int(getenv("DEBUG") or "1")
 

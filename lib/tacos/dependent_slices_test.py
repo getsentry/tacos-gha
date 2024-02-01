@@ -22,31 +22,25 @@ FS = D.FileSystem.from_paths(PATHS)
 
 class TestFileSystem:
     def test_from_paths(self) -> None:
-        fs = D.FileSystem.from_paths(
-            (
-                OSPath("d/e/e.txt"),
-                OSPath("a/aa/aa.txt"),
-                OSPath("a/b/c/c.txt"),
-                OSPath("a/a.txt"),
-            )
-        )
+        fs = D.FileSystem.from_paths((
+            OSPath("d/e/e.txt"),
+            OSPath("a/aa/aa.txt"),
+            OSPath("a/b/c/c.txt"),
+            OSPath("a/a.txt"),
+        ))
         assert fs == D.FileSystem(
-            files=frozenset(
-                {
-                    D.File(Path("d/e/e.txt")),
-                    D.File(Path("a/aa/aa.txt")),
-                    D.File(Path("a/b/c/c.txt")),
-                    D.File(Path("a/a.txt")),
-                }
-            ),
-            dirs=frozenset(
-                {
-                    D.Dir(Path("d/e")),
-                    D.Dir(Path("a/aa")),
-                    D.Dir(Path("a/b/c")),
-                    D.Dir(Path("a")),
-                }
-            ),
+            files=frozenset({
+                D.File(Path("d/e/e.txt")),
+                D.File(Path("a/aa/aa.txt")),
+                D.File(Path("a/b/c/c.txt")),
+                D.File(Path("a/a.txt")),
+            }),
+            dirs=frozenset({
+                D.Dir(Path("d/e")),
+                D.Dir(Path("a/aa")),
+                D.Dir(Path("a/b/c")),
+                D.Dir(Path("a")),
+            }),
         )
 
     def test_from_git(self, tmp_path: Path) -> None:
@@ -68,22 +62,18 @@ class TestFileSystem:
             fs = D.FileSystem.from_git()
 
         assert fs == D.FileSystem(
-            files=frozenset(
-                {
-                    D.File(Path("d/e/e.txt")),
-                    D.File(Path("a/aa/aa.txt")),
-                    D.File(Path("a/b/c/c.txt")),
-                    D.File(Path("a/a.txt")),
-                }
-            ),
-            dirs=frozenset(
-                {
-                    D.Dir(Path("d/e")),
-                    D.Dir(Path("a/aa")),
-                    D.Dir(Path("a/b/c")),
-                    D.Dir(Path("a")),
-                }
-            ),
+            files=frozenset({
+                D.File(Path("d/e/e.txt")),
+                D.File(Path("a/aa/aa.txt")),
+                D.File(Path("a/b/c/c.txt")),
+                D.File(Path("a/a.txt")),
+            }),
+            dirs=frozenset({
+                D.Dir(Path("d/e")),
+                D.Dir(Path("a/aa")),
+                D.Dir(Path("a/b/c")),
+                D.Dir(Path("a")),
+            }),
         )
 
 
@@ -91,32 +81,20 @@ class TestTFCategorized:
     def test_from_fs(self) -> None:
         categorized = D.TFCategorized.from_fs(FS)
         assert categorized == D.TFCategorized(
-            slices=frozenset(
-                {
-                    D.TopLevelTFModule(
-                        D.TFModule(D.Dir(Path("env/prod/slice-0")))
-                    ),
-                    D.TopLevelTFModule(
-                        D.TFModule(D.Dir(Path("env/dev/slice-0")))
-                    ),
-                }
-            ),
-            shared_dirs=frozenset(
-                {
-                    D.TFSharedModulesDir(D.Dir(Path("module"))),
-                    D.TFSharedModulesDir(
-                        D.Dir(Path("env/dev/slice-0/module"))
-                    ),
-                }
-            ),
-            config_files=frozenset(
-                {
-                    D.TFConfigFile(D.File(Path("terragrunt-base.hcl"))),
-                    D.TFConfigFile(
-                        D.File(Path("env/prod/terragrunt-prod.hcl"))
-                    ),
-                }
-            ),
+            slices=frozenset({
+                D.TopLevelTFModule(
+                    D.TFModule(D.Dir(Path("env/prod/slice-0")))
+                ),
+                D.TopLevelTFModule(D.TFModule(D.Dir(Path("env/dev/slice-0")))),
+            }),
+            shared_dirs=frozenset({
+                D.TFSharedModulesDir(D.Dir(Path("module"))),
+                D.TFSharedModulesDir(D.Dir(Path("env/dev/slice-0/module"))),
+            }),
+            config_files=frozenset({
+                D.TFConfigFile(D.File(Path("terragrunt-base.hcl"))),
+                D.TFConfigFile(D.File(Path("env/prod/terragrunt-prod.hcl"))),
+            }),
         )
 
     def test_config_deps(self) -> None:
@@ -146,12 +124,10 @@ class TestTFCategorized:
                 {D.TFConfigFile(D.File(Path("env/prod/terragrunt-prod.hcl")))}
             ),
         )
-        assert modified.config_dirs == frozenset(
-            {
-                D.TFConfigDir(D.Dir(Path("env/dev/slice-0"))),
-                D.TFConfigDir(D.Dir(Path("env/prod"))),
-            }
-        )
+        assert modified.config_dirs == frozenset({
+            D.TFConfigDir(D.Dir(Path("env/dev/slice-0"))),
+            D.TFConfigDir(D.Dir(Path("env/prod"))),
+        })
 
 
 class TestDependentSlices:

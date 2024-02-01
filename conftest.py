@@ -1,4 +1,5 @@
 """Universally-applicable pytest fixtures."""
+
 from __future__ import annotations
 
 import pytest
@@ -13,7 +14,7 @@ from lib.types import Environ
 from lib.types import Generator
 from lib.types import OSPath
 
-TEST_HOME = TACOS_GHA_HOME / "manual_tests"
+TEST_HOME = TACOS_GHA_HOME / "spec"
 
 
 @fixture
