@@ -4,7 +4,6 @@ from dataclasses import dataclass
 from random import Random
 from typing import TYPE_CHECKING
 
-from lib.constants import EMPTY_PATH
 from lib.functions import now
 from lib.sh import sh
 from lib.tacos.dependent_slices import TFCategorized
@@ -53,7 +52,7 @@ class Slices:
         return self.workdir / self.subpath
 
     @classmethod
-    def from_path(cls, workdir: OSPath, subpath: Path = EMPTY_PATH) -> Self:
+    def from_path(cls, workdir: OSPath, subpath: Path = Path.EMPTY) -> Self:
         slices_path = workdir / subpath
         tf_categorized = TFCategorized.from_git(slices_path)
         return cls(

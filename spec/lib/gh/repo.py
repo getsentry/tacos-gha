@@ -44,6 +44,7 @@ class RemoteRepo:
         sh.run((
             "git",
             "clone",
+            "-q",  # suppress noisy progress reports
             # best for build environments where the repository will be
             # deleted after a single build
             "--filter=tree:0",
