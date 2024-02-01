@@ -108,11 +108,6 @@ jobs:
               || github.event.pull_request.user.login
             }}
 
-      - name: Override USER
-        if: github.event.action == 'closed'
-        run: |
-          gha-set-env 'USER' <<< ${{github.event.pull_request.user.login}}
-
       - name: Unlock
         id: main
         run: |
