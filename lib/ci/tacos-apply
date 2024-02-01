@@ -16,6 +16,32 @@ EOF
     exit 1
 fi
 
+if "$GITHUB_PR_DRAFT"; then
+    : no applying a draft! bail.
+    gha-step-summary >/dev/null <<EOF
+### TACOS Apply: $TF_ROOT_MODULE
+
+Applies are not allowed for draft PRs.
+Please set the PR ready for review first.
+
+Apply request refused: PR is a draft
+EOF
+    exit 1
+fi
+
+if [[ "$GITHUB_PR_STATE" != "OPEN" ]]; then
+    : no applying a closed PR! bail.
+    gha-step-summary >/dev/null <<EOF
+### TACOS Apply: $TF_ROOT_MODULE
+
+Applies are only allowed for open PRs.
+You may try reopening the PR first.
+
+Apply request refused: PR is not open
+EOF
+    exit 1
+fi
+
 cmd=(
   env GETSENTRY_SAC_VERB=apply
   sudo-gcp
