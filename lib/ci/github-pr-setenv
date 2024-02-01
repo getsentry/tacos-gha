@@ -20,3 +20,7 @@ gh pr view "$pr_url" --json reviewDecision |
   jq '.reviewDecision == "APPROVED"' |
   gha-set-env 'GITHUB_PR_APPROVED' \
 ;
+
+gh pr view "$pr_url" --json state --jq .state |
+  gha-set-env 'GITHUB_PR_STATE' \
+;

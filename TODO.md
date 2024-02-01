@@ -3,8 +3,8 @@ correctness:
 - [x] refuse apply without review
   - [x] @buck apply should ignore approval by non-codeowners
     - i.e. check mergability instead of approvers
-- [ ] @ellison refuse apply for closed PR
-  - [ ] explain declined apply due to closed PR
+- [x] @ellison refuse apply for closed PR
+  - [x] explain declined apply due to closed PR
     - suggest re-opening the PR
 - [ ] @ellison unlock even if closed with merge conflicts
 - [ ] @ellison unlock even if closed by another user
