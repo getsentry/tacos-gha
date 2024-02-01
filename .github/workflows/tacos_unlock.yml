@@ -103,9 +103,13 @@ jobs:
           # Use author's username when unlocking for closed PRs
           user: |
             ${{
-              github.event.action == 'closed'
-              && github.actor
-              || github.event.pull_request.user.login
+              true
+              && github.event_name == 'pull_request'
+              && github.event.action == 'closed'
+
+              && github.event.pull_request.user.login
+
+              || github.actor
             }}
 
       - name: Unlock
