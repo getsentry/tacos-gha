@@ -1,0 +1,11 @@
+#!/bin/bash
+set -euo pipefail
+
+if "$@" >& noise.log; then
+  rm noise.log
+else
+  status="$?"
+  echo >&2 "ERROR: command failed: $*"
+  cat >&2 noise.log
+  exit "$status"
+fi

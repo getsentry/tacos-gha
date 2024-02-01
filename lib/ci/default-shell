@@ -6,7 +6,7 @@ HERE="$(dirname "$(readlink -f "$0")")"
 # minimal bootstrapping: no envrc is loaded till post-sudo
 export TACOS_GHA_HOME PATH DEBUG
 TACOS_GHA_HOME="${TACOS_GHA_HOME:-"$(cd "$HERE"/../..; pwd)"}"
-PATH="$TACOS_GHA_HOME/bin:$TACOS_GHA_HOME/lib/ci/lib:$PATH"
+PATH="$TACOS_GHA_HOME/bin:$TACOS_GHA_HOME/lib/ci/bin:$PATH"
 DEBUG="${DEBUG:-"${RUNNER_DEBUG:-}"}"
 
 : combine stdout to stderr, to prevent out-of-order interleaving

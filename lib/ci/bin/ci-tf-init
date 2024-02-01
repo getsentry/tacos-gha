@@ -1,0 +1,6 @@
+#!/bin/bash
+set -euo pipefail
+
+# these commands are noisy, but the output is only valuable when they fail
+quieten sudo-gcp terragrunt-noninteractive run-all init
+exec "$@"

@@ -22,7 +22,8 @@ it is currently held by ${ESC}[34m$(whoami)@$(hostname -f)${ESC}[m (i.e.
 ${ESC}[32m\$(whoami)@\$(hostname -f)${ESC}[m). It will fail if anyone else holds
 the lock.
 
-COMMAND should take the state lock, itself (e.g. \`terraform apply\`). The state
+COMMAND should not attempt to take the state lock, itself
+(e.g. \`terraform apply --lock=false\`). The state
 lock will continue to be held after the command finishes.
 
 EOF
@@ -30,7 +31,7 @@ EOF
 fi
 
 set -x
-tf-lock-release "$slice"
-"$@" && status=$? || status=$?
 tf-lock-acquire "$slice"
+"$@" && status=$? || status=$?
+
 exit "$status"

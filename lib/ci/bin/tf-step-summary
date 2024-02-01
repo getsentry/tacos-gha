@@ -1,0 +1,94 @@
+#!/bin/bash
+set -euo pipefail
+title="$1"
+shift 1
+
+tf_log=tf-log.hcl
+console_log=console.log
+with-user-env "$TF_ROOT_MODULE" \
+  ci-tf-init \
+    "$@" 2>&1 >"$tf_log" |
+  tee "$console_log" \
+  && status=$? \
+  || status=$? \
+;
+
+summary="$(
+  if tac "$tf_log" | grep -E -im1 'complete|Plan:|No changes'; then
+    : :D
+  elif cat "$console_log" "$tf_log" | grep -E -im1 'error'; then
+    : D:
+  else
+    echo "summary failed!($?)"
+  fi
+)"
+
+(
+cat <<EOF1
+### $title: $TF_ROOT_MODULE
+
+EOF1
+cat  # put any extended explanation on stdin
+
+if (( "$status" == 0 )); then
+  # hide boring bits
+cat <<EOF2
+<details>
+  <summary>$summary</summary>
+
+EOF2
+else
+  # things failed -- show it
+  cat <<EOF2
+  $summary
+
+EOF2
+
+fi
+
+if (( "$status" == 0 )); then
+  # hide boring bits
+  cat <<EOF2.1
+  <details>
+    <summary>Commands: (exit code: $status)</summary>
+EOF2.1
+else
+  # things failed -- show it
+  cat <<EOF2.2
+  Commands: (exit code: $status)
+EOF2.2
+
+fi
+
+cat <<EOF3
+
+\`\`\`console
+$(
+  # match `console` syntax highlighting by removing '+ ' from xtrace lines
+  uncolor "$console_log" |
+    sed -r 's/^\++ \$ /\n$ /'
+)
+\`\`\`
+EOF3
+
+if (( "$status" == 0 )); then
+  echo '</details>'
+fi
+
+
+cat <<EOF4
+
+  Result:
+
+\`\`\`hcl
+$(cat "$tf_log")
+\`\`\`
+EOF4
+
+if (( "$status" == 0 )); then
+  echo '</details>'
+fi
+) |
+  gha-step-summary >/dev/null
+
+exit "$status"

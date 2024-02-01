@@ -2,7 +2,19 @@
 set -euo pipefail
 export TERRAGRUNT_NO_AUTO_APPROVE=false
 export TERRAGRUNT_NON_INTERACTIVE=true
+export TERRAGRUNT_NO_AUTO_INIT=true
+export TERRAGRUNT_FAIL_ON_STATE_BUCKET_CREATION=true
+
 export TF_DETAILED_EXITCODE=1
+
+# Don't try this at home, kids!
+# * we use tf-lock-acquire to take the lock, before terragrunt starts
+# * we run `terraform refresh` separately, in ci-tf-init
+export TF_CLI_ARGS=""
+export TF_CLI_ARGS_init="-lock=false"
+export TF_CLI_ARGS_refresh="-lock=false -refresh=false"
+export TF_CLI_ARGS_plan="-lock=false -refresh=false"
+export TF_CLI_ARGS_apply="-lock=false -refresh=false"
 
 terragrunt "$@" 2>&1 |
   # shorten the danged "module prefixes" to a readable length
