@@ -2,7 +2,8 @@
 set -euo pipefail
 export TERRAGRUNT_INCLUDE_MODULE_PREFIX=false
 
-if ! [[ "$GITHUB_PR_APPROVERS" ]]; then
+# NOTE: approval is different than approvers, due to codeowners
+if ! "$GITHUB_PR_APPROVED"; then
     : no approvers! bail.
     gha-step-summary >/dev/null <<EOF
 ### TACOS Apply: $TF_ROOT_MODULE

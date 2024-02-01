@@ -1,7 +1,7 @@
 #!/bin/bash
 # Forward stdin to the GHA step summary, and save it to the .summary output of
 # this step.
-set -euxo pipefail
+set -euo pipefail
 
 tee >(
   # step summary and PR comments can't handle ansi-color like GHA logging does =(
