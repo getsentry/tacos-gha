@@ -1,7 +1,7 @@
 correctness:
 
 - [x] refuse apply without review
-  - [ ] @buck apply should ignore approval by non-codeowners
+  - [x] @buck apply should ignore approval by non-codeowners
     - i.e. check mergability instead of approvers
 - [ ] @ellison refuse apply for closed PR
   - [ ] explain declined apply due to closed PR
