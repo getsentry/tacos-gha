@@ -13,6 +13,10 @@ on:
       tacos_gha_ref:
         type: string
         default: refs/heads/stable
+    secrets:
+      ssh-private-key:
+        description: "Private SSH key to use for git clone"
+        required: false
 
 defaults:
   run:
@@ -94,6 +98,8 @@ jobs:
           path: tacos-gha
       - name: Setup
         uses: ./tacos-gha/.github/actions/setup
+        with:
+          ssh-private-key: ${{ secrets.ssh-private-key }}
 
       - name: Unlock
         id: main
