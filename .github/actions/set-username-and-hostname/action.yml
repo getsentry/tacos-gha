@@ -37,7 +37,8 @@ runs:
             'former primary group ("docker")'
         sudo usermod -g "$olduser" "$olduser" -aG "$(id -g)"
 
-        newuser="${{inputs.user}}"
+        : remove square brackets from bot names as they are invalid for linux
+        newuser="$( tr -d '[]' <<< "${{inputs.user}}" )"
         : show defaults
         useradd -D
 
