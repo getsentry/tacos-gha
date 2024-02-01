@@ -2,44 +2,38 @@
 set -euo pipefail
 export TERRAGRUNT_INCLUDE_MODULE_PREFIX=false
 
+refuse() {
+    reason="$1"
+   (
+   echo "### TACOS Apply: $TF_ROOT_MODULE"
+   cat  # pass deeper explanation via stdin
+   echo
+   echo "Apply request refused: $reason"
+EOF
+) | gha-step-summary >/dev/null
+    exit 1
+}
+
 # NOTE: approval is different than approvers, due to codeowners
 if ! "$GITHUB_PR_APPROVED"; then
-    : no approvers! bail.
-    gha-step-summary >/dev/null <<EOF
-### TACOS Apply: $TF_ROOT_MODULE
-
+    refuse "PR has no approvals" <<EOF
 Production changes must be peer-reviewed.
 Please try again after code review.
-
-Apply request refused: PR has no approvals
 EOF
-    exit 1
 fi
 
 if "$GITHUB_PR_DRAFT"; then
-    : no applying a draft! bail.
-    gha-step-summary >/dev/null <<EOF
-### TACOS Apply: $TF_ROOT_MODULE
-
-Applies are not allowed for draft PRs.
-Please set the PR ready for review first.
-
-Apply request refused: PR is a draft
+    refuse "PR is not Ready" <<EOF
+Draft PRs cannot be applied.
+Please try again after code review.
 EOF
-    exit 1
 fi
 
 if [[ "$GITHUB_PR_STATE" != "OPEN" ]]; then
-    : no applying a closed PR! bail.
-    gha-step-summary >/dev/null <<EOF
-### TACOS Apply: $TF_ROOT_MODULE
-
+    refuse "PR is not open" <<EOF
 Applies are only allowed for open PRs.
 You may try reopening the PR first.
-
-Apply request refused: PR is not open
 EOF
-    exit 1
 fi
 
 cmd=(
