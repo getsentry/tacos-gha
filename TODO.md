@@ -7,7 +7,7 @@ correctness:
   - [ ] explain declined apply due to closed PR
     - suggest re-opening the PR
 - [ ] @ellison unlock even if closed with merge conflicts
-- [ ] @ellison unlock even if closed by another user
+- [x] @ellison unlock even if closed by another user
   - set username from pr author on closed event
 - [x] @buck P3: FIXME: tf-lock-info infinite regress if providers are undeclared
 

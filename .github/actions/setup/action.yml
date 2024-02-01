@@ -7,6 +7,9 @@ inputs:
     description: "Private SSH key to use for git clone"
     type: string
     default: ""
+  user:
+    description: the username that will be used for following steps
+    required: false
 
 runs:
   using: composite
@@ -16,6 +19,8 @@ runs:
 
     - name: tell TF username and PR
       uses: ./tacos-gha/.github/actions/set-username-and-hostname
+      with:
+        user: ${{inputs.user}}
 
     - name: set workload identity provider
       id: set-workload-identity-provider

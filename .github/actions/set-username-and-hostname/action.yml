@@ -2,7 +2,7 @@ name: Set Username and Hostname
 
 inputs:
   user:
-    description: use the PR owner, even if someone else re-triggers the job
+    description: the username that will be used for following steps
     default: ${{github.actor}}
   hostname:
     description: a fake hostname to represent the relevant PR
