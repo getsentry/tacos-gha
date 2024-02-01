@@ -58,8 +58,12 @@ class PR(gh.PR):
 
         return self
 
-    def close(self) -> None:
-        super().close()
+    def close(
+        self,
+        app_installation: gh.app.Installation | None = None,
+        now: datetime | None = None,
+    ) -> datetime:
+        return super().close(app_installation, now)
 
     @classmethod
     @contextmanager
