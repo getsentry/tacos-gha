@@ -10,6 +10,7 @@ inputs:
   user:
     description: the username that will be used for following steps
     required: false
+    default: ${{github.actor}}
 
 runs:
   using: composite
