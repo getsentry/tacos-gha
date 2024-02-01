@@ -9,7 +9,7 @@ correctness:
 - [ ] @ellison unlock even if closed with merge conflicts
 - [ ] @ellison unlock even if closed by another user
   - set username from pr author on closed event
-- [ ] @buck P3: FIXME: tf-lock-info infinite regress if providers are undeclared
+- [x] @buck P3: FIXME: tf-lock-info infinite regress if providers are undeclared
 
 ease of use (UI/UX):
 
