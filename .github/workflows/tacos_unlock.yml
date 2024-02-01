@@ -101,6 +101,11 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.ssh-private-key }}
 
+      - name: Override USER
+        if: github.event.action == 'closed'
+        run: |
+          gha-set-env 'USER' <<< ${{github.event.pull_request.user.login}}
+
       - name: Unlock
         id: main
         run: |
