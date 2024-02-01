@@ -61,7 +61,6 @@ jobs:
     # note: we want to noop if they converted to draft first
     if: |
       true
-      && github.event.pull_request.draft == false
       && github.event.label.name == ':taco::apply'
     needs: [determine-tf-root-modules]
     runs-on: ubuntu-latest
