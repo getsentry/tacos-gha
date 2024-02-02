@@ -15,7 +15,7 @@ else
   )
 fi
 cmd+=(
-  terragrunt-noninteractive run-all
+  terragrunt run-all
 
   # terragrunt in "bare" slices will evaluate relative paths with respect to its
   # hidden terraform working directory, making the plan file hard to find, so

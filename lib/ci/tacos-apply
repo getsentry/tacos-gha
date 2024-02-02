@@ -40,8 +40,8 @@ cmd=(
   env GETSENTRY_SAC_VERB=apply
   sudo-gcp
   tf-lock
-  terragrunt-noninteractive run-all
-  apply --lock=true --auto-approve
+  terragrunt run-all \
+    apply --auto-approve
 )
 
 tf_log=tf-log.hcl
