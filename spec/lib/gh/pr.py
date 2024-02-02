@@ -73,22 +73,35 @@ class PR:
         finally:
             pr.close()
 
-    def close(self) -> None:
+    def close(
+        self,
+        app_installation: app.Installation | None = None,
+        now: datetime | None = None,
+    ) -> datetime:
         sh.banner("deleting branch")
+        since = mknow()
         try:
-            sh.run((
-                "gh",
-                "pr",
-                "close",
-                self.url,
-                "--comment",
-                "automatic test cleanup",
-                "--delete-branch",
-            ))
+            sh.run(
+                (
+                    "gh",
+                    "pr",
+                    "close",
+                    self.url,
+                    "--comment",
+                    "automatic test cleanup",
+                    "--delete-branch",
+                ),
+                env=(
+                    {"GH_TOKEN": app_installation.token(now=now)}
+                    if app_installation is not None
+                    else None
+                ),
+            )
         except CalledProcessError:
             # might already be closed
             if not self.is_closed():
                 raise
+        return since
 
     def is_closed(self) -> bool:
         status = sh.stdout(

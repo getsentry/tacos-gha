@@ -100,6 +100,17 @@ jobs:
         uses: ./tacos-gha/.github/actions/setup
         with:
           ssh-private-key: ${{ secrets.ssh-private-key }}
+          # Use author's username when unlocking for closed PRs
+          user: |
+            ${{
+              true
+              && github.event_name == 'pull_request'
+              && github.event.action == 'closed'
+
+              && github.event.pull_request.user.login
+
+              || github.actor
+            }}
 
       - name: Unlock
         id: main
