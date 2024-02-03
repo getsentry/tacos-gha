@@ -124,7 +124,7 @@ def tf_lock_release(root_module: Path, env: Environ) -> None:
     else:
         raise UserError(
             f"""\
-tf-lock-release: failure: not {tf_user}: {root_module}({lock_user})
+tf-lock-release: failure: not {lock_user}: {root_module}({tf_user})
 (hint: to force, set $USER and/or $HOST explicitly)
 """,
             code=TF_LOCK_EHELD,
