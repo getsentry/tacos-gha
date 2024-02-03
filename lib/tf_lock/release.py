@@ -153,7 +153,7 @@ def main() -> None:
     if args:
         paths = [Path(arg) for arg in args]
     else:
-        paths = [Path.cwd(environ)]
+        paths = [Path(".")]
 
     from os import environ
 
