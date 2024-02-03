@@ -43,7 +43,7 @@ runs:
         useradd -D
 
         : add the requested username
-        sudo useradd -g "$olduser" -G "$(id -G | tr ' ' ,)" "$newuser"
+        sudo useradd -m -g "$olduser" -G "$(id -G | tr ' ' ,)" "$newuser"
 
         : new user metadata:
         getent passwd "$newuser"
