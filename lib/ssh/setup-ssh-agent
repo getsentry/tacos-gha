@@ -1,0 +1,9 @@
+sshdir=$(getent passwd $USER | cut -d: -f6)/.ssh
+mkdir $sshdir
+chmod 700 $sshdir
+cat > $sshdir/key
+chmod 600 $sshdir/key
+eval "$(ssh-agent -s)"
+gha-set-env SSH_AUTH_SOCK <<< $SSH_AUTH_SOCK
+gha-set-env SSH_AGENT_PID <<< $SSH_AGENT_PID
+ssh-add $sshdir/key
