@@ -1,0 +1,6 @@
+#!/bin/bash
+set -euxo pipefail
+
+: FIXME: need a lower-privilege way to enable locking
+GETSENTRY_SAC_VERB=apply \
+sudo-gcp tf-lock-acquire >&2

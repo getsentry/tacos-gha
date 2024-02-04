@@ -1,0 +1,12 @@
+#!/bin/bash
+set -euo pipefail
+exec 1>&2  # stdout is reserved for tf plan/apply results
+
+set -ex
+
+: FIXME: need a lower-privilege way to authorize locking
+# problem: currently the plan terraformer is very strictly readonly but we need
+#     to be able to lock/unlock the tfstate in this workflow
+# planned fix:
+#     add a "state" terraformer, which can mess with the locks but not infra
+GETSENTRY_SAC_VERB=apply sudo-gcp tf-lock-release

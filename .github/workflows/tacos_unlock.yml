@@ -115,7 +115,7 @@ jobs:
       - name: Unlock
         id: main
         run: |
-          "$TACOS_GHA_HOME/"lib/ci/tacos-unlock
+          tf-step-summary "TACOS Unlock" "$TACOS_GHA_HOME/"lib/tacos/unlock
 
       - name: Update PR
         # we want to report failures, too

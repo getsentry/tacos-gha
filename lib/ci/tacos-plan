@@ -2,77 +2,24 @@
 set -euo pipefail
 export TERRAGRUNT_INCLUDE_MODULE_PREFIX=false
 
+# terragrunt in "bare" slices will evaluate relative paths with respect to its
+# hidden terraform working directory, making the plan file hard to find, so
+# it's essential to use an absolute path here.
+export TACOS_TFPLAN="$PWD/$TF_ROOT_MODULE/tfplan"
+
+# TODO: let the user know who has the lock
+# TODO: let the user know plan may not be fully accurate
+
 if "$GITHUB_PR_DRAFT"; then
-  lock="false"
-  cmd=(sudo-gcp)
+  export TACOS_LOCK=false
 else
-  lock="true"
-  : FIXME: need a lower-privilege way to enable locking
-  cmd=(
-    env GETSENTRY_SAC_VERB=apply
-    sudo-gcp
-    tf-lock
-  )
+  export TACOS_LOCK=true
 fi
-cmd+=(
-  terragrunt run-all
-
-  # terragrunt in "bare" slices will evaluate relative paths with respect to its
-  # hidden terraform working directory, making the plan file hard to find, so
-  # it's essential to use an absolute path here.
-  plan -out "$PWD/$TF_ROOT_MODULE/tfplan" -lock="$lock"
-)
-
-tf_log=tf-log.hcl
-console_log=console.log
-with-user-env "$TF_ROOT_MODULE" \
-    "${cmd[@]}" 2>&1 >"$tf_log" |
-  tee "$console_log" \
-  && status=$? \
-  || status=$? \
-;
-
-summary="$(
-  if tac "$tf_log" | grep -E -im1 'Plan:|No changes'; then
-    : :D
-  elif cat "$console_log" "$tf_log" | grep -E -im1 'error'; then
-    : D:
-  else
-    echo "summary failed!($?)"
-  fi
-)"
-
-# TODO: hide "commands" in PR comments when exit code is 0
-# TODO: roll up init / refresh phases from tf log
-gha-step-summary >/dev/null <<EOF
-### TACOS Plan: $TF_ROOT_MODULE
-
-<details>
-  <summary>$summary</summary>
-
-  Commands: (exit code: $status)
-
-\`\`\`console
-$(
-  # match `console` syntax highlighting by removing '+ ' from xtrace lines
-  uncolor "$console_log" |
-    sed -r 's/^\++ \$ /\n$ /'
-)
-\`\`\`
-
-  Result:
-
-\`\`\`hcl
-$(cat "$tf_log")
-\`\`\`
-
-</details>
-EOF
 
 gha-set-output artifact_path <<< "$TF_ROOT_MODULE/tfplan" |
   # Invalid characters include: " : < > | * ? \r \n \ /
   tr / ' ' |
   gha-set-output artifact_name \
-;
+>/dev/null
 
-exit "$status"
+exec tf-step-summary "TACOS Plan" "$TACOS_GHA_HOME/"lib/tacos/plan
