@@ -33,13 +33,18 @@ env:
 
 jobs:
   determine-tf-root-modules:
+    # note: we want to noop if they converted to draft first
+    if: |
+      true
+      && github.event.action == 'labeled'
+      && github.event.label.name == ':taco::apply'
+      && github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     permissions:
       contents: read
       pull-requests: write
 
     name: list slices
-    if: github.event.pull_request.draft == false
     outputs:
       slices: ${{ steps.list-slices.outputs.slices }}
 
@@ -58,10 +63,6 @@ jobs:
         uses: ./tacos-gha/.github/actions/list-slices
 
   tacos_apply:
-    # note: we want to noop if they converted to draft first
-    if: |
-      true
-      && github.event.label.name == ':taco::apply'
     needs: [determine-tf-root-modules]
     runs-on: ubuntu-latest
     permissions:
