@@ -28,6 +28,9 @@ ease of use (UI/UX):
 
 testing: (tier 1)
 
+- [ ] terragrunt slice with dependencies
+  - prevent regression: --terragrunt-no-auto-init was exploding during
+    terragrunt-info
 - [ ] run _something_ with debug mode active
 - [ ] ensure below “Test Plan” is covered in automated tests
   - [x] create PR (”PR1”) on one of the slices; see plan in comments

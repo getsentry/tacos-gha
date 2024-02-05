@@ -31,6 +31,18 @@ export TF_CLI_ARGS_refresh="-lock=false -refresh=false"
 export TF_CLI_ARGS_plan="-lock=false -refresh=false"
 export TF_CLI_ARGS_apply="-lock=false -refresh=false"
 
+DEBUG="${DEBUG:-0}"
+if (( DEBUG >= 1 )); then
+  export TF_LOG=debug
+  export TERRAGRUNT_LOG_LEVEL=info
+  set -x
+fi
+if (( DEBUG >= 3 )); then
+  export TERRAGRUNT_LOG_LEVEL=debug
+elif (( DEBUG <= 0 )); then
+  export TERRAGRUNT_LOG_LEVEL=error
+fi
+
 # sed: shorten the absurdly long "module prefix", but don't combine stdout/err
 "$(super "$0")" "$@" \
   0</dev/null \
