@@ -9,7 +9,6 @@ refuse() {
    cat  # pass deeper explanation via stdin
    echo
    echo "Apply request refused: $reason"
-EOF
 ) | gha-step-summary >/dev/null
     exit 1
 }
