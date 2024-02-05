@@ -11,9 +11,23 @@ correctness:
   - set username from pr author on closed event
 - [x] @buck P3: FIXME: tf-lock-info infinite regress if providers are undeclared
 
+security:
+
+- [ ] tf state lock auth -- @trostel has confirmed P2 priority
+  - FIXME: don't use the apply terraformer for the plan workflow
+  - FIXME: need a lower-privilege way to enable locking
+
 ease of use (UI/UX):
 
-- [ ] explain declined apply due to draft status
+- [ ] @ellison user guide
+- [ ] speed - minimize time to plan, round-trip
+  - [ ] optimize setup action
+  - [ ] optimize list-slices action
+    - can we get just the filenames of _.hcl _.tf files?
+    - then we can touch empty files, simulate a clone for
+      determine-relevant-slices
+  - [ ] leverage "narrow" git clones, where possible
+- [x] explain declined apply due to draft status
 - [x] explain declined apply due to missing review
 - [ ] on conflict, provide a link to conflicting PR
 - [ ] @ellison phased allowlist:
@@ -46,7 +60,7 @@ testing: (tier 2)
 - [ ] refuse apply without review
 - [ ] p1: How does apply work in a auto-merge situation?
   - simple: complain if auto-merge is enabled for un-applied change
-  - simple: user documentation? let's dont do that
+  - simple: user documentation? "dont do that"
   - is it possible to disable automerge in that case?
 - [ ] set a terraformer at a repo-subpath .envrc
 - [ ] demo four allowlist phases
@@ -72,9 +86,6 @@ epics:
 
 - [ ] pip packaging
   - FIXME: we need pip packaging
-- [ ] tf state lock auth
-  - FIXME: don't use the apply terraformer for the plan workflow
-  - FIXME: need a lower-privilege way to enable locking
 - [ ] summary steps
   - FIXME: we need a fan-in summary
   - FIXME: this really should be done in a fan-in summary job
