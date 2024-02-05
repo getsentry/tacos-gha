@@ -30,6 +30,10 @@ testing:
   - simple: user documentation? let's dont do that
   - is it possible to disable automerge in that case?
 - [ ] set a terraformer at a repo-subpath .envrc
+- [ ] terragrunt slice with dependencies
+  - prevent regression: --terragrunt-no-auto-init was exploding during
+    terragrunt-info
+- [ ] run _something_ with debug mode active
 - [ ] ensure below “Test Plan” is covered in automated tests
   - [x] create PR (”PR1”) on one of the slices; see plan in comments
   - [ ] set `🌮:apply` label on PR; recieve error message about review
