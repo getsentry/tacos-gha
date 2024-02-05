@@ -5,6 +5,6 @@ set -euo pipefail
 
 cd "$GITHUB_WORKSPACE"
 jq <<< "$TF_ROOT_MODULES" '.[]' -r |
-  xargs -n1 "$TACOS_GHA_HOME/"lib/ci/tacos-unlock |
+  xargs -n1 "$TACOS_GHA_HOME/"lib/tacos/unlock |
   gha-step-summary \
 ;

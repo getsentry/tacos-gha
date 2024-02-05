@@ -1,13 +1,31 @@
 #!/bin/bash
 # Forward stdin to the GHA step summary, and save it to the .summary output of
 # this step.
-set -euxo pipefail
+set -euo pipefail
 
 tee >(
   # step summary and PR comments can't handle ansi-color like GHA logging does =(
   uncolor |
+    sed -r '
+      # clarify noop ":" commands as comments
+      s/^\++ \$ : /\n# /
+
+      # match `console` syntax highlighting by removing "+ " from xtrace lines
+      s/^\++ \$ /\n$ /
+
+      # symbolize some absolute paths 
+      # note: relative paths are too ambiguous, here, becase we chdir some
+      s@~/@'"$HOME"'/@g
+      s@'"$GITHUB_WORKSPACE/$TF_ROOT_MODULE"'@$slice@g
+      s@'"$GITHUB_WORKSPACE"'@$repo@g
+      s@'"$HOME"'/@~/@g
+    ' |
     tee -a "$GITHUB_STEP_SUMMARY" |
     jq -sR |
-    gha-set-output summary \
-  >/dev/null
+    gha-set-output summary |
+  if [[ "$DEBUG" ]]; then
+    cat
+  else
+    cat >/dev/null
+  fi
 )

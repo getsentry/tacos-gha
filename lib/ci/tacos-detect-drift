@@ -4,7 +4,7 @@ BRANCH_NAME=tacos/drift
 
 set -x
 cd "$TF_ROOT_MODULE"
-tf-lock terragrunt-noninteractive plan -detailed-exitcode | tee .drift
+tf-lock terragrunt plan -detailed-exitcode | tee .drift
 
 if (( $? == 2 )); then
   : drift detected!

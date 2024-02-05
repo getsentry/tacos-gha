@@ -12,7 +12,7 @@ def plan_is_clean(tf_root_modules: Iterable[Path]) -> bool:
     """
     sh.banner("checking tf plan...")
     returncode = sh.returncode(
-        ("sudo-gcp", "terragrunt-noninteractive")
+        ("sudo-gcp", "terragrunt")
         + tuple(
             f"--terragrunt-include-dir={tf_root_module}"
             for tf_root_module in tf_root_modules
@@ -32,12 +32,7 @@ def plan_is_clean(tf_root_modules: Iterable[Path]) -> bool:
 
 def apply(tf_root_modules: Iterable[Path]) -> None:
     sh.run(
-        (
-            "env",
-            "GETSENTRY_SAC_VERB=apply",
-            "sudo-gcp",
-            "terragrunt-noninteractive",
-        )
+        ("env", "GETSENTRY_SAC_VERB=apply", "sudo-gcp", "terragrunt")
         + tuple(
             f"--terragrunt-include-dir={tf_root_module}"
             for tf_root_module in tf_root_modules
