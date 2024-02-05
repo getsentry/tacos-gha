@@ -1,35 +1,33 @@
 correctness:
 
 - [x] refuse apply without review
-- [ ] refuse apply for closed PR
-  - [ ] refuse to lock a closed PR?
-- [ ] apply should ignore approval by non-codeowners
-- [ ] FIXME: tf-lock-info infinite regress if providers are undeclared
+  - [x] @buck apply should ignore approval by non-codeowners
+    - i.e. check mergability instead of approvers
+- [x] @ellison refuse apply for closed PR
+  - [x] explain declined apply due to closed PR
+    - suggest re-opening the PR
+- [ ] @ellison unlock even if closed with merge conflicts
+- [x] @ellison unlock even if closed by another user
+  - set username from pr author on closed event
+- [x] @buck P3: FIXME: tf-lock-info infinite regress if providers are undeclared
 
 ease of use (UI/UX):
 
 - [ ] explain declined apply due to draft status
 - [x] explain declined apply due to missing review
-- [ ] explain declined apply due to closed PR
-  - suggest re-opening the PR
 - [ ] on conflict, provide a link to conflicting PR
-- [ ] phased allowlist:
+- [ ] @ellison phased allowlist:
   1.  [x] off
   2.  [ ] plan-only
   3.  [ ] plan-and-lock
   4.  [x] plan-lock-apply
 - [ ] create, show plan even for "ready" PR that can't obtain lock
-- [ ] enable workflow-dispatch from master branch
-- [ ] TODO: hide "commands" in PR comments when exit code is 0
-- [ ] TODO: roll up init / refresh phases from tf log
+- [x] @buck TODO: roll up "commands" in PR comments when exit code is 0
+- [x] @buck TODO: roll up init / refresh phases from tf log
+- [ ] P3: Tell user that merge conflicts are preventing plan/apply
 
-testing:
+testing: (tier 1)
 
-- [ ] p1: How does apply work in a auto-merge situation?
-  - simple: complain if auto-merge is enabled for un-applied change
-  - simple: user documentation? let's dont do that
-  - is it possible to disable automerge in that case?
-- [ ] set a terraformer at a repo-subpath .envrc
 - [ ] ensure below “Test Plan” is covered in automated tests
   - [x] create PR (”PR1”) on one of the slices; see plan in comments
   - [ ] set `🌮:apply` label on PR; recieve error message about review
@@ -39,17 +37,27 @@ testing:
     - [ ] with link to conflicting PR
   - [ ] unlock PR1; update PR2; see PR2 take lock
   - [ ] merge PR2; label PR1 :taco::plan; see PR1 take lock
-- [ ] demo four allowlist phases
-- [ ] automated testing for lib/tf_lock
-- [ ] raise XFailed("Comment not implemented yet.")
 - [ ] raise XFailed("locking not yet implemented")
+- [ ] raise XFailed("Comment not implemented yet.")
+- [ ] explain declined apply due to closed PR
+
+testing: (tier 2)
+
+- [ ] refuse apply without review
+- [ ] p1: How does apply work in a auto-merge situation?
+  - simple: complain if auto-merge is enabled for un-applied change
+  - simple: user documentation? let's dont do that
+  - is it possible to disable automerge in that case?
+- [ ] set a terraformer at a repo-subpath .envrc
+- [ ] demo four allowlist phases
+- [ ] automated testing for lib/tf_lock -- see lib/tf_lock/TESTING.md
 - [ ] raise XFailed("notify_owner action does not exist")
-- [ ] raise XFailed("tacos/drift branch not created")
 - [ ] raise XFailed("terraform changes not yet mergeable")
+- [ ] FIXME: automated testing for lib/tf_lock
 - [ ] sh.banner("TODO: check that the plan matches what we expect")
 - [ ] TODO: check for the opening of the drift remediation branch.
-- [ ] FIXME: automated testing for lib/tf_lock
 - [ ] TODO: anything (scenario: drift detection)
+- [ ] raise XFailed("tacos/drift branch not created")
 
 future improvements:
 

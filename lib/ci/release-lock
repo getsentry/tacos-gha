@@ -2,11 +2,3 @@
 set -euo pipefail
 
 tf-lock-release
-status=$?
-
-set -x
-if [ $status -eq 0 ]; then
-  exit 0
-else
-  exit 1
-fi

@@ -43,6 +43,10 @@ env:
 
 jobs:
   determine-tf-root-modules:
+    if: |
+      false
+      || github.event.action != 'labeled'
+      || github.event.label.name == ':taco::unlock'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -67,10 +71,6 @@ jobs:
         uses: ./tacos-gha/.github/actions/list-slices
 
   tacos_unlock:
-    if: |
-      false
-      || github.event.action != 'labeled'
-      || github.event.label.name == ':taco::unlock'
     needs: [determine-tf-root-modules]
     runs-on: ubuntu-latest
     permissions:
@@ -100,11 +100,22 @@ jobs:
         uses: ./tacos-gha/.github/actions/setup
         with:
           ssh-private-key: ${{ secrets.ssh-private-key }}
+          # Use author's username when unlocking for closed PRs
+          user: |
+            ${{
+              true
+              && github.event_name == 'pull_request'
+              && github.event.action == 'closed'
+
+              && github.event.pull_request.user.login
+
+              || github.actor
+            }}
 
       - name: Unlock
         id: main
         run: |
-          "$TACOS_GHA_HOME/"lib/ci/tacos-unlock
+          tf-step-summary "TACOS Unlock" "$TACOS_GHA_HOME/"lib/tacos/unlock
 
       - name: Update PR
         # we want to report failures, too

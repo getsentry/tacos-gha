@@ -1,0 +1,43 @@
+#!/bin/bash
+set -euo pipefail
+
+usage() {
+  cat >&2 <<'EOF'
+usage: super SCRIPT
+
+Find the next command in your $PATH with the same name as SCRIPT.
+EOF
+}
+
+if [[ "${DEBUG:-}" ]]; then
+  set -x
+fi
+
+script="${1:-}"  # what are we looking for?
+if [[ -x "$script" ]]; then
+  found=false
+elif command -v "$script"; then
+  found=true
+else
+  usage
+  exit 1
+fi
+
+result=""
+for script2 in $(which -a "$(basename "$script")"); do
+  if [[ "$script2" -ef "$script" ]]; then # same file!
+    found=true
+  elif $found; then
+    result="$script2"
+    found=false  # keep going, to avoid cycles
+  else  # one of *our* overrides
+    continue
+  fi
+done
+
+if [[ "$result" ]]; then
+  echo "$result"
+else
+  echo >&2 "No super-script found:" "$script"
+  exit 1
+fi

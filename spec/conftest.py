@@ -7,6 +7,8 @@ from typing import Callable
 from pytest import fixture
 
 from lib import json
+from lib import wait
+from lib.constants import NOW
 from lib.constants import TACOS_GHA_HOME
 from lib.functions import one
 from lib.sh import sh
@@ -29,7 +31,6 @@ GHA_RELEVANT_PATHS = (
     "lib/getsentry-sac",
     "lib/github-actions",
     "lib/tacos",
-    "lib/terragrunt",
     "lib/tf_lock",
     "lib/unix",
 )
@@ -54,6 +55,7 @@ def demo(cwd: OSPath, git_remote: gh.RemoteRepo) -> Generator[gh.LocalRepo]:
 
 @fixture
 def workdir(demo: gh.LocalRepo, environ: Environ) -> Generator[OSPath]:
+    sh.banner("loading .envrc settings")
     with cd(TACOS_GHA_HOME, environ):
         # disallow direnv from unloading our test environment:
         for var in environ:
@@ -71,22 +73,31 @@ def slices_subpath(workdir: OSPath, user: str, test_name: str) -> Path:
     ###return Path(f"env.{user}")
     subpath = OSPath(f"terraform/env.{user}/{test_name}")
     if not subpath.exists():
-        with gh.up_to_date():
-            sh.banner(f"first-time setup: {subpath}")
-            # note: macos cp has no -r option
-            sh.run(("cp", "-a", "terraform/env/prod", subpath))
-            sh.run(("git", "add", subpath))
+        message = f"first-time setup: {subpath}"
+        sh.banner(message)
+        sh.run(("mkdir", "-p", subpath.parent))
+        # note: macos cp has no -r option
+        sh.run(("cp", "terraform/env/.gitignore", subpath.parent))
+        sh.run(("cp", "-a", "terraform/env/prod", subpath))
+        sh.run(("git", "add", subpath.parent))
 
-            # NOTE: terragrunt apply renders templates, causing some diff
-            Slices.from_path(workdir, subpath).apply()
+        all_slices = Slices.from_path(workdir, subpath)
+        all_slices.force_unlock()
+        all_slices.apply()
 
-            sh.banner("first-time setup: commit and push")
-            sh.run(("git", "diff", subpath))
-            sh.run(("git", "add", subpath))
-            sh.run(("git", "commit", "-m", f"auto setup: {subpath}"))
+        # NOTE: terragrunt apply renders templates, causing some diff
+        sh.run(("git", "add", subpath))
 
-            # NOTE: repo config allows force-push to main by all writers
-            sh.run(("git", "push", "-f", "origin", "HEAD:main"))
+        sh.banner("first-time setup: commit and push")
+        pr = gh.PR.open(
+            f"auto-setup/{user}/{NOW.isoformat().replace(':', '_')}/{test_name}",
+            message,
+        )
+
+        sh.banner("first-time setup: approve and merge")
+        pr.approve(tacos_demo.get_reviewer())
+        pr.merge()
+        wait.for_(pr.is_closed)
 
     return subpath
 

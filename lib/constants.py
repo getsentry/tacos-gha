@@ -3,7 +3,6 @@ from __future__ import annotations
 import getpass
 
 from lib.types import OSPath
-from lib.types import Path
 
 from . import functions
 
@@ -11,4 +10,3 @@ from . import functions
 USER = getpass.getuser()
 NOW = functions.now()
 TACOS_GHA_HOME = OSPath(__file__).parents[1]
-EMPTY_PATH = Path("")
