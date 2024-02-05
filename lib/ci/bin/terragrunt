@@ -31,6 +31,10 @@ export TF_CLI_ARGS_refresh="-lock=false -refresh=false"
 export TF_CLI_ARGS_plan="-lock=false -refresh=false"
 export TF_CLI_ARGS_apply="-lock=false -refresh=false"
 
-tgenv exec "$@" 2>&1 |
-  # shorten the danged "module prefixes" to a readable length
-  sed -u 's,'"$PWD"',.,g'
+# sed: shorten the absurdly long "module prefix", but don't combine stdout/err
+"$(super "$0")" "$@" \
+  0</dev/null \
+  1> >( sed "s#$PWD/##g" >&1 ) \
+  2> >( sed "s#$PWD/##g" >&2 ) \
+;
+

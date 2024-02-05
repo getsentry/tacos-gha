@@ -22,8 +22,8 @@ ease of use (UI/UX):
   3.  [ ] plan-and-lock
   4.  [x] plan-lock-apply
 - [ ] create, show plan even for "ready" PR that can't obtain lock
-- [ ] @buck TODO: roll up "commands" in PR comments when exit code is 0
-- [ ] @buck TODO: roll up init / refresh phases from tf log
+- [x] @buck TODO: roll up "commands" in PR comments when exit code is 0
+- [x] @buck TODO: roll up init / refresh phases from tf log
 - [ ] P3: Tell user that merge conflicts are preventing plan/apply
 
 testing: (tier 1)

@@ -3,14 +3,12 @@ from __future__ import annotations
 
 from typing import Callable
 
-from spec.lib import tacos_demo
-from spec.lib.slice import Slices
-
-TEST_NAME = __name__
-
 from pytest import fixture
 
 from lib.parse import Parse
+from spec.lib import tacos_demo
+from spec.lib.slice import Slices
+from spec.lib.testing import assert_sequence_in_log
 
 
 @fixture
@@ -22,8 +20,10 @@ def test(pr: tacos_demo.PR) -> None:
     pr.approve()
     assert pr.is_approved()
 
-    # the taco-apply label causes the plan to become clean:
+    # the taco-apply label causes the plan to become clean (and locked):
     assert not pr.slices.plan_is_clean()
+    pr.slices.assert_unlocked()
+
     since = pr.add_label(":taco::apply")
     assert pr.check("Terraform Apply").wait(since).success
     assert pr.slices.plan_is_clean()
@@ -50,23 +50,28 @@ def test(pr: tacos_demo.PR) -> None:
             Parse(comment).after.last("</summary>").before.first("</details>")
         )
 
-        assert "$ tf-lock-acquire .\ntf-lock-acquire: success: .(" in commands
-        # the next bit is github-username@fake-pr-domain, which seems tricky
-
-        assert """\
+        assert_sequence_in_log(
+            commands,
+            (
+                f"\n$ cd {pr.slices.subpath}/{slice}\n",
+                """
+$ sudo-gcp tf-lock-acquire
+You are authenticated for the next hour as: tacos-gha-tf-apply@sac-dev-sa.iam.gserviceaccount.com
+tf-lock-acquire: success: .(""",  # the next bit is github-username@fake-pr-domain, which seems tricky
+                """
 $ sudo-gcp terragrunt run-all init
 You are authenticated for the next hour as: tacos-gha-tf-apply@sac-dev-sa.iam.gserviceaccount.com
-""" in commands
+""",
+                "\nTerraform has been successfully initialized!\n",
+                "\n$ sudo-gcp terragrunt run-all refresh\n",
+                "\n$ sudo-gcp terragrunt run-all apply --auto-approve\n",
+            ),
+        )
 
+        # lock should continue to be held
         assert "tf-lock-release" not in commands
 
-        for command in (
-            f"cd {pr.slices.subpath}/{slice}",
-            f"sudo-gcp tf-lock-acquire",
-            f"sudo-gcp terragrunt run-all init",
-            f"sudo-gcp terragrunt run-all refresh",
-            f"sudo-gcp terragrunt run-all apply --auto-approve",
-        ):
-            line = f"\n$ {command}\n"
-            assert line in commands
-            commands = commands.after.first(line)
+        tf_result: Parse = Parse(comment).between("</details>", "</details>")
+        assert "\nTerraform will perform the following actions:\n" in tf_result
+
+    pr.slices.assert_locked()

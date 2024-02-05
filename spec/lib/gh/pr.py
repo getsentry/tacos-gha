@@ -237,9 +237,11 @@ class PR:
                 yield run
 
 
-def commit_and_push(branch: Branch, message: object = None) -> None:
+def commit_and_push(branch: Branch, message: object = None) -> datetime:
+    since = mknow()
     sh.run(("git", "checkout", "-qB", branch))
     sh.run(("git", "commit", "-qam", message))
     with gh.up_to_date():
         sh.run(("git", "show", "--stat"))
         sh.run(("git", "push", "origin", f"{branch}:{branch}"))
+    return since

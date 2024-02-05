@@ -54,7 +54,10 @@ class PR(gh.PR):
         branch, message = edit_slices(slices, test_name, branch, message)
         self = cls.open(branch, message, slices=slices, draft=draft)
 
-        sh.banner("PR opened:", self.url)
+        message = "PR opened:"
+        if draft:
+            message = "Draft " + message
+        sh.banner(message, self.url)
 
         return self
 
