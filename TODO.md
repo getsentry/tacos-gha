@@ -28,6 +28,7 @@ ease of use (UI/UX):
 
 testing: (tier 1)
 
+- [ ] run _something_ with debug mode active
 - [ ] ensure below “Test Plan” is covered in automated tests
   - [x] create PR (”PR1”) on one of the slices; see plan in comments
   - [ ] set `🌮:apply` label on PR; recieve error message about review
