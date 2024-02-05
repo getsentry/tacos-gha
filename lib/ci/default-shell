@@ -17,7 +17,7 @@ chmod -R g+rw "$(dirname "$GITHUB_OUTPUT")"
 
 sudo=(
   # switch user to "$USER" (by default this is a noop)
-  sudo --preserve-env -u "$USER"
+  sudo --preserve-env --set-home -u "$USER"
 
   # sudo refuses to preserve certain vars: https://github.com/sudo-project/sudo/blob/main/plugins/sudoers/env.c#L138
   env PATH="$PATH"

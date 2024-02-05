@@ -43,7 +43,15 @@ runs:
         useradd -D
 
         : add the requested username
-        sudo useradd -g "$olduser" -G "$(id -G | tr ' ' ,)" "$newuser"
+        sudo useradd \
+          --gid "$olduser" \
+          --groups "$(id -G | tr ' ' ,)" \
+          "$newuser" \
+        ;
+
+        : make our user share the homedir with the original user
+        newhome="$(getent passwd "$newuser" | cut -d: -f6)"
+        sudo ln -sf "$HOME" "$newhome"
 
         : new user metadata:
         getent passwd "$newuser"
