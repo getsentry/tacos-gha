@@ -1,6 +1,0 @@
-#!/bin/sh
-# print a list of all known terragrunt slices
-terragrunt output-module-groups |
-  jq '.[] | .[]' -r |
-  sed -r 's@^'"$PWD"'/@@' \
-;

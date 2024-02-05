@@ -36,60 +36,10 @@ You may try reopening the PR first.
 EOF
 fi
 
-cmd=(
-  env GETSENTRY_SAC_VERB=apply
-  sudo-gcp
-  tf-lock
-  terragrunt-noninteractive run-all
-  apply --lock=true --auto-approve
-)
-
-tf_log=tf-log.hcl
-console_log=console.log
-with-user-env "$TF_ROOT_MODULE" \
-    "${cmd[@]}" 2>&1 >"$tf_log" |
-  tee "$console_log" \
-  && status=$? \
-  || status=$? \
-;
-
-summary="$(
-  if tac "$tf_log" | grep -E -im1 'complete'; then
-    : :D
-  elif cat "$console_log" "$tf_log" | grep -E -im1 'error'; then
-    : D:
-  else
-    echo "summary failed!($?)"
-  fi
-)"
-
-# TODO: hide "commands" in PR comments when exit code is 0
-# TODO: hide tf-init and tf-refresh outputs from tf log -- run them separate?
-gha-step-summary >/dev/null <<EOF
-### TACOS Apply: $TF_ROOT_MODULE
+tf-step-summary \
+  "TACOS Apply" \
+  "$TACOS_GHA_HOME/lib/tacos/apply" \
+  <<EOF
 
 Approvers: $GITHUB_PR_APPROVERS
-
-<details>
-  <summary>$summary</summary>
-
-  Commands: (exit code: $status)
-
-\`\`\`console
-$(
-  # match `console` syntax highlighting by removing '+ ' from xtrace lines
-  uncolor "$console_log" |
-    sed -r 's/^\++ \$ /\n$ /'
-)
-\`\`\`
-
-  Result:
-
-\`\`\`hcl
-$(cat "$tf_log")
-\`\`\`
-
-</details>
 EOF
-
-exit "$status"
