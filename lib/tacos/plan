@@ -1,0 +1,29 @@
+#!/bin/bash
+set -euo pipefail
+# read as: cp stdout tmp && cp stderr stdout
+# stdout is reserved for tf apply results
+exec 3>&1 1>&2
+
+# note: for terragrunt, tfplan must be absolute
+TACOS_TFPLAN="${TACOS_TFPLAN:-$PWD/tfplan}"
+TACOS_LOCK="${TACOS_LOCK:-false}"
+
+if "$TACOS_LOCK"; then
+  ( set -ex
+    : FIXME: need a lower-privilege way to authorize locking
+    # problem: currently the plan terraformer is very strictly readonly but we need
+    #     to be able to lock/unlock the tfstate in this workflow
+    # planned fix:
+    #     add a "state" terraformer, which can mess with the locks but not infra
+    GETSENTRY_SAC_VERB=apply sudo-gcp tf-lock-acquire
+  )
+fi
+
+quietly sudo-gcp terragrunt run-all init
+
+if "$TACOS_LOCK"; then
+  quietly sudo-gcp terragrunt run-all refresh
+fi
+
+set -x
+sudo-gcp terragrunt run-all plan -out "$TACOS_TFPLAN" >&3

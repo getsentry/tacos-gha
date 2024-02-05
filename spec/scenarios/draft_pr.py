@@ -13,8 +13,6 @@ def test(
     with tacos_demo.PR.opened_for_slices(
         slices, test_name, demo, tacos_branch, draft=True
     ) as pr:
-        sh.banner("Draft PR opened:", pr.url)
-
         # The terraform_plan check should run automatically when the PR is opened
         sh.banner("Wait for the terraform_plan check to complete")
         assert pr.check("Terraform Plan").wait(pr.since).success

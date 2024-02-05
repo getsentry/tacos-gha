@@ -1,0 +1,40 @@
+#!/bin/bash
+# Wrap terragrunt a little to set some CI-friendly defaults.
+# We use the `terragrunt` name so that CI shows copy-pasteable commands.
+# *All* settings here should represent behaviors that people "should expect" to
+# change between CI and local commands.
+set -euo pipefail
+
+## Terragrunt
+export TERRAGRUNT_NON_INTERACTIVE=true
+# configured in tacos-gha.demo/terraform/terragrunt-base.hcl
+# TODO: auto-configure terragrunt retry patterns in tacos-gha
+export TERRAGRUNT_NO_AUTO_RETRY=false
+# we'll do init separately, for cleaner logs
+export TERRAGRUNT_NO_AUTO_INIT=true
+# these should *all* be IAC'd
+export TERRAGRUNT_FAIL_ON_STATE_BUCKET_CREATION=true
+# shown by default, but overrideable
+export TERRAGRUNT_INCLUDE_MODULE_PREFIX=${TERRAGRUNT_INCLUDE_MODULE_PREFIX:-true}
+# we'll be explicit
+export TERRAGRUNT_NO_AUTO_APPROVE=true
+
+## Terraform
+export TF_DETAILED_EXITCODE=1
+
+# Don't try this at home, kids!
+# * we use tf-lock-acquire to take the lock, before terragrunt starts
+# * we run `terraform refresh` separately, in ci-tf-init
+export TF_CLI_ARGS=""
+export TF_CLI_ARGS_init="-lock=false"
+export TF_CLI_ARGS_refresh="-lock=false -refresh=false"
+export TF_CLI_ARGS_plan="-lock=false -refresh=false"
+export TF_CLI_ARGS_apply="-lock=false -refresh=false"
+
+# sed: shorten the absurdly long "module prefix", but don't combine stdout/err
+"$(super "$0")" "$@" \
+  0</dev/null \
+  1> >( sed "s#$PWD/##g" >&1 ) \
+  2> >( sed "s#$PWD/##g" >&2 ) \
+;
+

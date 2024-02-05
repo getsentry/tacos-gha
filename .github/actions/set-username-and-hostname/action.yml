@@ -2,8 +2,8 @@ name: Set Username and Hostname
 
 inputs:
   user:
-    description: use the PR owner, even if someone else re-triggers the job
-    default: ${{github.actor}}
+    description: the username that will be used for following steps
+    required: true
   hostname:
     description: a fake hostname to represent the relevant PR
     default: |-
@@ -37,12 +37,21 @@ runs:
             'former primary group ("docker")'
         sudo usermod -g "$olduser" "$olduser" -aG "$(id -g)"
 
-        newuser="${{inputs.user}}"
+        : remove square brackets from bot names as they are invalid for linux
+        newuser="$( tr -d '[]' <<< "${{inputs.user}}" )"
         : show defaults
         useradd -D
 
         : add the requested username
-        sudo useradd -g "$olduser" -G "$(id -G | tr ' ' ,)" "$newuser"
+        sudo useradd \
+          --gid "$olduser" \
+          --groups "$(id -G | tr ' ' ,)" \
+          "$newuser" \
+        ;
+
+        : make our user share the homedir with the original user
+        newhome="$(getent passwd "$newuser" | cut -d: -f6)"
+        sudo ln -sf "$HOME" "$newhome"
 
         : new user metadata:
         getent passwd "$newuser"
