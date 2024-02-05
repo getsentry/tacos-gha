@@ -18,19 +18,13 @@ tf_working_dir() {
   root_module="$1"
   if [[ -e "$root_module/terragrunt.hcl" ]]; then
     ( cd "$root_module"
-      terragrunt validate-inputs
-      terragrunt terragrunt-info |
+      # validate-inputs makes terragrunt generate its templates
+      terragrunt  --terragrunt-no-auto-init=false validate-inputs
+
+      terragrunt  --terragrunt-no-auto-init=false terragrunt-info |
         jq -r .WorkingDir
     )
   else
     echo "$root_module"
   fi
 }
-
-export TERRAGRUNT_LOG_LEVEL
-if [[ "${DEBUG:-}" ]]; then
-  TERRAGRUNT_LOG_LEVEL=info
-  set -x
-else
-  TERRAGRUNT_LOG_LEVEL=error
-fi
