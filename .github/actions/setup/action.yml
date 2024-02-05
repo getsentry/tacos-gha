@@ -88,6 +88,6 @@ runs:
       shell: ${{inputs.shell}}
       if: inputs.ssh-private-key != ''
       run: |
-        "$TACOS_GHA_HOME/"lib/ssh/setup-ssh-agent <<E_O_K
+        gha-ssh-agent <<E_O_K
         ${{inputs.ssh-private-key}}
         E_O_K
