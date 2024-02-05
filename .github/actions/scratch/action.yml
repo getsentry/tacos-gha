@@ -56,8 +56,6 @@ runs:
 
     - name: Set username and hostname
       uses: ./.github/actions/set-username-and-hostname
-      with:
-        user: ${{github.actor}}
 
     - name: show unix infos (after)
       shell: ${{inputs.shell}}

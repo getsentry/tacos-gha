@@ -34,11 +34,7 @@ class Installation:
 
         return cls(id, app_id, app_secret)
 
-    def token(
-        self, jwt: JWT | None = None, now: datetime | None = None
-    ) -> InstallationToken:
-        if jwt is None:
-            jwt = self.jwt(now)
+    def token(self, jwt: JWT) -> InstallationToken:
         url = (
             f"https://api.github.com/app/installations/{self.id}/access_tokens"
         )

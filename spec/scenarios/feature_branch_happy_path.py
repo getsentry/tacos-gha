@@ -34,7 +34,7 @@ def assert_merged(xfails: XFails) -> None:
 
 
 @pytest.mark.xfail(raises=XFailed)
-def test(pr: tacos_demo.PR) -> None:
+def test(pr: tacos_demo.PR, repo: gh.LocalRepo) -> None:
     xfails: XFails = []
 
     sh.banner("look at your plan")
@@ -49,7 +49,7 @@ def test(pr: tacos_demo.PR) -> None:
     sh.banner("edit, more")
     slices = Slices.from_path(pr.slices.path).random()
     slices.edit()
-    gh.commit_and_push(pr.branch, "more changes")
+    gh.commit_and_push(repo, pr.branch, "more changes")
 
     sh.banner("apply, again")
     apply(pr, xfails)

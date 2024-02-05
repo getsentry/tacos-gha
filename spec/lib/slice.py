@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from random import Random
 from typing import TYPE_CHECKING
 
+from lib.constants import EMPTY_PATH
 from lib.functions import now
 from lib.sh import sh
 from lib.tacos.dependent_slices import TFCategorized
@@ -52,7 +53,7 @@ class Slices:
         return self.workdir / self.subpath
 
     @classmethod
-    def from_path(cls, workdir: OSPath, subpath: Path = Path.EMPTY) -> Self:
+    def from_path(cls, workdir: OSPath, subpath: Path = EMPTY_PATH) -> Self:
         slices_path = workdir / subpath
         tf_categorized = TFCategorized.from_git(slices_path)
         return cls(
@@ -89,12 +90,10 @@ class Slices:
             should_lock = slice in self
 
             assert locked == should_lock, (locked, slice)
-        sh.banner("lock status: locked")
 
     def assert_unlocked(self) -> None:
         for slice in self.all:
             assert not slice.is_locked()
-        sh.banner("lock status: unlocked")
 
     def force_unlock(self) -> None:
         """Unlock these slices, forcefully."""

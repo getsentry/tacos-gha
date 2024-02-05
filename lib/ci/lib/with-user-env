@@ -27,5 +27,5 @@ if (( DEBUG >= 1 )); then
   gha-printenv final
 fi
 
-# Run the wrapped command -- it will handle xtrace itself
+# Run the wrapped command
 "$@"

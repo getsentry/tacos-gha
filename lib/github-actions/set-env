@@ -12,9 +12,4 @@ val="$(tee >(cat >&3))"
 
 # NOTE: separate subprocess substitution, above, to avoid separating var from
 #   value due to reentrancy
-result="$var=$val"
-cat >> "$GITHUB_ENV" <<< "$result"
-
-if (( ${DEBUG:-0} > 1 )); then
-  echo >&2 "gha-set-env: $result"
-fi
+cat >> "$GITHUB_ENV" <<< "$var=$val"

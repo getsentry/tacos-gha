@@ -7,10 +7,6 @@ inputs:
     description: "Private SSH key to use for git clone"
     type: string
     default: ""
-  user:
-    description: the username that will be used for following steps
-    required: false
-    default: ${{github.actor}}
 
 runs:
   using: composite
@@ -20,8 +16,6 @@ runs:
 
     - name: tell TF username and PR
       uses: ./tacos-gha/.github/actions/set-username-and-hostname
-      with:
-        user: ${{inputs.user}}
 
     - name: set workload identity provider
       id: set-workload-identity-provider
@@ -85,9 +79,7 @@ runs:
         GH_TOKEN: ${{ github.token }}
 
     - name: Set up SSH agent
-      shell: ${{inputs.shell}}
       if: inputs.ssh-private-key != ''
-      run: |
-        gha-ssh-agent <<E_O_K
-        ${{inputs.ssh-private-key}}
-        E_O_K
+      uses: webfactory/ssh-agent@v0.8.0
+      with:
+        ssh-private-key: ${{ inputs.ssh-private-key }}

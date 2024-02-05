@@ -20,5 +20,5 @@ set -euo pipefail
   tee -a "$GITHUB_STEP_SUMMARY" |
   # ... and set `summary` output as json-encoded markdown.
   jq -sRr '"summary=\(. | @json)"' \
-  >>"$GITHUB_OUTPUT" \
+  >> "$GITHUB_OUTPUT" \
 ;

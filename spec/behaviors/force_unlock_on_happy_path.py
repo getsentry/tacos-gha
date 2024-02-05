@@ -17,12 +17,8 @@ def test(pr: tacos_demo.PR) -> None:
     assert set(unlock_comments) == pr.slices.slices
 
     for slice, comment in sorted(unlock_comments.items()):
-        assert (
-            Parse(comment).before.first("\n")
-            == f"### TACOS Unlock: {pr.slices.subpath}/{slice}"
-        )
-
         assert "\nTerraform state has been successfully unlocked!\n" in comment
 
-        assert "<summary>tf-lock-release: success: .(" in comment
-        # the next bit is github-username@fake-pr-domain, which seems tricky
+        last_line = Parse(comment).before.last("\n```").after.last("\n")
+        assert last_line.startswith("tf-lock-release: success: ")
+        assert f"/{slice}(" in last_line

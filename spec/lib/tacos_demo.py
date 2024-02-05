@@ -4,7 +4,6 @@ from __future__ import annotations
 from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime
-from functools import cache
 from typing import Self
 
 from lib.constants import NOW
@@ -24,11 +23,6 @@ APP_INSTALLATION_REVIEWER = (
     "op://Team Tacos gha"
     " dev/gh-app--tacos-gha-reviewer/app-installation/sentryio-org"
 )
-
-
-@cache
-def get_reviewer() -> gh.app.Installation:
-    return gh.app.Installation.from_1password(APP_INSTALLATION_REVIEWER)
 
 
 @dataclass(frozen=True)
@@ -52,21 +46,15 @@ class PR(gh.PR):
     ) -> Self:
         edit_workflow_versions(demo, tacos_branch)
         branch, message = edit_slices(slices, test_name, branch, message)
-        self = cls.open(branch, message, slices=slices, draft=draft)
+        gh.commit_and_push(demo, branch, message)
+        self = cls.open(demo, branch, slices=slices, draft=draft)
 
-        message = "PR opened:"
-        if draft:
-            message = "Draft " + message
-        sh.banner(message, self.url)
+        sh.banner("PR opened:", self.url)
 
         return self
 
-    def close(
-        self,
-        app_installation: gh.app.Installation | None = None,
-        now: datetime | None = None,
-    ) -> datetime:
-        return super().close(app_installation, now)
+    def close(self) -> None:
+        super().close()
 
     @classmethod
     @contextmanager
@@ -132,11 +120,16 @@ class PR(gh.PR):
     def approve(
         self,
         app_installation: gh.app.Installation | None = None,
-        now: datetime | None = None,
+        jwt: gh.JWT | None = None,
+        now: datetime = NOW,
     ) -> datetime:
         if app_installation is None:
-            app_installation = get_reviewer()
-        return super().approve(app_installation, now)
+            app_installation = gh.app.Installation.from_1password(
+                APP_INSTALLATION_REVIEWER
+            )
+        if jwt is None:
+            jwt = gh.JWT(app_installation.app, app_installation.secret, now)
+        return super().approve(app_installation, jwt)
 
 
 def edit_workflow_versions(
@@ -158,7 +151,6 @@ def edit_workflow_versions(
                 )),
                 workflow,
             ))
-            sh.run(("git", "add", "-u", workflow_dir))
 
 
 def edit_slices(
@@ -185,6 +177,7 @@ def edit_slices(
         message = ""
     message = f"test: {test_name} ({NOW}){message}"
 
+    # NB: setting an upstream tracking branch makes `gh pr` stop working well
     sh.run(("git", "checkout", "-B", branch))
 
     slices.edit()

@@ -1,7 +1,0 @@
-#!/bin/bash
-set -euxo pipefail
-
-eval "$(ssh-agent -s)"
-gha-set-env SSH_AUTH_SOCK <<< "$SSH_AUTH_SOCK"
-gha-set-env SSH_AGENT_PID <<< "$SSH_AGENT_PID"
-ssh-add -

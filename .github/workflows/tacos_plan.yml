@@ -43,10 +43,6 @@ env:
 
 jobs:
   determine-tf-root-modules:
-    if: |
-      false
-      || github.event.action != 'labeled'
-      || github.event.label.name == ':taco::plan'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -71,6 +67,10 @@ jobs:
         uses: ./tacos-gha/.github/actions/list-slices
 
   tacos_plan:
+    if: |
+      false
+      || github.event.action != 'labeled'
+      || github.event.label.name == ':taco::plan'
     needs: [determine-tf-root-modules]
     runs-on: ubuntu-latest
     permissions:
