@@ -10,8 +10,8 @@ export TERRAGRUNT_NON_INTERACTIVE=true
 # configured in tacos-gha.demo/terraform/terragrunt-base.hcl
 # TODO: auto-configure terragrunt retry patterns in tacos-gha
 export TERRAGRUNT_NO_AUTO_RETRY=false
-# we'll do init separately, for cleaner logs
-export TERRAGRUNT_NO_AUTO_INIT=true
+# this is necessary for recursive init
+export TERRAGRUNT_NO_AUTO_INIT=false
 # these should *all* be IAC'd
 export TERRAGRUNT_FAIL_ON_STATE_BUCKET_CREATION=true
 # shown by default, but overrideable
