@@ -115,9 +115,9 @@ class Slices:
     def force_clean(self) -> None:
         # cleanup: apply main in case the test left things in a dirty state
         sh.banner("cleanup: roll back any drift")
+        self.all.force_unlock()
         sh.run(("git", "-C", self.path, "reset", "--hard", "origin/main"))
-        self.force_unlock()
-        self.apply()
+        self.all.apply()
         sh.banner("cleanup complete")
 
     def __iter__(self) -> Iterator[Slice]:
