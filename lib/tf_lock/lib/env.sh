@@ -28,3 +28,7 @@ tf_working_dir() {
     echo "$root_module"
   fi
 }
+
+if [[ "${DEBUG:-}" ]]; then
+  set -x
+fi
