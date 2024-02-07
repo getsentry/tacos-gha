@@ -30,7 +30,7 @@ def force_unlock(root_module: Path) -> None:
         user, host = lock_info["Who"].split("@")
         sh.run((
             "env",
-            f"GETSENTRY_SAC_VERB=apply",
+            f"GETSENTRY_SAC_VERB=state-admin",
             f"USER={user}",
             f"HOST={host}",
             "sudo-gcp",

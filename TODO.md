@@ -1,3 +1,21 @@
+action items:
+
+- [ ] bug: committing to another persons's pr fails locking
+- [ ] security issue
+- [ ] wide rollout & comms
+- [ ] jira ticket for bucket permissions
+- [ ] backlog to fix test-region bucket
+- [ ] user guide
+  - notification adjustment
+- about drift detection
+  - [ ] allowlist config
+- [ ] fix the test suite
+- [ ] run tests in CI -- stretch
+- [ ] drift remediation -- how will people know when there's a new drift branch?
+  - ensure lock conflict message links to the lock-holding PR
+- [ ] down the old terraform-plan workflow
+  - after full rollout
+
 correctness:
 
 - [x] refuse apply without review
@@ -7,13 +25,14 @@ correctness:
   - [x] explain declined apply due to closed PR
     - suggest re-opening the PR
 - [ ] @ellison unlock even if closed with merge conflicts
+  - let user know why nothing is going to happen
 - [x] @ellison unlock even if closed by another user
   - set username from pr author on closed event
 - [x] @buck P3: FIXME: tf-lock-info infinite regress if providers are undeclared
 
 security:
 
-- [ ] tf state lock auth -- @trostel has confirmed P2 priority
+- [~] tf state lock auth -- @trostel has confirmed P2 priority
   - FIXME: don't use the apply terraformer for the plan workflow
   - FIXME: need a lower-privilege way to enable locking
 
