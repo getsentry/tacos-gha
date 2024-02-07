@@ -25,8 +25,8 @@ def test(
         ) as pr2,
     ):
         checks: dict[tacos_demo.PR, gh.CheckRun] = {
-            pr1: pr1.check("Terraform Lock").wait(),
-            pr2: pr2.check("Terraform Lock").wait(),
+            pr1: pr1.check("Terraform Plan").wait(),
+            pr2: pr2.check("Terraform Plan").wait(),
         }
 
         for pr, check in checks.items():
