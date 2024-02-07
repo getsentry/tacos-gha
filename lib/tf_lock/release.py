@@ -1,21 +1,17 @@
 #!/usr/bin/env python3.12
 from __future__ import annotations
 
-from typing import Callable
 from typing import Mapping
-from typing import ParamSpec
 from typing import Tuple
-from typing import TypeVar
 
 from lib import json
 from lib.sh import sh
 from lib.types import OSPath
 from lib.types import Path
+from lib.user_error import UserError
 
 HERE = sh.get_HERE(__file__)
 Environ = Mapping[str, str]
-T = TypeVar("T")
-P = ParamSpec("P")
 TF_LOCK_EHELD = 3
 
 
@@ -23,30 +19,6 @@ def info(msg: object) -> None:
     from sys import stderr
 
     print(msg, file=stderr, flush=True)
-
-
-class UserError(SystemExit):
-    def __init__(self, message: object = None, *, code: int | None = None):
-        if code is None:
-            code = 1
-        super().__init__(code)
-        self.message = message
-        self.args: tuple[object, ...] = (message,)
-
-    @classmethod
-    def handler(cls, func: Callable[P, T]) -> Callable[P, T]:
-        from functools import wraps
-
-        @wraps(func)
-        def wrapped(*args: P.args, **kwargs: P.kwargs) -> T:
-            try:
-                return func(*args, **kwargs)
-            except cls as error:
-                if error.message is not None:
-                    info(error.message)
-                raise
-
-        return wrapped
 
 
 def get_current_user(env: Environ) -> str:
