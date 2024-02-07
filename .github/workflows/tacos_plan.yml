@@ -28,18 +28,9 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
   cancel-in-progress: true
 
-# FIXME: don't use the apply terraformer for the plan workflow
-# problem: currently the plan terraformer is very strictly readonly but we need
-#     to be able to lock/unlock the tfstate in this workflow
-# proposals:
-#   1. add a third "planlock" member to the terraformer? We want to grant write
-#       permissions just enough for locking state.
-#   2. add an ACL to grant this specific permission, but this is deprecated
-#       https://cloud.google.com/storage/docs/access-control/lists
-#   3. use conditional IAM (i.e. add some CEL code) to condtionally grant the
-#       planner write to just the lock file
+# FIXME: only use state-admin access for a locking (non-draft) plan
 env:
-  GETSENTRY_SAC_VERB: apply
+  GETSENTRY_SAC_VERB: state-admin
 
 jobs:
   determine-tf-root-modules:
