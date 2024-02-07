@@ -217,7 +217,8 @@ class PR:
     @classmethod
     def wait_for(cls, branch: str, since: datetime, timeout: int = 60) -> Self:
         def branch_pr() -> Self | None:
-            assert sh.success(("gh", "pr", "view", branch))
+            if not sh.success(("gh", "pr", "view", branch)):
+                return None
             return cls.from_branch(branch, since)
 
         return wait.for_(branch_pr, timeout=timeout, sleep=5)
