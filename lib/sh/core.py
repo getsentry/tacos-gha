@@ -30,7 +30,9 @@ def get_HERE(__file__: str) -> OSPath:
     return OSPath(__file__).parent.resolve()
 
 
-def run(cmd: Command, env: Environ | None = None) -> None:
+def run(
+    cmd: Command, env: Environ | None = None, input: str | None = None
+) -> None:
     """Run a command to completion. Raises on error.
 
     >>> run(('echo', 'ok'))
@@ -39,7 +41,7 @@ def run(cmd: Command, env: Environ | None = None) -> None:
         ...
     subprocess.CalledProcessError: Command '('false', 'not ok')' returned non-zero exit status 1.
     """
-    _wait(_popen(cmd, env=env))
+    _wait(_popen(cmd, env=env, input=input), input=input)
 
 
 def stdout(cmd: Command) -> str:
@@ -113,6 +115,7 @@ def _popen(
     capture_output: bool = False,
     encoding: str = US_ASCII,
     env: Environ | None = None,
+    input: str | None = None,
 ) -> Popen[str]:
     import subprocess
 
@@ -121,6 +124,11 @@ def _popen(
     if cmd[0] == ":":
         # : is the POSIX-specified shell builtin for 'true', but we've no shell
         cmd = ("true",) + cmd[1:]
+
+    if input is not None:
+        stdin = subprocess.PIPE
+    else:
+        stdin = None
 
     if capture_output:
         stdout = subprocess.PIPE
@@ -139,6 +147,7 @@ def _popen(
         tuple(_stringify(arg) for arg in cmd),
         text=True,
         encoding=encoding,
+        stdin=stdin,
         stdout=stdout,
         env=env,
         close_fds=False,
