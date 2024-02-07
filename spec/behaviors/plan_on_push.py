@@ -58,12 +58,12 @@ def test(pr: tacos_demo.PR, test_name: str) -> None:
                 f"\n$ cd {pr.slices.subpath}/{slice}\n",
                 """\
 $ sudo-gcp tf-lock-acquire
-You are authenticated for the next hour as: tacos-gha-tf-apply@sac-dev-sa.iam.gserviceaccount.com
+You are authenticated for the next hour as: tacos-gha-tf-state-admin@sac-dev-sa.iam.gserviceaccount.com
 tf-lock-acquire: success: .(""",  # the next bit is github-username@fake-pr-domain, which seems tricky
                 """\
 
 $ sudo-gcp terragrunt run-all init
-You are authenticated for the next hour as: tacos-gha-tf-apply@sac-dev-sa.iam.gserviceaccount.com
+You are authenticated for the next hour as: tacos-gha-tf-state-admin@sac-dev-sa.iam.gserviceaccount.com
 """,
                 "\nTerraform has been successfully initialized!\n",
                 "\n$ sudo-gcp terragrunt run-all refresh\n",
