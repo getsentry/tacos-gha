@@ -4,4 +4,8 @@ set -euxo pipefail
 eval "$(ssh-agent -s)"
 gha-set-env SSH_AUTH_SOCK <<< "$SSH_AUTH_SOCK"
 gha-set-env SSH_AGENT_PID <<< "$SSH_AGENT_PID"
-ssh-add -
+
+# keys are appear on stdin, concatenated
+python3.12 -m lib.github_actions.ssh_add
+
+ssh-add -L
