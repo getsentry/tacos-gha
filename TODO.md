@@ -1,6 +1,6 @@
 action items:
 
-- [ ] @ellison bug: committing to another persons's pr fails locking
+- [x] @ellison bug: committing to another persons's pr fails locking
 - [ ] @buck security issue
   - [~] tf state lock auth -- @trostel has confirmed P2 priority
     - FIXME: don't use the apply terraformer for the plan workflow
