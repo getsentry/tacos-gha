@@ -1,16 +1,17 @@
 #!/usr/bin/env py.test
 from __future__ import annotations
 
-import pytest
-
 from lib.sh import sh
 from spec.lib import tacos_demo
 from spec.lib.gh import gh
 from spec.lib.slice import Slices
-from spec.lib.xfail import XFailed
+
+MESSAGE = """
+$ sudo-gcp tf-lock-acquire
+You are authenticated for the next hour as: tacos-gha-tf-state-admin@sac-dev-sa.iam.gserviceaccount.com
+tf-lock-acquire: failure: not """
 
 
-@pytest.mark.xfail(raises=XFailed)
 def test(
     slices: Slices, test_name: str, demo: gh.LocalRepo, tacos_branch: gh.Branch
 ) -> None:
@@ -35,7 +36,7 @@ def test(
             elif conclusion == "FAILURE":
                 loser = pr
                 sh.banner("Loser does not acquire the lock")
-                print(winner)
+                print(loser)
             else:
                 raise AssertionError(f"Unexpected conclusion: {conclusion}")
 
@@ -43,20 +44,21 @@ def test(
         assert winner.check("Terraform Plan").wait().success
 
         sh.banner("Loser recieves a comment about the locking failure")
-        try:
-            assert loser is not None
-        except AssertionError:
-            raise XFailed("locking not yet implemented")
-        assert (
-            "lock failed, on slice prod/slice-3-vm, due to user1, PR #334 "
-            in loser.comments(loser.since)
-        )
+        assert loser is not None
+        comments = loser.get_comments_for_job("plan")
+        for slice in loser.slices:
+            assert MESSAGE in comments[slice]
+
+        sh.banner("Winner doesn't")
+        comments = winner.get_comments_for_job("plan")
+        for slice in winner.slices:
+            assert MESSAGE not in comments[slice]
 
         sh.banner("Winner closes their PR")
-        winner.close()
+        since = winner.close()
+        assert winner.check("Terraform Unlock").wait().success
 
-        sh.banner("Loser adds the :taco::acquire-lock label")
-        since = loser.add_label(":taco::acquire-lock")
-
-        sh.banner("Loser acquires the lock")
+        # TODO: add a :taco::lock label
+        sh.banner("Loser gets the lock, using :taco::lock label")
+        since = loser.add_label(":taco::plan")
         assert loser.check("Terraform Plan").wait(since).success
