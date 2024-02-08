@@ -14,8 +14,11 @@ EOF
     set -x
     git grep -Ei '(todo|fixme|xxx)[: (]|raise xfail'
   ) |
-    grep -E -v '^[^:]*\.md:|\<grep\>' |
-    sed -r 's/^[^:]+:[ #:]*//' |
+    grep -E -v '^TODO|\<grep\>' |
+    sed -r '
+      s/^[^:]+:[ #:]*//
+      s/^[ ]*[-*][ ]*//
+    ' |
     sort -u \
   ;
 
