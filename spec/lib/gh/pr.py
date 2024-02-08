@@ -55,6 +55,7 @@ class PR:
         draft: bool = False,
         **attrs: object,
     ) -> Self:
+        sh.run(("git", "checkout", "-b", branch))
         since = mknow()
         commit_and_push(branch, message)
         url = sh.stdout(

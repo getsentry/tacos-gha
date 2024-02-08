@@ -51,6 +51,7 @@ class PR(gh.PR):
         message: object = None,
         draft: bool = False,
     ) -> Self:
+        sh.run(("git", "checkout", "-q", "origin/main"))
         edit_workflow_versions(demo, tacos_branch)
         branch, message = edit_slices(slices, test_name, branch, message)
         self = cls.open(branch, message, slices=slices, draft=draft)
@@ -191,8 +192,6 @@ def edit_slices(
     else:
         message = ""
     message = f"test: {test_name} ({NOW}){message}"
-
-    sh.run(("git", "checkout", "-q", "origin/main", "-B", branch))
 
     slices.edit()
     return branch, message
