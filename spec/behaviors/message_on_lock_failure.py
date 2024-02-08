@@ -1,18 +1,47 @@
 #!/usr/bin/env py.test
 from __future__ import annotations
 
-import pytest
-
+from lib.sh import sh
 from spec.lib import tacos_demo
 from spec.lib.gh import gh
+from spec.lib.slice import Slice
 from spec.lib.slice import Slices
-from spec.lib.xfail import XFailed
 
-MESSAGE = "lock failed, on slice prod/slice-3-vm, due to user1, PR #334 "
+# TODO: improve the conflict message: "lock failed, on slice prod/slice-3-vm, due to user1, PR #334 "
+CONFLICT_MESSAGE = """
+$ sudo-gcp tf-lock-acquire
+You are authenticated for the next hour as: tacos-gha-tf-state-admin@sac-dev-sa.iam.gserviceaccount.com
+tf-lock-acquire: failure: not """
 
 
-# reason="locking not yet implemented"
-@pytest.mark.xfail(raises=XFailed)
+def assert_there_can_be_only_one(slice: Slice, *prs: tacos_demo.PR) -> None:
+    sh.banner(f"Slice: {slice}")
+
+    checks: dict[tacos_demo.PR, gh.CheckRun] = {
+        pr: pr.check(
+            "Terraform Plan", f"tacos_plan ({pr.slices.subpath / slice})"
+        ).wait()
+        for pr in prs
+    }
+    assert {check.conclusion for check in checks.values()} == {
+        "SUCCESS",
+        "FAILURE",
+    }
+
+    for pr, check in checks.items():
+        comments = pr.get_comments_for_job("plan")
+        if check.conclusion == "SUCCESS":
+            print("Winner:", pr.url)
+            for slice in pr.slices:
+                assert CONFLICT_MESSAGE not in comments[slice]
+        elif check.conclusion == "FAILURE":
+            print("Loser:", pr.url)
+            for slice in pr.slices:
+                assert CONFLICT_MESSAGE in comments[slice]
+        else:
+            raise AssertionError(check)
+
+
 def test(
     test_name: str, slices: Slices, demo: gh.LocalRepo, tacos_branch: gh.Branch
 ) -> None:
@@ -24,27 +53,5 @@ def test(
             slices, test_name, demo, tacos_branch, branch=2
         ) as pr2,
     ):
-        checks: dict[tacos_demo.PR, gh.CheckRun] = {
-            pr1: pr1.check("Terraform Plan").wait(),
-            pr2: pr2.check("Terraform Plan").wait(),
-        }
-
-        for pr, check in checks.items():
-            comments = pr.comments(since=check.started_at)
-            if check.conclusion == "SUCCESS":
-                assert MESSAGE not in comments
-            elif check.conclusion == "FAILURE":
-                assert MESSAGE in comments
-            else:
-                raise AssertionError(check)
-
-        try:
-            assert {check.conclusion for check in checks.values()} == {
-                "SUCCESS",
-                "FAILURE",
-            }
-        except AssertionError:
-            assert {check.conclusion for check in checks.values()} == {
-                "SUCCESS"
-            }
-            raise XFailed("locking not yet implemented")
+        for slice in slices:
+            assert_there_can_be_only_one(slice, pr1, pr2)

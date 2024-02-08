@@ -8,7 +8,8 @@ working_dir="$(tf_working_dir "$root_module")"
 
 # at most 1 reiteration should be necessary
 i=0
-while (( i < 10 )); do
+limit=3
+while (( i < limit )); do
   (( i += 1 ))
 
 
@@ -38,7 +39,7 @@ while (( i < 10 )); do
     then
     ( # NB: need to undo the cd to keep relative paths valid
       cd "$working_dir"
-      if ! noise="$(terraform init 2>&1)"; then
+      if ! noise="$(terraform init 2>&1)" || (( i == limit )); then
         echo >&2 Terraform init failed!
         echo >&2 "$noise"
         exit 1

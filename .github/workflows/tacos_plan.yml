@@ -2,7 +2,7 @@ name: TACOS Plan
 
 # downstream projects should use events:
 ###pull_request:
-###  types: [opened, synchronize, reopened, ready_for_review]
+###  types: [labeled, opened, synchronize, reopened, ready_for_review]
 
 on:
   workflow_call:
@@ -91,6 +91,29 @@ jobs:
         uses: ./tacos-gha/.github/actions/setup
         with:
           ssh-private-key: ${{ secrets.ssh-private-key }}
+          # We explicitly list the low-concern actions, during which users
+          # will use the identity of the original PR author.
+          # see doc/permissions.md
+          user: |
+            ${{
+              true
+              && github.event_name == 'pull_request'
+              && (
+                  false
+                  || (
+                      true
+                      && github.event.action == 'labeled'
+                      && github.event.label.name == ':taco::plan'
+                  )
+                  || github.event.action == 'ready_for_review'
+                  || github.event.action == 'synchronize'
+                  || github.event.action == 'reopened'
+              )
+
+              && github.event.pull_request.user.login
+
+              || github.triggering_actor
+            }}
 
       - name: Plan
         id: main

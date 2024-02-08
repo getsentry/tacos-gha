@@ -18,6 +18,7 @@ from lib.types import Generator
 from lib.types import OSPath
 from lib.types import Path
 from spec.lib import tacos_demo
+from spec.lib import tf
 from spec.lib.gh import gh
 from spec.lib.slice import Slices
 
@@ -82,6 +83,10 @@ def slices_subpath(workdir: OSPath, user: str, test_name: str) -> Path:
         sh.run(("git", "add", subpath.parent))
 
         all_slices = Slices.from_path(workdir, subpath)
+        with sh.cd(all_slices.path):
+            # if the slice never existed before,
+            # this is needed to create GCS objects
+            tf.init(all_slices)
         all_slices.force_unlock()
         all_slices.apply()
 
@@ -124,9 +129,16 @@ def slices(
 @fixture
 def tacos_branch() -> str:
     with sh.cd(TACOS_GHA_HOME):
-        result = one(
-            sh.lines(("git", "symbolic-ref", "-q", "--short", "HEAD"))
-        )
+        try:
+            result = one(
+                sh.lines(("git", "symbolic-ref", "-q", "--short", "HEAD"))
+            )
+        except AssertionError:
+            raise AssertionError(
+                "Could not find a name for your git branch."
+                + " Are you on a detached HEAD?"
+            )
+
         # push any GHA-relevant changes
         if result != "main":
             if not sh.success(

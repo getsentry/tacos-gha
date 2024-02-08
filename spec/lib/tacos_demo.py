@@ -1,6 +1,7 @@
 #!/usr/bin/env py.test
 from __future__ import annotations
 
+import dataclasses
 from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime
@@ -50,6 +51,7 @@ class PR(gh.PR):
         message: object = None,
         draft: bool = False,
     ) -> Self:
+        sh.run(("git", "checkout", "-q", "origin/main"))
         edit_workflow_versions(demo, tacos_branch)
         branch, message = edit_slices(slices, test_name, branch, message)
         self = cls.open(branch, message, slices=slices, draft=draft)
@@ -138,6 +140,12 @@ class PR(gh.PR):
             app_installation = get_reviewer()
         return super().approve(app_installation, now)
 
+    def with_slices(self, slices: Slices) -> Self:
+        return dataclasses.replace(self, slices=slices)
+
+    def __str__(self) -> str:
+        return self.url
+
 
 def edit_workflow_versions(
     demo: gh.LocalRepo, tacos_branch: gh.Branch
@@ -184,8 +192,6 @@ def edit_slices(
     else:
         message = ""
     message = f"test: {test_name} ({NOW}){message}"
-
-    sh.run(("git", "checkout", "-B", branch))
 
     slices.edit()
     return branch, message
