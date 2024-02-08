@@ -6,20 +6,15 @@ from lib.parse import Parse
 from spec.lib import tacos_demo
 from spec.lib.gh import gh
 from spec.lib.slice import Slice
-from spec.lib.slice import Slices
 from spec.lib.testing import assert_sequence_in_log
 
 
 def test(pr: tacos_demo.PR, test_name: str) -> None:
-    slices_random = pr.slices.all.random()
+    slices2 = pr.slices.with_some_overlap()
     branch, message = tacos_demo.edit_slices(
-        slices_random, test_name, message="more code"
+        slices2, test_name, message="more code"
     )
-    slices = Slices(
-        slices=(pr.slices.slices | slices_random.slices),
-        subpath=slices_random.subpath,
-        workdir=slices_random.workdir,
-    )
+    pr = pr.with_slices(pr.slices | slices2)
 
     since = gh.commit_and_push(branch, message)
     assert pr.check("Terraform Plan").wait(since).success
@@ -28,7 +23,7 @@ def test(pr: tacos_demo.PR, test_name: str) -> None:
         comments = pr.get_comments_for_job("plan", since)
 
         slices_found = frozenset(comments)
-        assert slices.slices == slices_found
+        assert pr.slices.slices == slices_found
         return comments
 
     comments = wait.for_(get_comments)

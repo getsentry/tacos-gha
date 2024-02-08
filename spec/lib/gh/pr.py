@@ -55,6 +55,7 @@ class PR:
         draft: bool = False,
         **attrs: object,
     ) -> Self:
+        sh.run(("git", "checkout", "-b", branch))
         since = mknow()
         commit_and_push(branch, message)
         url = sh.stdout(
@@ -240,9 +241,8 @@ class PR:
 
 def commit_and_push(branch: Branch, message: object = None) -> datetime:
     since = mknow()
-    sh.run(("git", "checkout", "-qB", branch))
     sh.run(("git", "commit", "-qam", message))
     with gh.up_to_date():
         sh.run(("git", "show", "--stat"))
-        sh.run(("git", "push", "origin", f"{branch}:{branch}"))
+        sh.run(("git", "push", "origin", f"HEAD:{branch}"))
     return since

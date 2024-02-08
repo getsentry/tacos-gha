@@ -61,18 +61,20 @@ class Slices:
             slices=frozenset(Slice(slice) for slice in tf_categorized.slices),
         )
 
+    def with_slices(self, slices: frozenset[Slice]) -> Self:
+        cls = type(self)
+        return cls(workdir=self.workdir, subpath=self.subpath, slices=slices)
+
     def random(self, seed: object = None, count: int | None = None) -> Self:
+        if len(self.slices) <= 1:
+            return self
+
         random = Random(seed)
         if count is None:
             count = random.randint(1, len(self.slices) - 1)
 
-        cls = type(self)
         slices = random.sample(tuple(self.slices), count)
-        return cls(
-            workdir=self.workdir,
-            subpath=self.subpath,
-            slices=frozenset(slices),
-        )
+        return self.with_slices(frozenset(slices))
 
     def edit(self) -> None:
         for slice in self:
@@ -80,8 +82,7 @@ class Slices:
 
     @property
     def all(self) -> Self:
-        cls = type(self)
-        return cls.from_path(self.workdir, self.subpath)
+        return self.from_path(self.workdir, self.subpath)
 
     def assert_locked(self) -> None:
         for slice in self.all:
@@ -115,20 +116,44 @@ class Slices:
     def force_clean(self) -> None:
         # cleanup: apply main in case the test left things in a dirty state
         sh.banner("cleanup: roll back any drift")
+        self.all.force_unlock()
         sh.run(("git", "-C", self.path, "reset", "--hard", "origin/main"))
-        self.force_unlock()
-        self.apply()
+        self.all.apply()
         sh.banner("cleanup complete")
+
+    def with_some_overlap(self, other: Self | None = None) -> Self:
+        """A set of common and uncommon slices, wrt `self` and `other`=all."""
+        if other is None:
+            other = self.all
+
+        # take a random sample from all three parts of the Venn diagram
+        return (
+            (self - other).random()
+            | (self & other).random()
+            | (other - self).random()
+        )
+
+    def __len__(self) -> int:
+        return len(self.slices)
 
     def __iter__(self) -> Iterator[Slice]:
         return iter(self.slices)
 
-    def __sub__(self, other: Self) -> Self:
-        if (self.workdir, self.subpath) == (other.workdir, other.subpath):
-            raise ValueError("can't subtract unrelated", self, other)
+    def _check_related(self, other: Self) -> None:
+        if (self.workdir, self.subpath) != (other.workdir, other.subpath):
+            raise ValueError("unrelated slice sets", self, other)
 
-        cls = type(self)
-        return cls(self.workdir, self.subpath, self.slices - other.slices)
+    def __sub__(self, other: Self) -> Self:
+        self._check_related(other)
+        return self.with_slices(self.slices - other.slices)
+
+    def __and__(self, other: Self) -> Self:
+        self._check_related(other)
+        return self.with_slices(self.slices & other.slices)
+
+    def __or__(self, other: Self) -> Self:
+        self._check_related(other)
+        return self.with_slices(self.slices | other.slices)
 
     def __contains__(self, other: Slice) -> bool:
         return other in self.slices

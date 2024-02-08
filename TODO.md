@@ -1,19 +1,23 @@
 action items:
 
-- [ ] bug: committing to another persons's pr fails locking
-- [ ] security issue
+- [ ] @ellison bug: committing to another persons's pr fails locking
+- [ ] @buck security issue
+  - [~] tf state lock auth -- @trostel has confirmed P2 priority
+    - FIXME: don't use the apply terraformer for the plan workflow
+    - FIXME: need a lower-privilege way to enable locking
 - [ ] wide rollout & comms
-- [ ] jira ticket for bucket permissions
-- [ ] backlog to fix test-region bucket
-- [ ] user guide
-  - notification adjustment
+- [ ] @buck jira ticket for bucket permissions
+- [ ] @buck backlog to fix test-region bucket
+- [ ] @ellison user guide
+  - how-to: avoid GHA notification spam
 - about drift detection
   - [ ] allowlist config
-- [ ] fix the test suite
-- [ ] run tests in CI -- stretch
-- [ ] drift remediation -- how will people know when there's a new drift branch?
+- [ ] @buck fix the test suite
+- [ ] @buck run tests in CI -- stretch
+- [ ] @buck drift remediation -- how will people know when there's a new drift
+      branch?
   - ensure lock conflict message links to the lock-holding PR
-- [ ] down the old terraform-plan workflow
+- [ ] @ellison down the old terraform-plan workflow
   - after full rollout
 
 correctness:
@@ -24,21 +28,23 @@ correctness:
 - [x] @ellison refuse apply for closed PR
   - [x] explain declined apply due to closed PR
     - suggest re-opening the PR
-- [ ] @ellison unlock even if closed with merge conflicts
-  - let user know why nothing is going to happen
+- [ ] @ellison Tell user that merge conflicts are preventing plan/apply
 - [x] @ellison unlock even if closed by another user
   - set username from pr author on closed event
 - [x] @buck P3: FIXME: tf-lock-info infinite regress if providers are undeclared
 
 security:
 
-- [~] tf state lock auth -- @trostel has confirmed P2 priority
-  - FIXME: don't use the apply terraformer for the plan workflow
-  - FIXME: need a lower-privilege way to enable locking
-
 ease of use (UI/UX):
 
+- [ ] on conflict, provide a link to conflicting PR
 - [ ] @ellison user guide
+- [ ] @ellison phased allowlist:
+  1.  [x] off
+  2.  [ ] plan-only
+  3.  [ ] plan-and-lock
+  4.  [x] plan-lock-apply
+  5.  [ ] drift detection
 - [ ] speed - minimize time to plan, round-trip
   - [ ] optimize setup action
   - [ ] optimize list-slices action
@@ -46,18 +52,11 @@ ease of use (UI/UX):
     - then we can touch empty files, simulate a clone for
       determine-relevant-slices
   - [ ] leverage "narrow" git clones, where possible
+- [ ] create, show plan even for "ready" PR that can't obtain lock
 - [x] explain declined apply due to draft status
 - [x] explain declined apply due to missing review
-- [ ] on conflict, provide a link to conflicting PR
-- [ ] @ellison phased allowlist:
-  1.  [x] off
-  2.  [ ] plan-only
-  3.  [ ] plan-and-lock
-  4.  [x] plan-lock-apply
-- [ ] create, show plan even for "ready" PR that can't obtain lock
 - [x] @buck TODO: roll up "commands" in PR comments when exit code is 0
 - [x] @buck TODO: roll up init / refresh phases from tf log
-- [ ] P3: Tell user that merge conflicts are preventing plan/apply
 
 testing: (tier 1)
 
@@ -104,6 +103,12 @@ future improvements:
 - [ ] FIXME: use a more specific type than str
 - [ ] TODO: workflow to automatically add taco:stale label as appropriate
 - [ ] TODO: workflow to automatically add taco:abandoned label as appropriate
+- [ ] convert lib/tf-lock to use the (private!?) golang api
+  - will need to fork terraform -- it's the only way to force un-private in go
+  - this will help with several issues:
+    - listing all locked slices efficiently
+    - locking slices efficiently (don't need to kill -9 terraform-console)
+    - retrieving lock info (don't need to parse terraform-force-unlock errors)
 
 epics:
 
