@@ -185,7 +185,7 @@ def edit_slices(
         message = ""
     message = f"test: {test_name} ({NOW}){message}"
 
-    sh.run(("git", "checkout", "-B", branch))
+    sh.run(("git", "checkout", "-q", "origin/main", "-B", branch))
 
     slices.edit()
     return branch, message

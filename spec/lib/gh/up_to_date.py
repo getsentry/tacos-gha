@@ -22,5 +22,6 @@ def up_to_date() -> Generator[None]:
 
         sh.run(("flock", fd))  # this may take time
         sh.run(("git", "status"))
-        sh.run(("git", "pull", "--rebase", "origin", "main"))
+        # rebase=false means "merge" /shrug
+        sh.run(("git", "pull", "--rebase=false", "origin", "main"))
         yield
