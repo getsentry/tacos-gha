@@ -4,7 +4,6 @@ from __future__ import annotations
 import pytest
 
 from lib.sh import sh
-from lib.types import OSPath
 from spec.lib import tacos_demo
 from spec.lib.gh import gh
 from spec.lib.slice import Slices
@@ -12,20 +11,15 @@ from spec.lib.slice import Slices
 
 @pytest.mark.xfail(reason="Locking not yet implemented")
 def test(
-    workdir: OSPath,
-    test_name: str,
-    demo: gh.LocalRepo,
-    tacos_branch: gh.Branch,
+    test_name: str, demo: gh.LocalRepo, tacos_branch: gh.Branch, slices: Slices
 ) -> None:
-    all_slices = Slices.from_path(workdir)
-    slices1 = all_slices.random()
-    slices2 = all_slices - slices1
+    slices2 = (slices.all - slices).random()
 
-    sh.banner(f"User 1 opens a PR for some slices: {slices1}")
+    sh.banner(f"User 1 opens a PR for some slices: {slices}")
     sh.banner(f"User 2 opens a PR for separate slices: {slices2}")
     with (
         tacos_demo.PR.opened_for_slices(
-            slices1, test_name, demo, tacos_branch
+            slices, test_name, demo, tacos_branch
         ) as pr1,
         tacos_demo.PR.opened_for_slices(
             slices2, test_name, demo, tacos_branch
