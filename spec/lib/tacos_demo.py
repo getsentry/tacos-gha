@@ -1,6 +1,7 @@
 #!/usr/bin/env py.test
 from __future__ import annotations
 
+import dataclasses
 from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime
@@ -137,6 +138,12 @@ class PR(gh.PR):
         if app_installation is None:
             app_installation = get_reviewer()
         return super().approve(app_installation, now)
+
+    def with_slices(self, slices: Slices) -> Self:
+        return dataclasses.replace(self, slices=slices)
+
+    def __str__(self) -> str:
+        return self.url
 
 
 def edit_workflow_versions(
