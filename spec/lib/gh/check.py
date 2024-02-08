@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+import dataclasses
 from collections import defaultdict
 from dataclasses import dataclass
 from datetime import datetime
 from typing import TYPE_CHECKING
 
 from lib import wait
+from lib.functions import now
 from lib.sh import sh
 
 from .types import CheckName
@@ -25,7 +27,7 @@ class DidNotRun(Exception):
 class CheckFilter:
     pr: PR
     workflow: WorkflowName
-    name: CheckName | None
+    check: CheckName | None
 
     def latest(self, since: datetime) -> Generator[CheckRun]:
         """Return the _most recent_ status of the named check."""
@@ -38,9 +40,9 @@ class CheckFilter:
                 and run.started_at > since
                 and run.workflow == self.workflow
                 and (
-                    self.name is None
-                    or run.name == self.name
-                    or run.job.startswith(self.name)
+                    self.check is None
+                    or run.name == self.check
+                    or run.job.startswith(self.check)
                 )
             ):
                 buckets[run.name].append(run)
@@ -49,6 +51,20 @@ class CheckFilter:
             run = max(runs)
             sh.info(run)
             yield run
+
+    def exists(self, since: datetime) -> CheckRun | None:
+        """Does such a thing exist, at all?"""
+        __tracebackhide__ = True
+
+        filter = dataclasses.replace(self, check=None)
+
+        runs = tuple(filter.latest(since))
+        if not runs:
+            return None
+
+        run = max(runs, key=lambda run: run.relevance)
+        sh.banner(run.url)
+        return run
 
     def ran(self, since: datetime) -> CheckRun | None:
         """Did a specified github-action run, lately?"""
@@ -66,7 +82,7 @@ class CheckFilter:
             return None
 
     def wait(
-        self, since: datetime | None = None, timeout: int = wait.WAIT_LIMIT
+        self, since: datetime | None = None, timeout: float = wait.WAIT_LIMIT
     ) -> CheckRun:
         """Wait for a check to run."""
         __tracebackhide__ = True
@@ -74,15 +90,23 @@ class CheckFilter:
         if since is None:
             since = self.pr.since
 
+        start = now()
         sh.info(f"waiting for {self} (since {since})...")
 
-        result = wait.for_(lambda: self.ran(since), timeout=timeout)
+        # use a shorter timeout just to check that such a thing exists
+        timeout_exists = min(30, timeout)
+        wait.for_(lambda: self.exists(since), timeout=timeout_exists)
+
+        # use the rest of the timeout to wait for run
+        time_used = now() - start
+        timeout_run = timeout - time_used.total_seconds()
+        result = wait.for_(lambda: self.ran(since), timeout=timeout_run)
 
         sh.banner(f"{self} ran")
         return result
 
     def __str__(self) -> str:
-        if self.name:
-            return f"{self.workflow} / {self.name}"
+        if self.check:
+            return f"{self.workflow} / {self.check}"
         else:
             return self.workflow
