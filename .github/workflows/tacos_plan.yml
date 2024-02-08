@@ -91,14 +91,20 @@ jobs:
         uses: ./tacos-gha/.github/actions/setup
         with:
           ssh-private-key: ${{ secrets.ssh-private-key }}
-          # Use author's username for the following actions
+          # We explicitly list the low-concern actions, during which users
+          # will use the identity of the original PR author.
+          # see doc/permissions.md
           user: |
             ${{
               true
               && github.event_name == 'pull_request'
               && (
                   false
-                  || github.event.action == 'labeled'
+                  || (
+                      true
+                      && github.event.action == 'labeled'
+                      && github.event.label.name == ':taco::plan'
+                  )
                   || github.event.action == 'ready_for_review'
                   || github.event.action == 'synchronize'
                   || github.event.action == 'reopened'
