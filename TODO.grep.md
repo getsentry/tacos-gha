@@ -2,6 +2,7 @@ Action items in the code:
 
 ```console
 $ git grep -Ei '(todo|fixme|xxx)[: (]|raise xfail'
+FIXME: a lower-privilege way to authorize tf-init
 FIXME: only use state-admin access for a locking (non-draft) plan
 FIXME: support `-u $USER` and/or `-u $EMAIL` to request an end-user access token
 FIXME: this check shouldn't be disabled, but it's bugged currently,
@@ -33,6 +34,5 @@ raise XFailed("Comment not implemented yet.")
 raise XFailed("locking not yet implemented")
 raise XFailed("notify_owner action does not exist")
 raise XFailed("tacos/drift branch not created")
-raise XFailed(str(xfails))
 sh.banner("TODO: check that the plan matches what we expect")
 ```
