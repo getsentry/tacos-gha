@@ -13,6 +13,7 @@ TEST_NAME = __name__
 def test(pr: tacos_demo.PR) -> None:
     assert pr.check("Terraform Plan").wait().success
 
+    pr.approve()
     since = pr.add_label(":taco::apply")
     assert pr.check("Terraform Apply").wait(since).success
 
@@ -24,6 +25,6 @@ def test(pr: tacos_demo.PR) -> None:
             in pr.comments(since=since)
         )
     except AssertionError:
-        raise XFailed("Comment not implemented yet.")
+        raise XFailed("close-on-dirty comment not implemented yet.")
 
     # TODO: check for the opening of the drift remediation branch.
