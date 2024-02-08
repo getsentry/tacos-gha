@@ -124,9 +124,16 @@ def slices(
 @fixture
 def tacos_branch() -> str:
     with sh.cd(TACOS_GHA_HOME):
-        result = one(
-            sh.lines(("git", "symbolic-ref", "-q", "--short", "HEAD"))
-        )
+        try:
+            result = one(
+                sh.lines(("git", "symbolic-ref", "-q", "--short", "HEAD"))
+            )
+        except AssertionError:
+            raise AssertionError(
+                "Could not find a name for your git branch."
+                + " Are you on a detached HEAD?"
+            )
+
         # push any GHA-relevant changes
         if result != "main":
             if not sh.success(
