@@ -4,6 +4,7 @@ inputs:
   user:
     description: the username that will be used for following steps
     required: true
+    default: ${{github.triggering_actor}}
   hostname:
     description: a fake hostname to represent the relevant PR
     default: |-
@@ -53,17 +54,21 @@ runs:
         newhome="$(getent passwd "$newuser" | cut -d: -f6)"
         sudo ln -sf "$HOME" "$newhome"
 
+        : ensure equal sudo access
+        sudo cat "/etc/sudoers.d/$olduser" |
+          sed "s/^$olduser /$newuser /" |
+          sudo tee "/etc/sudoers.d/$newuser" \
+        ;
+
         : new user metadata:
         getent passwd "$newuser"
         sudo getent shadow "$newuser"
 
         : for comparison
         id "$olduser"
+        sudo -lU "$olduser"
         id "$newuser"
-
-        : "note: files not owned by me:  (I don't think this is a problem)"
-        find "$HOME" -not \( -user "$olduser" -group "$olduser" \)  -print0 |
-          xargs -0r ls -ld --
+        sudo -lU "$newuser"
 
         : ensure everything is equally accessible to my user-group '("runner")'
         # the _diag directory has files being rapidly created and deleted
@@ -73,5 +78,6 @@ runs:
             -user "$olduser" -group "$olduser" -not -type l -print0 |
           xargs -0r chmod g=u --
 
-        : set default user for future steps
+        : set default user/home for future steps
         echo "USER=$newuser" >> "$GITHUB_ENV"
+        echo "HOME=$newhome" >> "$GITHUB_ENV"
