@@ -10,12 +10,7 @@ TACOS_LOCK="${TACOS_LOCK:-false}"
 
 if "$TACOS_LOCK"; then
   ( set -ex
-    : FIXME: need a lower-privilege way to authorize locking
-    # problem: currently the plan terraformer is very strictly readonly but we need
-    #     to be able to lock/unlock the tfstate in this workflow
-    # planned fix:
-    #     add a "state" terraformer, which can mess with the locks but not infra
-    GETSENTRY_SAC_VERB=apply sudo-gcp tf-lock-acquire
+    GETSENTRY_SAC_VERB=state-admin sudo-gcp tf-lock-acquire
   )
 fi
 
