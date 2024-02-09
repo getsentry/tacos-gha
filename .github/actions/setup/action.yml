@@ -23,6 +23,32 @@ runs:
       with:
         user: ${{inputs.user}}
 
+    - name: Set up SSH agent
+      if: inputs.ssh-private-key != ''
+      uses: webfactory/ssh-agent@v0.8.0
+      with:
+        ssh-private-key: ${{ inputs.ssh-private-key }}
+
+        # These fix most ownership, permission issues, but the .ssh config files
+        # still get the wrong ownership, fixed in the next step.
+        ssh-agent-cmd: |
+          ./tacos-gha/lib/ci/bin/sudo-ssh-agent
+        ssh-add-cmd: |
+          ./tacos-gha/lib/ci/bin/sudo-ssh-add
+
+    - name: Fix .ssh permissions
+      shell: ${{inputs.shell}}
+      if: inputs.ssh-private-key != ''
+      run: |
+        : fix ssh config ownership
+        sudo chown -v -R "$(id -un):$(id -gn)" ~/.ssh
+
+        : Show SSH agent pubkeys
+        ssh-add -L
+
+        : ... hashes too
+        ssh-add -l
+
     - name: set workload identity provider
       id: set-workload-identity-provider
       shell: ${{inputs.shell}}
@@ -83,11 +109,3 @@ runs:
         ;
       env:
         GH_TOKEN: ${{ github.token }}
-
-    - name: Set up SSH agent
-      shell: ${{inputs.shell}}
-      if: inputs.ssh-private-key != ''
-      run: |
-        gha-ssh-agent <<E_O_K
-        ${{inputs.ssh-private-key}}
-        E_O_K
