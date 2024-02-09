@@ -1,18 +1,23 @@
 action items:
 
+- [ ] @ellison Tell user that merge conflicts are preventing plan/apply
+- [ ] @buck jira ticket for bucket permissions
+- [ ] @buck backlog to fix test-region bucket
+- [ ] @buck TODO: check for the opening of the drift remediation branch.
+- [ ] @buck TODO: anything (scenario: drift detection)
+- [ ] @buck raise XFailed("tacos/drift branch not created")
+
 - [x] @ellison bug: committing to another persons's pr fails locking
 - [ ] @buck security issue
   - [~] tf state lock auth -- @trostel has confirmed P2 priority
     - FIXME: don't use the apply terraformer for the plan workflow
     - FIXME: need a lower-privilege way to enable locking
 - [ ] wide rollout & comms
-- [ ] @buck jira ticket for bucket permissions
-- [ ] @buck backlog to fix test-region bucket
 - [ ] @ellison user guide
   - how-to: avoid GHA notification spam
 - about drift detection
   - [ ] allowlist config
-- [ ] @buck fix the test suite
+- [x] @buck fix the test suite
 - [ ] @buck run tests in CI -- stretch
 - [ ] @buck drift remediation -- how will people know when there's a new drift
       branch?
@@ -28,7 +33,6 @@ correctness:
 - [x] @ellison refuse apply for closed PR
   - [x] explain declined apply due to closed PR
     - suggest re-opening the PR
-- [ ] @ellison Tell user that merge conflicts are preventing plan/apply
 - [x] @ellison unlock even if closed by another user
   - set username from pr author on closed event
 - [x] @buck P3: FIXME: tf-lock-info infinite regress if providers are undeclared
@@ -91,9 +95,6 @@ testing: (tier 2)
 - [ ] raise XFailed("terraform changes not yet mergeable")
 - [ ] FIXME: automated testing for lib/tf_lock
 - [ ] sh.banner("TODO: check that the plan matches what we expect")
-- [ ] TODO: check for the opening of the drift remediation branch.
-- [ ] TODO: anything (scenario: drift detection)
-- [ ] raise XFailed("tacos/drift branch not created")
 
 future improvements:
 
