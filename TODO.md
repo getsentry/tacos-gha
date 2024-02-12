@@ -1,32 +1,58 @@
-action items:
+# TODO
 
-- [ ] @ellison Tell user that merge conflicts are preventing plan/apply
-- [ ] @buck jira ticket for bucket permissions
-- [ ] @buck backlog to fix test-region bucket
-- [ ] @buck TODO: check for the opening of the drift remediation branch.
-- [ ] @buck TODO: anything (scenario: drift detection)
-- [ ] @buck raise XFailed("tacos/drift branch not created")
+## Major Milestones
 
-- [x] @ellison bug: committing to another persons's pr fails locking
-- [ ] @buck security issue
-  - [~] tf state lock auth -- @trostel has confirmed P2 priority
-    - FIXME: don't use the apply terraformer for the plan workflow
-    - FIXME: need a lower-privilege way to enable locking
 - [ ] wide rollout & comms
+  - [ ] @buck jira ticket for bucket permissions
+  - [ ] @ellison clickops quickfix test-region bucket
+  - [ ] JIRA backlog to tf-import test-region bucket
+- [ ] @ellison down the old terraform-plan workflow
+  - after full rollout and acceptance
+- [ ] drift remediation
+  - [ ] allowlist config
+  - [ ] ensure lock conflict message links to the lock-holding PR
+    - essential for people know when there's conflicting drift
+  - [ ] @buck how will people know when there's _new_ drift?
+  - [ ] @buck TODO: check for the opening of the drift remediation branch.
+  - [ ] @buck TODO: anything (scenario: drift detection)
+  - [ ] @buck raise XFailed("tacos/drift branch not created") branch?
+
+## Misc. Action Items
+
+This is the inbox during standup and weeklies.
+
+- (none, currently)
+
+## Maintainability
+
 - [ ] @ellison user guide
   - how-to: avoid GHA notification spam
-- about drift detection
-  - [ ] allowlist config
-- [x] @buck fix the test suite
 - [ ] @buck run tests in CI -- stretch
-- [ ] @buck drift remediation -- how will people know when there's a new drift
-      branch?
-  - ensure lock conflict message links to the lock-holding PR
-- [ ] @ellison down the old terraform-plan workflow
-  - after full rollout
+- convert the rest of the sh to python https://github.com/getsentry/tacos-gha
+  - @ian: "I'll look and take some part of it"
+  - use `./lib/git/ls-sh` for a listing
+  - [ ] lib/ci/bin
+  - [ ] lib/ci
+  - [ ] lib/gcloud
+  - [ ] lib/github_actions
+  - [ ] lib/unix/super
+  - [ ] lib/unix/quietly
+  - [ ] lib/unix/tty-attach
+- [ ] convert lib/tf-lock to use the (private!?) golang api
+  - will need to fork terraform -- it's the only way to force un-private in go
+  - this will help with several issues:
+    - listing all locked slices efficiently
+    - locking slices efficiently (don't need to kill -9 terraform-console)
+    - retrieving lock info (don't need to parse `terraform force-unlock` errors)
+    - setting lock info (no need for .github/actions/set-user-and-hostname)
+- [x] @buck fix the test suite
 
-correctness:
+k8s is able to manage VMs (and other non-k8s GCP objects) via "config connector"
+gcloud components install config-connector
 
+## Correctness
+
+- [x] @ellison bug: committing to another persons's pr fails locking
 - [x] refuse apply without review
   - [x] @buck apply should ignore approval by non-codeowners
     - i.e. check mergability instead of approvers
@@ -37,10 +63,16 @@ correctness:
   - set username from pr author on closed event
 - [x] @buck P3: FIXME: tf-lock-info infinite regress if providers are undeclared
 
-security:
+## Security
 
-ease of use (UI/UX):
+- [x] @buck security issue
+  - [x] tf state lock auth -- @trostel has confirmed P2 priority
+    - fixed: don't use the apply terraformer for the plan workflow
+    - fixed: need a lower-privilege way to enable locking
 
+## Ease of Use (UI/UX)
+
+- [ ] @ellison Tell user that merge conflicts are preventing plan/apply
 - [ ] on conflict, provide a link to conflicting PR
 - [ ] @ellison user guide
 - [ ] @ellison phased allowlist:
@@ -57,12 +89,19 @@ ease of use (UI/UX):
       determine-relevant-slices
   - [ ] leverage "narrow" git clones, where possible
 - [ ] create, show plan even for "ready" PR that can't obtain lock
+- [ ] @ian Node 16 deprecation warnings
+  - https://github.com/getsentry/ops/actions/runs/7849633666
+- [ ] @ian research: how to get the "job id" during a job?
+  - it would be really good to leave a link to the job that produced the log
+    shown in comment
 - [x] explain declined apply due to draft status
 - [x] explain declined apply due to missing review
 - [x] @buck TODO: roll up "commands" in PR comments when exit code is 0
 - [x] @buck TODO: roll up init / refresh phases from tf log
 
-testing: (tier 1)
+## Testing
+
+### Tier 1
 
 - [ ] terragrunt slice with dependencies
   - prevent regression: --terragrunt-no-auto-init was exploding during
@@ -81,7 +120,7 @@ testing: (tier 1)
 - [ ] raise XFailed("Comment not implemented yet.")
 - [ ] explain declined apply due to closed PR
 
-testing: (tier 2)
+### Tier 2
 
 - [ ] refuse apply without review
 - [ ] p1: How does apply work in a auto-merge situation?
@@ -96,7 +135,7 @@ testing: (tier 2)
 - [ ] FIXME: automated testing for lib/tf_lock
 - [ ] sh.banner("TODO: check that the plan matches what we expect")
 
-future improvements:
+## Future Improvements
 
 - [ ] TODO: fetch and apply the `--out tfplan` file from plan workflow
 - [ ] TODO: github-script to fetch run-id of the most recent tfplan
@@ -104,14 +143,11 @@ future improvements:
 - [ ] FIXME: use a more specific type than str
 - [ ] TODO: workflow to automatically add taco:stale label as appropriate
 - [ ] TODO: workflow to automatically add taco:abandoned label as appropriate
-- [ ] convert lib/tf-lock to use the (private!?) golang api
-  - will need to fork terraform -- it's the only way to force un-private in go
-  - this will help with several issues:
-    - listing all locked slices efficiently
-    - locking slices efficiently (don't need to kill -9 terraform-console)
-    - retrieving lock info (don't need to parse terraform-force-unlock errors)
+- [ ] integrate TACOS into terraform-sandbox repo:
+      https://github.com/getsentry/terraform-sandboxes.private
+  - this will help kickstart #proj-clickops
 
-epics:
+## Epics
 
 - [ ] pip packaging
   - FIXME: we need pip packaging
@@ -121,13 +157,14 @@ epics:
 - [ ] TODO: interpolate with a python (rust?) script, for less abitrary
       execution
 
-upstream:
+## Upstream
 
 - def **init**( # pyright: ignore[reportMissingSuperCall] # TODO: bugreport
-  TODO:
 - upstream feature request on google-github-actions/auth -- this
 
-nice-to-have: (AKA "probably not")
+## nice-to-have
+
+AKA "probably not"
 
 ```
 TODO: refactor to an object that takes token in constructor, remove autouse
@@ -138,7 +175,7 @@ TODO: clean up `sudo-gcp.toml` configs, then delete me:
 TODO: amend if the previous commit was a similar auto-commit
 ```
 
-### Long Term Goals
+## Long Term Goals
 
 onboard preexisting users:
 
