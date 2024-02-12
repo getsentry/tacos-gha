@@ -2,8 +2,6 @@ Action items in the code:
 
 ```console
 $ git grep -Ei '(todo|fixme|xxx)[: (]|raise xfail'
-- TODO: make "apply" a required check -- must pass for irrelevant PRs
-FIXME: a lower-privilege way to authorize tf-init
 FIXME: automated testing for lib/tf_lock
 FIXME: only use state-admin access for a locking (non-draft) plan
 FIXME: support `-u $USER` and/or `-u $EMAIL` to request an end-user access token
@@ -29,6 +27,7 @@ TODO: improve the conflict message: "lock failed, on slice prod/slice-3-vm, due 
 TODO: interpolate with a python (rust?) script, for less abitrary execution
 TODO: let the user know plan may not be fully accurate
 TODO: let the user know who has the lock
+TODO: make "apply" a required check -- must pass for irrelevant PRs
 TODO: update actions for minimal slice names
 TODO: upstream feature request on google-github-actions/auth -- this
 TODO: workflow to automatically add taco:abandoned label as appropriate
