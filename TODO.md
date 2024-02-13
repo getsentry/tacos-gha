@@ -2,20 +2,42 @@
 
 ## Major Milestones
 
+P1
+
 - [ ] wide rollout & comms
-  - [ ] @buck jira ticket for bucket permissions
+
+  - [ ] @ellison Tell user that merge conflicts are preventing plan/apply
+  - [ ] @buck combined summary comments
+    - simple version: concatenate
+    - FIXME: we need a fan-in summary
+    - FIXME: this really should be done in a fan-in summary job
+  - [ ] @filippo jira ticket for bucket permissions
+    - https://gist.github.com/bukzor/ee00a6f75d4a0cc7f865c37cfa67a895
+  - [ ] @filippo JIRA backlog to tf-import test-region bucket
+    - gs://sentry-test-region-terraform
   - [ ] @ellison clickops quickfix test-region bucket
-  - [ ] JIRA backlog to tf-import test-region bucket
-- [ ] @ellison down the old terraform-plan workflow
-  - after full rollout and acceptance
+    - https://gist.github.com/bukzor/ee00a6f75d4a0cc7f865c37cfa67a895
+
 - [ ] drift remediation
-  - [ ] allowlist config
+
+  - [ ] @ellison phased allowlist:
+    1.  [x] off
+    2.  [ ] plan-only
+    3.  [ ] plan-and-lock
+    4.  [x] plan-lock-apply
+    5.  [ ] drift detection
   - [ ] ensure lock conflict message links to the lock-holding PR
     - essential for people know when there's conflicting drift
-  - [ ] @buck how will people know when there's _new_ drift?
+  - [~] how will people know when there's _new_ drift?
+    - initial implementation: people need to notice the automatic drift pr
+    - slack notification?
+    - team-sre needs to decide
+  - [ ] @buck raise XFailed("tacos/drift branch not created") branch?
   - [ ] @buck TODO: check for the opening of the drift remediation branch.
   - [ ] @buck TODO: anything (scenario: drift detection)
-  - [ ] @buck raise XFailed("tacos/drift branch not created") branch?
+
+- [ ] @ellison down the old terraform-plan workflow
+  - after full rollout and acceptance
 
 ## Misc. Action Items
 
@@ -24,6 +46,8 @@ This is the inbox during standup and weeklies.
 - (none, currently)
 
 ## Maintainability
+
+P2
 
 - [ ] @ellison user guide
   - how-to: avoid GHA notification spam
@@ -45,12 +69,14 @@ This is the inbox during standup and weeklies.
     - locking slices efficiently (don't need to kill -9 terraform-console)
     - retrieving lock info (don't need to parse `terraform force-unlock` errors)
     - setting lock info (no need for .github/actions/set-user-and-hostname)
-- [x] @buck fix the test suite
+- [x] @buck get the test suite passing
 
 k8s is able to manage VMs (and other non-k8s GCP objects) via "config connector"
 gcloud components install config-connector
 
 ## Correctness
+
+P1
 
 - [x] @ellison bug: committing to another persons's pr fails locking
 - [x] refuse apply without review
@@ -72,15 +98,9 @@ gcloud components install config-connector
 
 ## Ease of Use (UI/UX)
 
-- [ ] @ellison Tell user that merge conflicts are preventing plan/apply
+P2
+
 - [ ] on conflict, provide a link to conflicting PR
-- [ ] @ellison user guide
-- [ ] @ellison phased allowlist:
-  1.  [x] off
-  2.  [ ] plan-only
-  3.  [ ] plan-and-lock
-  4.  [x] plan-lock-apply
-  5.  [ ] drift detection
 - [ ] speed - minimize time to plan, round-trip
   - [ ] optimize setup action
   - [ ] optimize list-slices action
@@ -89,11 +109,13 @@ gcloud components install config-connector
       determine-relevant-slices
   - [ ] leverage "narrow" git clones, where possible
 - [ ] create, show plan even for "ready" PR that can't obtain lock
-- [ ] @ian Node 16 deprecation warnings
+- [ ] P3 @ian Node 16 deprecation warnings
   - https://github.com/getsentry/ops/actions/runs/7849633666
-- [ ] @ian research: how to get the "job id" during a job?
-  - it would be really good to leave a link to the job that produced the log
-    shown in comment
+- [ ] leave a link to the job that produced the log shown in comment
+  - example:
+    https://github.com/getsentry/tacos-gha/actions/runs/7890053512/job/21531390874
+    https://github.com/$org/$repo/actions/runs/$runid/job/$jobid
+  - [ ] @ian research: how to get the "job id" during a job?
 - [x] explain declined apply due to draft status
 - [x] explain declined apply due to missing review
 - [x] @buck TODO: roll up "commands" in PR comments when exit code is 0
@@ -102,6 +124,8 @@ gcloud components install config-connector
 ## Testing
 
 ### Tier 1
+
+P2
 
 - [ ] terragrunt slice with dependencies
   - prevent regression: --terragrunt-no-auto-init was exploding during
@@ -151,9 +175,6 @@ gcloud components install config-connector
 
 - [ ] pip packaging
   - FIXME: we need pip packaging
-- [ ] summary steps
-  - FIXME: we need a fan-in summary
-  - FIXME: this really should be done in a fan-in summary job
 - [ ] TODO: interpolate with a python (rust?) script, for less abitrary
       execution
 
