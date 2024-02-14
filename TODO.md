@@ -6,7 +6,7 @@ P1
 
 - [ ] wide rollout & comms
 
-  - [ ] @ellison Tell user that merge conflicts are preventing plan/apply
+  - [x] @ellison Tell user that merge conflicts are preventing plan/apply
   - [ ] @buck combined summary comments
     - simple version: concatenate
     - FIXME: we need a fan-in summary
@@ -15,7 +15,7 @@ P1
     - https://gist.github.com/bukzor/ee00a6f75d4a0cc7f865c37cfa67a895
   - [ ] @filippo JIRA backlog to tf-import test-region bucket
     - gs://sentry-test-region-terraform
-  - [ ] @ellison clickops quickfix test-region bucket
+  - [x] @ellison clickops quickfix test-region bucket
     - https://gist.github.com/bukzor/ee00a6f75d4a0cc7f865c37cfa67a895
 
 - [ ] drift remediation
