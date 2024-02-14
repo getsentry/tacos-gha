@@ -32,34 +32,26 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  create-conflict-message:
+  manage-conflict-message:
     runs-on: ubuntu-latest
     permissions:
       pull-requests: write
 
     steps:
       - name: Update PR
-        if: github.event.pull_request.mergeable_state == 'conflicting'
         uses: thollander/actions-comment-pull-request@v2.4.3
         with:
           message: |
             This PR currently has a merge conflict, which is preventing
             other TACOS jobs from running. Please solve the conflict and
             then try again.
-          comment_tag: conflict
 
-  delete-conflict-message:
-    runs-on: ubuntu-latest
-    permissions:
-      pull-requests: write
-
-    steps:
-      - name: Update PR
-        if: github.event.pull_request.mergeable_state == 'mergeable'
-        uses: thollander/actions-comment-pull-request@v2.4.3
-        with:
-          comment_tag: conflict
-          mode: delete
+            latest change: ${{ github.event.pull_request.updated_at }}
+            sha: ${{ github.event.pull_request.head.sha }}
+          comment_tag: conflict()
+          mode:
+            ${{ github.event.pull_request.mergeable_state == 'conflicting' &&
+            'upsert' || 'delete' }}
 
   # Any of these 3 labels may have been applied and not run due to the conflict.
   reset-label-unlock:
