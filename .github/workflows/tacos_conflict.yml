@@ -38,9 +38,25 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          echo 'STATUS='$(gh pr view ${{github.event.pull_request.html_url }} \
-                          --json mergeStateStatus \
-                          --jq .mergeStateStatus) >> $GITHUB_ENV
+          i=0
+          limit=10
+          while (( i < limit )); do
+            (( i += 1 ))
+            status=$(gh pr view \
+                     ${{github.event.pull_request.html_url }} \
+                     --json mergeStateStatus \
+                     --jq .mergeStateStatus)
+            if [[ "$status" == "UNKNOWN" ]]; then
+              sleep 1
+              continue
+            fi
+            break
+          done
+          if (( i == limit )); then
+            echo "Mergeability of PR is UNKNOWN."
+            exit 1
+          fi
+          echo 'STATUS='"$status" > $GITHUB_ENV
       - name: Update PR
         uses: thollander/actions-comment-pull-request@v2.4.3
         with:
