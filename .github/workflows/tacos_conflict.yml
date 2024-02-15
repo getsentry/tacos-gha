@@ -41,16 +41,15 @@ jobs:
           i=0
           limit=10
           while (( i < limit )); do
-            (( i += 1 ))
             status=$(gh pr view \
                      ${{github.event.pull_request.html_url }} \
                      --json mergeStateStatus \
                      --jq .mergeStateStatus)
-            if [[ "$status" == "UNKNOWN" ]]; then
-              sleep 1
-              continue
+            if [[ "$status" != "UNKNOWN" ]]; then
+              break
             fi
-            break
+            sleep 1
+            (( i += 1 ))
           done
           if (( i == limit )); then
             echo "Mergeability of PR is UNKNOWN."
