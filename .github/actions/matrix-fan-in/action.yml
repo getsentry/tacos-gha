@@ -18,6 +18,7 @@ inputs:
       syntax: @actions/glob
     default: "*"
   shell:
+    description: "private -- do not use"
     default: bash -euxo pipefail {0}
 
 runs:
