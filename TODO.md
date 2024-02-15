@@ -1,26 +1,38 @@
 # TODO
 
+## Action items
+
+An inbox for quick use during meetings:
+
+- [ ] P2/3 lock and plan downstream terragrunt dependencies too? needs more
+      discussion
+- UI enhancement requests:
+  - [ ] Make it much more clear that the lock was taken
+  - [ ] Make it clear why the lock was taken
+  - [ ] Leave a breadcrumb to User's Guide
+
 ## Major Milestones
 
 P1
 
 - [ ] wide rollout & comms
 
-  - [x] @ellison Tell user that merge conflicts are preventing plan/apply
-  - [ ] @buck combined summary comments
+  - [~] @ellison Tell user that merge conflicts are preventing plan/apply
+  - [~] @buck combined summary comments
     - simple version: concatenate
     - FIXME: we need a fan-in summary
     - FIXME: this really should be done in a fan-in summary job
-  - [ ] @filippo jira ticket for bucket permissions
+  - [x] @filippo jira ticket for bucket permissions
     - https://gist.github.com/bukzor/ee00a6f75d4a0cc7f865c37cfa67a895
-  - [ ] @filippo JIRA backlog to tf-import test-region bucket
+    - https://getsentry.atlassian.net/browse/OPS-5203
+  - [ ] @ellison JIRA backlog to tf-import test-region bucket IAM
     - gs://sentry-test-region-terraform
   - [x] @ellison clickops quickfix test-region bucket
     - https://gist.github.com/bukzor/ee00a6f75d4a0cc7f865c37cfa67a895
 
 - [ ] drift remediation
 
-  - [ ] @ellison phased allowlist:
+  - [~] @ellison phased allowlist:
     1.  [x] off
     2.  [ ] plan-only
     3.  [ ] plan-and-lock
@@ -28,7 +40,7 @@ P1
     5.  [ ] drift detection
   - [ ] ensure lock conflict message links to the lock-holding PR
     - essential for people know when there's conflicting drift
-  - [~] how will people know when there's _new_ drift?
+  - [#] how will people know when there's _new_ drift?
     - initial implementation: people need to notice the automatic drift pr
     - slack notification?
     - team-sre needs to decide
@@ -49,6 +61,12 @@ This is the inbox during standup and weeklies.
 
 P2
 
+- [ ] ownership/stewardship transition
+  - [ ] @ellison developer's guide
+    - HACKING.md ?
+  - [ ] onboard a new team member from SRE
+    - neo dmitrii jim richard
+    - [x] invite to standup
 - [ ] @ellison user guide
   - how-to: avoid GHA notification spam
 - [ ] @buck run tests in CI -- stretch
