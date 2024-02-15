@@ -111,8 +111,11 @@ class PR(gh.PR):
 
             job_comments = comments.setdefault(job2, {})
 
-            slice = Slice(tag.between("(", ")"))
-            slice = slice.relative_to(self.slices.subpath)
+            if tag.endswith("()"):
+                slice = Slice(".")
+            else:
+                slice = Slice(tag.between("(", ")"))
+                slice = slice.relative_to(self.slices.subpath)
 
             job_comments[slice] = comment
         return comments

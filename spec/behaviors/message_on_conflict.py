@@ -32,6 +32,6 @@ def test(
         )
         sh.banner("Set the second PR as ready and check for the conflict")
         since = pr2.toggle_draft()
-        assert pr2.check("Terraform Conflict").wait().success
+        assert pr2.check("Terraform Conflict").wait(since).success
         _, comment = pr2.get_comments_for_job("conflict").popitem()
         assert CONFLICT_MESSAGE in comment
