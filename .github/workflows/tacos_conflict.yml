@@ -21,10 +21,6 @@ on:
         type: string
         default: refs/heads/stable
 
-defaults:
-  run:
-    shell: env ./tacos-gha/lib/ci/default-shell {0}
-
 # Cancel in progress workflows on pull_requests.
 # https://docs.github.com/en/actions/using-jobs/using-concurrency#example-using-a-fallback-value
 concurrency:
@@ -38,6 +34,13 @@ jobs:
       pull-requests: write
 
     steps:
+      - name: Get mergeable state
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          echo 'STATUS='$(gh pr view ${{github.event.pull_request.html_url }} \
+                          --json mergeStateStatus \
+                          --jq .mergeStateStatus) >> $GITHUB_ENV
       - name: Update PR
         uses: thollander/actions-comment-pull-request@v2.4.3
         with:
@@ -49,9 +52,7 @@ jobs:
             latest change: ${{ github.event.pull_request.updated_at }}
             sha: ${{ github.event.pull_request.head.sha }}
           comment_tag: conflict()
-          mode:
-            ${{ github.event.pull_request.mergeable_state == 'conflicting' &&
-            'upsert' || 'delete' }}
+          mode: ${{ env.STATUS == 'DIRTY' && 'upsert' || 'delete' }}
 
   # Any of these 3 labels may have been applied and not run due to the conflict.
   reset-label-unlock:
