@@ -55,7 +55,7 @@ jobs:
             echo "Mergeability of PR is UNKNOWN."
             exit 1
           fi
-          echo 'STATUS='"$status" > $GITHUB_ENV
+          echo 'GITHUB_PR_STATUS='"$status" > $GITHUB_ENV
       - name: Update PR
         uses: thollander/actions-comment-pull-request@v2.4.3
         with:
@@ -67,7 +67,7 @@ jobs:
             latest change: ${{ github.event.pull_request.updated_at }}
             sha: ${{ github.event.pull_request.head.sha }}
           comment_tag: conflict()
-          mode: ${{ env.STATUS == 'DIRTY' && 'upsert' || 'delete' }}
+          mode: ${{ env.GITHUB_PR_STATUS == 'DIRTY' && 'upsert' || 'delete' }}
 
   # Any of these 3 labels may have been applied and not run due to the conflict.
   reset-label-unlock:
