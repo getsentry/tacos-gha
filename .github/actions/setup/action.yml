@@ -1,8 +1,6 @@
 name: Setup
 
 inputs:
-  shell:
-    default: env ./tacos-gha/lib/ci/default-shell {0}
   ssh-private-key:
     description: "Private SSH key to use for git clone"
     type: string
@@ -11,6 +9,9 @@ inputs:
     description: the username that will be used for following steps
     required: false
     default: ${{github.triggering_actor}}
+  shell:
+    description: "private -- do not use"
+    default: env ./tacos-gha/lib/ci/default-shell {0}
 
 runs:
   using: composite

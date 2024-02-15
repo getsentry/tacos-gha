@@ -1,0 +1,34 @@
+name: "Matrix Fan-out"
+description: "Uploads a JSON file as an artifact with a unique name."
+
+inputs:
+  path:
+    description: "The directory to upload."
+    default: ./matrix-fan-out
+  retention-days:
+    description: "Optional. Defaults to repository settings."
+    default: null
+  shell:
+    description: "private -- do not use"
+    default: bash -euxo pipefail {0}
+
+runs:
+  using: "composite"
+
+  steps:
+    - shell: ${{ inputs.shell }}
+      env:
+        MATRIX_FAN_OUT_PATH: ${{ inputs.path }}
+        MATRIX_FAN_OUT_CONTEXT: ${{ toJSON(matrix) }}
+      run: |
+        "$GITHUB_ACTION_PATH/"prepare.sh |
+          tee -a "$GITHUB_ENV"
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ env.artifact_name }}
+        path: ${{ inputs.path }}
+        retention-days: ${{ inputs.retention-days }}
+        if-no-files-found: error
+        overwrite: false # assert no accidental overlaps
