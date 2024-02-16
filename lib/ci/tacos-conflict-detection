@@ -1,26 +1,41 @@
-#!/bin/bash
-set -euo pipefail
-exec >&2  # our only output is logging
-pr_url="$1"
+#!/usr/bin/env python3.12
+from __future__ import annotations
 
-set -x
-sleep=3
-limit=30
-while (( limit > 0 )); do
-  (( limit -= sleep ))
-  status=$(
-    gh pr view \
-      "$pr_url" \
-      --json mergeStateStatus \
-      --jq .mergeStateStatus \
-    ;
-  )
-  if [[ "$status" != "UNKNOWN" ]]; then
-    gha-set-env <<< "GITHUB_PR_STATUS=$status"
-    exit 0
-  fi
-  sleep $sleep
-done
-gha-set-env <<< "GITHUB_PR_STATUS=$status"
-echo "Timeout getting PR status: $status"
-exit 1
+from lib.sh import sh
+from lib.types import URL
+from lib.user_error import UserError
+
+
+def tacos_conflict_detection(pr_url: URL) -> None:
+    status = None
+    sleep = 3
+    limit = 30
+    while limit > 0:
+        limit -= sleep
+        status = sh.line((
+            "gh",
+            "pr",
+            "view",
+            pr_url,
+            "--json=mergeStateStatus",
+            "--jq=.mergeStateStatus",
+        ))
+
+        if status != "UNKNOWN":
+            sh.run(("gha-set-env",), input=f"GITHUB_PR_STATUS={{status}}")
+            return
+
+        sh.run(("sleep", sleep))
+    sh.run(("gha-set-env",), input=f"GITHUB_PR_STATUS={{status}}")
+    raise UserError(f"Timeout getting PR status: {status}")
+
+
+@UserError.handler
+def main() -> None:
+    from sys import argv
+
+    tacos_conflict_detection(URL(argv[1]))
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
