@@ -1,4 +1,4 @@
-name: TACOS Conflict
+name: TACOS Conflict Detection
 
 # downstream projects should use events:
 ###pull_request_target:
@@ -28,7 +28,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  manage-conflict-message:
+  conflict-detection:
     runs-on: ubuntu-latest
     permissions:
       pull-requests: write
@@ -37,25 +37,27 @@ jobs:
       - name: Get mergeable state
         env:
           GH_TOKEN: ${{ github.token }}
+          pr_url: ${{ github.event.pull_request.html_url }} \
         run: |
-          i=0
-          limit=10
-          while (( i < limit )); do
-            status=$(gh pr view \
-                     ${{github.event.pull_request.html_url }} \
-                     --json mergeStateStatus \
-                     --jq .mergeStateStatus)
+          sleep=3
+          limit=30
+          while (( limit > 0 )); do
+            (( limit -= sleep ))
+            status=$(
+              gh pr view \
+                "$pr_url" \
+                --json mergeStateStatus \
+                --jq .mergeStateStatus \
+              ;
+            )
             if [[ "$status" != "UNKNOWN" ]]; then
-              break
+              gha-set-env <<< "GITHUB_PR_STATUS=$status"
+              exit 0
             fi
-            sleep 1
-            (( i += 1 ))
+            sleep $sleep
           done
-          if (( i == limit )); then
-            echo "Mergeability of PR is UNKNOWN."
-            exit 1
-          fi
-          echo 'GITHUB_PR_STATUS='"$status" > $GITHUB_ENV
+          echo "Timeout getting PR status: $status"
+          exit 1
       - name: Update PR
         uses: thollander/actions-comment-pull-request@v2.4.3
         with:
@@ -66,7 +68,7 @@ jobs:
 
             latest change: ${{ github.event.pull_request.updated_at }}
             sha: ${{ github.event.pull_request.head.sha }}
-          comment_tag: conflict()
+          comment_tag: conflict_detection
           mode: ${{ env.GITHUB_PR_STATUS == 'DIRTY' && 'upsert' || 'delete' }}
 
   # Any of these 3 labels may have been applied and not run due to the conflict.
