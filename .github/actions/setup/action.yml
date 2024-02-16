@@ -64,7 +64,7 @@ runs:
 
     - name: gcp auth
       id: auth
-      uses: google-github-actions/auth@v1
+      uses: google-github-actions/auth@v2.1.1
       with:
         workload_identity_provider: ${{env.GETSENTRY_SAC_OIDC}}
         service_account: ${{env.SUDO_GCP_SERVICE_ACCOUNT}}
