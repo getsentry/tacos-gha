@@ -39,25 +39,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           pr_url: ${{ github.event.pull_request.html_url }} \
         run: |
-          sleep=3
-          limit=30
-          while (( limit > 0 )); do
-            (( limit -= sleep ))
-            status=$(
-              gh pr view \
-                "$pr_url" \
-                --json mergeStateStatus \
-                --jq .mergeStateStatus \
-              ;
-            )
-            if [[ "$status" != "UNKNOWN" ]]; then
-              gha-set-env <<< "GITHUB_PR_STATUS=$status"
-              exit 0
-            fi
-            sleep $sleep
-          done
-          echo "Timeout getting PR status: $status"
-          exit 1
+          "$TACOS_GHA_HOME/"lib/ci/tacos-conflict-detection "$pr_url"
       - name: Update PR
         uses: thollander/actions-comment-pull-request@v2.4.3
         with:

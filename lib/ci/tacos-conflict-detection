@@ -1,0 +1,26 @@
+#!/bin/bash
+set -euo pipefail
+exec >&2  # our only output is logging
+pr_url="$1"
+
+set -x
+sleep=3
+limit=30
+while (( limit > 0 )); do
+  (( limit -= sleep ))
+  status=$(
+    gh pr view \
+      "$pr_url" \
+      --json mergeStateStatus \
+      --jq .mergeStateStatus \
+    ;
+  )
+  if [[ "$status" != "UNKNOWN" ]]; then
+    gha-set-env <<< "GITHUB_PR_STATUS=$status"
+    exit 0
+  fi
+  sleep $sleep
+done
+gha-set-env <<< "GITHUB_PR_STATUS=$status"
+echo "Timeout getting PR status: $status"
+exit 1
