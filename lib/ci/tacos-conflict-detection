@@ -1,33 +1,55 @@
 #!/usr/bin/env python3.12
 from __future__ import annotations
 
+from lib import wait
 from lib.sh import sh
 from lib.types import URL
 from lib.user_error import UserError
 
+MERGE_CONFLICT_MESSAGE = """\
+Dear PR author,
+
+You currently have a merge conflict, which prevents github-actions from running
+any checks. TACOS will resume doing terraform stuff for you once the conflict is
+resolved.
+
+Good luck; have fun,
+  --:taco::taco::taco:
+"""
+
+
+def pr_conflict_status(pr_url: URL) -> str:
+    return sh.line((
+        "gh",
+        "pr",
+        "view",
+        pr_url,
+        "--json=mergeStateStatus",
+        "--jq=.mergeStateStatus",
+    ))
+
+
+def tell_user(pr_url: URL) -> None:
+    sh.run(("gh", "issue", "edit", "--add-label", ":taco::conflict", pr_url))
+    sh.run(
+        ("gh", "issue", "comment", pr_url, "--body-file", "-"),
+        input=MERGE_CONFLICT_MESSAGE,
+    )
+
 
 def tacos_conflict_detection(pr_url: URL) -> None:
-    status = None
-    sleep = 3
-    limit = 30
-    while limit > 0:
-        limit -= sleep
-        status = sh.line((
-            "gh",
-            "pr",
-            "view",
-            pr_url,
-            "--json=mergeStateStatus",
-            "--jq=.mergeStateStatus",
-        ))
+    def pr_conflict_status_known() -> str | None:
+        status = pr_conflict_status(pr_url)
+        if status == "UNKNOWN":
+            return None  # keep waiting
+        else:
+            return status
 
-        if status != "UNKNOWN":
-            sh.run(("gha-set-env",), input=f"GITHUB_PR_STATUS={{status}}")
-            return
+    status = wait.for_(pr_conflict_status_known)
 
-        sh.run(("sleep", sleep))
-    sh.run(("gha-set-env",), input=f"GITHUB_PR_STATUS={{status}}")
-    raise UserError(f"Timeout getting PR status: {status}")
+    if status == "DIRTY":
+        tell_user(pr_url)
+    sh.run(("gha-set-env",), input=f"GITHUB_PR_STATUS={status}")
 
 
 @UserError.handler
