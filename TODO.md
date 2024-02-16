@@ -17,7 +17,7 @@ P1
 
 - [ ] wide rollout & comms
 
-  - [~] @ellison Tell user that merge conflicts are preventing plan/apply
+  - [x] @ellison Tell user that merge conflicts are preventing plan/apply
   - [~] @buck combined summary comments
     - simple version: concatenate
     - FIXME: we need a fan-in summary
@@ -34,10 +34,9 @@ P1
 
   - [~] @ellison phased allowlist:
     1.  [x] off
-    2.  [ ] plan-only
-    3.  [ ] plan-and-lock
-    4.  [x] plan-lock-apply
-    5.  [ ] drift detection
+    2.  [x] plan-and-lock
+    3.  [x] plan-lock-apply
+    4.  [x] drift detection
   - [ ] ensure lock conflict message links to the lock-holding PR
     - essential for people know when there's conflicting drift
   - [#] how will people know when there's _new_ drift?

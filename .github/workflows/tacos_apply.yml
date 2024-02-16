@@ -62,7 +62,7 @@ jobs:
         id: list-slices
         uses: ./tacos-gha/.github/actions/list-slices
         with:
-          allowlist: apply.allowlist
+          allowlist: .config/tacos-gha/apply.allowlist
 
   tacos_apply:
     needs: [determine-tf-root-modules]
