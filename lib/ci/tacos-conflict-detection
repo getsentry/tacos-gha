@@ -6,7 +6,8 @@ from lib.sh import sh
 from lib.types import URL
 from lib.user_error import UserError
 
-MERGE_CONFLICT_MESSAGE = """\
+TAG = '<!-- getsentry/tacos-gha "conflict-detection" -->'
+MERGE_CONFLICT_MESSAGE = f"""\
 Dear PR author,
 
 You currently have a merge conflict, which prevents github-actions from running
@@ -15,6 +16,8 @@ resolved.
 
 Good luck; have fun,
   --:taco::taco::taco:
+
+{TAG}
 """
 
 
@@ -37,6 +40,43 @@ def tell_user(pr_url: URL) -> None:
     )
 
 
+def find_conflict_message(pr_url: URL) -> str | None:
+    id = sh.line((
+        "gh",
+        "pr",
+        "view",
+        pr_url,
+        "--json",
+        "comments",
+        '--jq=.comments[] | select(.body | contains("<!-- getsentry/tacos-gha "conflict-detection" -->")) | .id',
+    ))
+
+    if not id:
+        return None
+    else:
+        return id
+
+
+def get_owner_repo(pr_url: str) -> tuple[str, str]:
+    # https://github.com/getsentry/tacos-gha.demo/pull/1635
+    netloc, owner, repo, pull_endpoint, pull = pr_url.rsplit("/", 4)
+
+    assert netloc == "https://github.com", netloc
+    assert pull_endpoint == "pull", pull_endpoint
+    assert pull.isdigit(), pull
+
+    return owner, repo
+
+
+def delete_message(pr_url: str, comment_id: str) -> None:
+    owner, repo = get_owner_repo(pr_url)
+
+    # https://docs.github.com/en/rest/issues/comments#delete-an-issue-comment
+    endpoint = f"/repos/{owner}/{repo}/issues/comments/{comment_id}"
+
+    sh.run(("gh", "api", "-X", "DELETE", endpoint))
+
+
 def tacos_conflict_detection(pr_url: URL) -> None:
     def pr_conflict_status_known() -> str | None:
         status = pr_conflict_status(pr_url)
@@ -46,10 +86,12 @@ def tacos_conflict_detection(pr_url: URL) -> None:
             return status
 
     status = wait.for_(pr_conflict_status_known)
+    prior_message = find_conflict_message(pr_url)
 
-    if status == "DIRTY":
+    if status == "DIRTY" and prior_message is None:
         tell_user(pr_url)
-    sh.run(("gha-set-env",), input=f"GITHUB_PR_STATUS={status}")
+    elif prior_message:
+        delete_message(pr_url, prior_message)
 
 
 @UserError.handler

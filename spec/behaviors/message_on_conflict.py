@@ -1,6 +1,7 @@
 #!/usr/bin/env py.test
 from __future__ import annotations
 
+from lib.functions import one
 from lib.sh import sh
 from spec.lib import tacos_demo
 from spec.lib.gh import gh
@@ -23,15 +24,20 @@ def test(
             slices, test_name, demo, tacos_branch, branch=2, draft=True
         ) as pr2,
     ):
-        sh.banner("Plan, approve and merge the first PR")
-        assert pr1.check("Terraform Plan").wait().success
+        sh.banner("approve and merge the first PR")
         since = pr1.approve()
         pr1.merge()
         assert (
             pr1.check("Terraform Unlock", "tacos_unlock").wait(since).success
         )
+
         sh.banner("Set the second PR as ready and check for the conflict")
         since = pr2.toggle_draft()
-        assert pr2.check("Terraform Conflict").wait(since).success
-        _, comment = pr2.get_comments_for_job("conflict").popitem()
+        assert pr2.check("Terraform Conflict Detection").wait(since).success
+        comment = one(pr2.get_comments_for_job("conflict_detection").values())
         assert CONFLICT_MESSAGE in comment
+
+        sh.banner("Resolve the conflict and the message is deleted.")
+        sh.run(("git", "pull", "--rebase=false", "--strategy=ours"))
+        assert pr2.check("Terraform Conflict Detection").wait(since).success
+        assert not pr2.get_comments_for_job("conflict_detection")

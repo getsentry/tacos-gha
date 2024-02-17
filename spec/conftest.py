@@ -181,14 +181,16 @@ def cli_auth_gcloud() -> None:
     from os import environ
 
     # https://fig.io/manual/gcloud/config/config-helper
-    gcloud_config = sh.json((
-        "tty-attach",
-        "gcloud",
-        "config",
-        "config-helper",
-        "--format",
-        "json(configuration.properties.core.account,credential.access_token)",
-    ))
+    gcloud_config = sh.json(
+        (
+            "tty-attach",
+            "gcloud",
+            "config",
+            "config-helper",
+            "--format",
+            "json(configuration.properties.core.account,credential.access_token)",
+        )
+    )
     gcloud_token = json.deepget(
         gcloud_config, str, "credential", "access_token"
     )
@@ -214,3 +216,9 @@ def cli_auth_gh() -> None:
     from os import environ
 
     environ["GH_TOKEN"] = sh.stdout(("gh", "auth", "token"))
+
+
+@fixture(autouse=True, scope="session")
+def prompt_1password() -> None:
+    """Get 1password to ask for touch ASAP, so tests can run without me."""
+    tacos_demo.get_reviewer()
