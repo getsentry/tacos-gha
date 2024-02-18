@@ -23,6 +23,29 @@ def assert_dict_of_strings(json: Value) -> dict[str, str]:
     return typing.cast(dict[str, str], json)
 
 
+def get(json: Value, result_type: type[T], key: int | str) -> T:
+    """Get a value from a json structure, with type safety.
+
+    >>> json = {"a": 2}
+    >>> get(json, int, 'a')
+    2
+
+    >>> json = ["red", "blue"]
+    >>> get(json, str, 1)
+    'blue'
+    """
+    result = json
+    if isinstance(key, str):
+        assert isinstance(result, dict), result
+        result = result[key]
+    else:  # if isinstance(key, int):
+        assert isinstance(result, list), result
+        result = result[key]
+
+    assert isinstance(result, result_type)
+    return result
+
+
 def deepget(json: Value, result_type: type[T], *keys: int | str) -> T:
     """Get a value from a deep json structure, with type safety.
 
