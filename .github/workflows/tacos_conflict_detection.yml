@@ -38,6 +38,18 @@ jobs:
       pull-requests: write
 
     steps:
+      - name: Checkout tacos-gha
+        uses: actions/checkout@v4
+        with:
+          repository: ${{inputs.tacos_gha_repo}}
+          ref: ${{inputs.tacos_gha_ref}}
+          path: tacos-gha
+          sparse-checkout: |
+            .github/actions/just-the-basics
+            lib
+            bin
+
+      - uses: ./tacos-gha/.github/actions/just-the-basics
       - name: Get mergeable state
         env:
           GH_TOKEN: ${{ github.token }}
@@ -45,27 +57,11 @@ jobs:
         run: |
           "$TACOS_GHA_HOME/"lib/ci/tacos-conflict-detection "$pr_url"
 
-  # Any of these 3 labels may have been applied and not run due to the conflict.
-  reset-label-unlock:
+  reset-label:
     if: github.event.pull_request.mergeable_state == 'conflicting'
     uses: ./.github/workflows/reset-label.yml
     with:
-      label: ":taco::unlock"
-      tacos_gha_repo: ${{inputs.tacos_gha_repo}}
-      tacos_gha_ref: ${{inputs.tacos_gha_ref}}
-
-  reset-label-plan:
-    if: github.event.pull_request.mergeable_state == 'conflicting'
-    uses: ./.github/workflows/reset-label.yml
-    with:
-      label: ":taco::plan"
-      tacos_gha_repo: ${{inputs.tacos_gha_repo}}
-      tacos_gha_ref: ${{inputs.tacos_gha_ref}}
-
-  reset-label-apply:
-    if: github.event.pull_request.mergeable_state == 'conflicting'
-    uses: ./.github/workflows/reset-label.yml
-    with:
-      label: ":taco::apply"
+      # These 3 labels may have been applied but not run due to a conflict.
+      label: ":taco::unlock|:taco::plan|:taco::apply"
       tacos_gha_repo: ${{inputs.tacos_gha_repo}}
       tacos_gha_ref: ${{inputs.tacos_gha_ref}}
