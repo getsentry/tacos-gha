@@ -8,28 +8,27 @@ from lib.user_error import UserError
 
 TAG = '<!-- getsentry/tacos-gha "conflict-detection" -->'
 MERGE_CONFLICT_MESSAGE = f"""\
-Dear PR author,
-
 You currently have a merge conflict, which prevents github-actions from running
 any checks. TACOS will resume doing terraform stuff for you once the conflict is
 resolved.
-
-Good luck; have fun,
-  --:taco::taco::taco:
-
 {TAG}
 """
 
+# mypy can't find LessThanOneError
+# mypy: ignore-errors
+
 
 def pr_conflict_status(pr_url: URL) -> str:
-    return sh.line((
-        "gh",
-        "pr",
-        "view",
-        pr_url,
-        "--json=mergeStateStatus",
-        "--jq=.mergeStateStatus",
-    ))
+    return sh.line(
+        (
+            "gh",
+            "pr",
+            "view",
+            pr_url,
+            "--json=mergeStateStatus",
+            "--jq=.mergeStateStatus",
+        )
+    )
 
 
 def tell_user(pr_url: URL) -> None:
@@ -41,20 +40,20 @@ def tell_user(pr_url: URL) -> None:
 
 
 def find_conflict_message(pr_url: URL) -> str | None:
-    id = sh.line((
-        "gh",
-        "pr",
-        "view",
-        pr_url,
-        "--json",
-        "comments",
-        '--jq=.comments[] | select(.body | contains("<!-- getsentry/tacos-gha "conflict-detection" -->")) | .id',
-    ))
-
-    if not id:
+    try:
+        return sh.line(
+            (
+                "gh",
+                "pr",
+                "view",
+                pr_url,
+                "--json",
+                "comments",
+                '--jq=.comments[] | select(.body | contains("<!-- getsentry/tacos-gha "conflict-detection" -->")) | .id',
+            )
+        )
+    except sh.LessThanOneError:
         return None
-    else:
-        return id
 
 
 def get_owner_repo(pr_url: str) -> tuple[str, str]:

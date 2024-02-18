@@ -53,7 +53,7 @@ jobs:
       - name: Get mergeable state
         env:
           GH_TOKEN: ${{ github.token }}
-          pr_url: ${{ github.event.pull_request.html_url }} \
+          pr_url: ${{ github.event.pull_request.html_url }} xyz
         run: |
           "$TACOS_GHA_HOME/"lib/ci/tacos-conflict-detection "$pr_url"
 

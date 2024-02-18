@@ -24,6 +24,23 @@ class DescribeLines:
         assert tuple(sh.lines(("echo", text))) == ("3", "4")
 
 
+class DescribeLine:
+    def it_checks_for_errors(self) -> None:
+        with pytest.raises(sh.CalledProcessError) as raised:
+            sh.line(("sh", "-c", "echo ok; exit 22"))
+
+        error = raised.value
+        assert error.returncode == 22
+
+    def it_fails_on_zero_lines(self) -> None:
+        with pytest.raises(sh.LessThanOneError):
+            sh.line(("true", "zero results"))
+
+    def it_fails_on_more_than_one_line(self) -> None:
+        with pytest.raises(sh.MoreThanOneError):
+            sh.line(("seq", "2"))
+
+
 class DescribePrivatePopen:
     def it_can_handle_posix_colon(self) -> None:
         proc = _popen((":", "ohai"))

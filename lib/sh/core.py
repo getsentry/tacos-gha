@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from lib.functions import LessThanOneError as LessThanOneError
+from lib.functions import MoreThanOneError as MoreThanOneError
 from lib.functions import one
 from lib.types import Environ
 from lib.types import OSPath
@@ -71,8 +73,15 @@ def lines(cmd: Command, *, encoding: str = US_ASCII) -> Generator[Line]:
 
         yield line
 
+    # handle termination and error codes
+    _wait(process)
+
 
 def line(cmd: Command, *, encoding: str = US_ASCII) -> Line:
+    """
+    >>> line(('echo', 'ok'))
+    'ok'
+    """
     return one(lines(cmd, encoding=encoding))
 
 

@@ -7,7 +7,7 @@ mypy
 
 # auto-formatting
 isort
-black
+black!=24.2.0
 
 # lint
 pylint
