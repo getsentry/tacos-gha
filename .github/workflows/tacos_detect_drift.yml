@@ -41,14 +41,17 @@ jobs:
       slices: ${{ steps.slices.outputs.slices }}
 
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/checkout@v4
+      - name: Checkout IAC
+        uses: actions/checkout@v4
+      - name: Checkout tacos-gha
+        uses: actions/checkout@v4
         with:
           repository: ${{inputs.tacos_gha_repo}}
           ref: ${{inputs.tacos_gha_ref}}
           path: tacos-gha
 
-      - id: slices
+      - name: List slices
+        id: slices
         run: |
           # NB: separate subprocess substitution, to avoid masking return values
           slices="$("./tacos-gha/"lib/tacos/slices | jq -R | jq -sc)"
@@ -62,16 +65,19 @@ jobs:
       id-token: write
 
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/checkout@v4
+      - name: Checkout IAC
+        uses: actions/checkout@v4
+      - name: Checkout tacos-gha
+        uses: actions/checkout@v4
         with:
           repository: ${{inputs.tacos_gha_repo}}
           ref: ${{inputs.tacos_gha_ref}}
           path: tacos-gha
-      - name: setup
+      - name: Setup
         uses: ./tacos-gha/.github/actions/setup
         with:
           ssh-private-key: ${{ secrets.ssh-private-key }}
 
-      - run: |
+      - name: Detect drift
+        run: |
           gha-log-as-step-summary "$TACOS_GHA_HOME/"lib/ci/tacos-detect-drift

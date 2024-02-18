@@ -17,7 +17,8 @@ jobs:
     outputs:
       keys: ${{ steps.keys-step.outputs.keys }}
     steps:
-      - id: keys-step
+      - name: Generate matrix-jobs' keys
+        id: keys-step
         run: |
           exec >&2  # our only output is logging
 

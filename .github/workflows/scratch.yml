@@ -32,7 +32,8 @@ jobs:
       pull-requests: write
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout tacos-gha
+        uses: actions/checkout@v4
         with:
           repository: ${{inputs.tacos_gha_repo}}
           ref: ${{inputs.tacos_gha_ref}}
