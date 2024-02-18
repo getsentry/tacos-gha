@@ -49,11 +49,13 @@ jobs:
             lib
             bin
 
-      - uses: ./tacos-gha/.github/actions/just-the-basics
-      - name: Get mergeable state
+      - name: Setup
+        uses: ./tacos-gha/.github/actions/just-the-basics
+
+      - name: Detect any merge conflict
         env:
           GH_TOKEN: ${{ github.token }}
-          pr_url: ${{ github.event.pull_request.html_url }} xyz
+          pr_url: ${{ github.event.pull_request.html_url }}
         run: |
           "$TACOS_GHA_HOME/"lib/ci/tacos-conflict-detection "$pr_url"
 

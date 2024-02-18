@@ -1,7 +1,10 @@
 #!/usr/bin/env python3.12
 from __future__ import annotations
 
+from lib import json
 from lib import wait
+from lib.functions import one
+from lib.parse import Parse
 from lib.sh import sh
 from lib.types import URL
 from lib.user_error import UserError
@@ -19,40 +22,40 @@ resolved.
 
 
 def pr_conflict_status(pr_url: URL) -> str:
-    return sh.line(
-        (
-            "gh",
-            "pr",
-            "view",
-            pr_url,
-            "--json=mergeStateStatus",
-            "--jq=.mergeStateStatus",
-        )
-    )
+    return sh.line((
+        "gh",
+        "pr",
+        "view",
+        pr_url,
+        "--json=mergeStateStatus",
+        "--jq=.mergeStateStatus",
+    ))
 
 
 def tell_user(pr_url: URL) -> None:
-    sh.run(("gh", "issue", "edit", "--add-label", ":taco::conflict", pr_url))
     sh.run(
-        ("gh", "issue", "comment", pr_url, "--body-file", "-"),
+        ("gh", "pr", "comment", pr_url, "--body-file", "-"),
         input=MERGE_CONFLICT_MESSAGE,
     )
 
 
-def find_conflict_message(pr_url: URL) -> str | None:
-    try:
-        return sh.line(
-            (
-                "gh",
-                "pr",
-                "view",
-                pr_url,
-                "--json",
-                "comments",
-                '--jq=.comments[] | select(.body | contains("<!-- getsentry/tacos-gha "conflict-detection" -->")) | .id',
-            )
-        )
-    except sh.LessThanOneError:
+def find_conflict_message(pr_url: URL) -> int | None:
+    result: set[int] = set()
+    for comment in sh.jq(
+        ("gh", "pr", "view", pr_url, "--json=comments", "--jq=.comments[]")
+    ):
+        body = json.get(comment, str, "body")
+
+        if TAG in body:
+            # the api doesn't want the id seen here (IC_kwDOKu2SPc50T-Ws)
+            # it wants the numeric id from the url (...#issuecomment-1951393358)
+            url = json.get(comment, str, "url")
+            id = Parse(url).after.last("-")
+            result.add(int(id))
+
+    if result:
+        return one(result)
+    else:
         return None
 
 
@@ -67,7 +70,9 @@ def get_owner_repo(pr_url: str) -> tuple[str, str]:
     return owner, repo
 
 
-def delete_message(pr_url: str, comment_id: str) -> None:
+def delete_message(pr_url: str, comment_id: int) -> None:
+    # I could only find how to do this via `gh api` which is considerably harder
+    # to use. Please update if you find a more straightforward way.
     owner, repo = get_owner_repo(pr_url)
 
     # https://docs.github.com/en/rest/issues/comments#delete-an-issue-comment
@@ -79,6 +84,7 @@ def delete_message(pr_url: str, comment_id: str) -> None:
 def tacos_conflict_detection(pr_url: URL) -> None:
     def pr_conflict_status_known() -> str | None:
         status = pr_conflict_status(pr_url)
+        sh.debug("PR merge status:", status)
         if status == "UNKNOWN":
             return None  # keep waiting
         else:
@@ -87,10 +93,20 @@ def tacos_conflict_detection(pr_url: URL) -> None:
     status = wait.for_(pr_conflict_status_known)
     prior_message = find_conflict_message(pr_url)
 
-    if status == "DIRTY" and prior_message is None:
-        tell_user(pr_url)
-    elif prior_message:
-        delete_message(pr_url, prior_message)
+    if status == "DIRTY":
+        sh.debug("PR is merge-conflicted.")
+        if prior_message is None:
+            tell_user(pr_url)
+        else:
+            sh.debug(f"Owner already notified. (comment {prior_message})")
+        sh.run(("gh", "pr", "edit", pr_url, "--add-label=:taco::conflict"))
+    else:
+        sh.debug("PR is merge-clean.")
+        if prior_message:
+            delete_message(pr_url, prior_message)
+        else:
+            sh.debug("No stale notification to be removed.")
+        sh.run(("gh", "pr", "edit", pr_url, "--remove-label=:taco::conflict"))
 
 
 @UserError.handler
