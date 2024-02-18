@@ -11,7 +11,6 @@ from typing import Self
 
 from lib.constants import NOW
 from lib.constants import USER
-from lib.functions import one
 from lib.parse import Parse
 from lib.sh import sh
 from lib.types import Generator
@@ -108,8 +107,10 @@ class PR(gh.PR):
         self, job: str, since: datetime | None = None
     ) -> dict[Slice, gh.Comment]:
         comments = self.get_comments_by_job(since, job_filter=job)
-        assert one(comments) == job
-        return comments[job]
+        if comments:
+            return comments[job]
+        else:
+            return {}
 
     def get_plans(
         self, since: datetime | None = None

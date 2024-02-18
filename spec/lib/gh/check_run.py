@@ -86,20 +86,35 @@ class CheckRun:
         result: list[object] = []
 
         # failures and incomplete jobs _must_ show up before successes
-        result.append(
-            ("COMPLETED", "PENDING", "QUEUED", "IN_PROGRESS").index(
-                self.status
+        try:
+            result.append(
+                ("COMPLETED", "PENDING", "QUEUED", "IN_PROGRESS").index(
+                    self.status
+                )
             )
-        )
-        result.append(
-            ("NEUTRAL", "SUCCESS", "", "FAILURE").index(self.conclusion)
-        )
+        except ValueError as error:
+            raise AssertionError(
+                f"unrecognised status: {self.status}"
+            ) from error
+
+        try:
+            result.append(
+                ("NEUTRAL", "SUCCESS", "CANCELLED", "", "FAILURE").index(
+                    self.conclusion
+                )
+            )
+        except ValueError as error:
+            raise AssertionError(
+                f"unrecognised conclusion: {self.conclusion}"
+            ) from error
+
         result.append(-self.started_at.timestamp())
         if self.completed_at:
             result.append(-self.completed_at.timestamp())
         else:
             result.append(0)
         result.append(self.name)
+
         return tuple(result)
 
     def __str__(self) -> str:

@@ -20,6 +20,8 @@ def now() -> datetime.datetime:
 
 
 def one(xs: Iterable[T]) -> T:
+    __tracebackhide__ = True
+
     tmp = tuple(xs)
     count = len(tmp)
     if count == 1:
