@@ -22,14 +22,12 @@ resolved.
 
 
 def pr_conflict_status(pr_url: URL) -> str:
-    return sh.line((
-        "gh",
-        "pr",
-        "view",
-        pr_url,
-        "--json=mergeStateStatus",
-        "--jq=.mergeStateStatus",
-    ))
+    pr = sh.json(("gh", "pr", "view", pr_url, "--json=state,mergeStateStatus"))
+    state = json.get(pr, str, "state")
+    if state == "MERGED":
+        return state
+    else:
+        return json.get(pr, str, "mergeStateStatus")
 
 
 def tell_user(pr_url: URL) -> None:
