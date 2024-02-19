@@ -47,6 +47,84 @@ def git_remote() -> gh.RemoteRepo:
     )
 
 
+# TODO(P3): refactor to an object that takes token in constructor
+@fixture(scope="session")
+def cli_auth_gcloud(session_environ: Environ) -> None:
+    # https://fig.io/manual/gcloud/config/config-helper
+    gcloud_config = sh.json((
+        "tty-attach",
+        "gcloud",
+        "config",
+        "config-helper",
+        "--format",
+        "json(configuration.properties.core.account,credential.access_token)",
+    ))
+    gcloud_token = json.deepget(
+        gcloud_config, str, "credential", "access_token"
+    )
+
+    # for the gcloud CLI
+    # https://cloud.google.com/sdk/docs/authorizing#auth-login
+    session_environ["CLOUDSDK_AUTH_ACCESS_TOKEN"] = gcloud_token
+
+    # for the gcloud terraform provider
+    # https://registry.terraform.io/providers/hashicorp/google/latest/docs/guides/provider_reference#access_token
+    session_environ["GOOGLE_OAUTH_ACCESS_TOKEN"] = gcloud_token
+
+    # this is here mostly to help gcloud generate valid error messages
+    # https://stackoverflow.com/a/44824175/146821
+    session_environ["CLOUDSDK_CORE_ACCOUNT"] = json.deepget(
+        gcloud_config, str, "configuration", "properties", "core", "account"
+    )
+
+
+# TODO(P3): refactor to an object that takes token in constructor
+@fixture(scope="session")
+def cli_auth_gh(session_environ: Environ) -> None:
+    session_environ["GH_TOKEN"] = sh.stdout(("gh", "auth", "token"))
+
+
+@fixture(scope="session")
+def cli_auth_op() -> None:
+    """Get 1password to ask for touch ASAP, so tests can run without me."""
+    tacos_demo.get_reviewer()
+
+
+@fixture
+def git_config(environ: Environ) -> Path:
+    # clear out any overriding environment vars
+    for var in environ:
+        if var.startswith("GIT_"):
+            del environ[var]
+
+    git_config = TACOS_GHA_HOME / "etc/gitconfig"
+    environ["GIT_CONFIG_GLOBAL"] = str(git_config)
+    return git_config
+
+
+@fixture(scope="session")
+def session_environ(
+    cli_auth_gcloud: None,
+    cli_auth_gh: None,
+    cli_auth_op: None,
+    session_environ: Environ,
+) -> Generator[Environ]:
+    """Several small customizations to the default environ, for tacos-demo."""
+    yield session_environ
+
+    # these exist only for pytest fixture dependency hinting
+    del cli_auth_gcloud, cli_auth_gh, cli_auth_op
+
+
+@fixture
+def environ(git_config: Path, environ: Environ) -> Generator[Environ]:
+    """Several small customizations to the default environ, for tacos-demo."""
+    yield environ
+
+    # these exist only for pytest fixture dependency hinting
+    del git_config
+
+
 @fixture
 def demo(cwd: OSPath, git_remote: gh.RemoteRepo) -> Generator[gh.LocalRepo]:
     """A local, cloned working copy of the "demo" repo."""
@@ -170,81 +248,3 @@ def pr(
         slices, test_name, demo, tacos_branch
     ) as pr:
         yield pr
-
-
-# TODO(P3): refactor to an object that takes token in constructor
-@fixture(scope="session")
-def cli_auth_gcloud(session_environ: Environ) -> None:
-    # https://fig.io/manual/gcloud/config/config-helper
-    gcloud_config = sh.json((
-        "tty-attach",
-        "gcloud",
-        "config",
-        "config-helper",
-        "--format",
-        "json(configuration.properties.core.account,credential.access_token)",
-    ))
-    gcloud_token = json.deepget(
-        gcloud_config, str, "credential", "access_token"
-    )
-
-    # for the gcloud CLI
-    # https://cloud.google.com/sdk/docs/authorizing#auth-login
-    session_environ["CLOUDSDK_AUTH_ACCESS_TOKEN"] = gcloud_token
-
-    # for the gcloud terraform provider
-    # https://registry.terraform.io/providers/hashicorp/google/latest/docs/guides/provider_reference#access_token
-    session_environ["GOOGLE_OAUTH_ACCESS_TOKEN"] = gcloud_token
-
-    # this is here mostly to help gcloud generate valid error messages
-    # https://stackoverflow.com/a/44824175/146821
-    session_environ["CLOUDSDK_CORE_ACCOUNT"] = json.deepget(
-        gcloud_config, str, "configuration", "properties", "core", "account"
-    )
-
-
-# TODO(P3): refactor to an object that takes token in constructor
-@fixture(scope="session")
-def cli_auth_gh(session_environ: Environ) -> None:
-    session_environ["GH_TOKEN"] = sh.stdout(("gh", "auth", "token"))
-
-
-@fixture(scope="session")
-def cli_auth_op() -> None:
-    """Get 1password to ask for touch ASAP, so tests can run without me."""
-    tacos_demo.get_reviewer()
-
-
-@fixture
-def git_config(environ: Environ) -> Path:
-    # clear out any overriding environment vars
-    for var in environ:
-        if var.startswith("GIT_"):
-            del environ[var]
-
-    git_config = TACOS_GHA_HOME / "etc/gitconfig"
-    environ["GIT_CONFIG_GLOBAL"] = str(git_config)
-    return git_config
-
-
-@fixture(scope="session")
-def session_environ(
-    cli_auth_gcloud: None,
-    cli_auth_gh: None,
-    cli_auth_op: None,
-    session_environ: Environ,
-) -> Generator[Environ]:
-    """Several small customizations to the default environ, for tacos-demo."""
-    yield session_environ
-
-    # these exist only for pytest fixture dependency hinting
-    del cli_auth_gcloud, cli_auth_gh, cli_auth_op
-
-
-@fixture
-def environ(git_config: Path, environ: Environ) -> Generator[Environ]:
-    """Several small customizations to the default environ, for tacos-demo."""
-    yield environ
-
-    # these exist only for pytest fixture dependency hinting
-    del git_config
