@@ -2,17 +2,16 @@
 
 from __future__ import annotations
 
-import contextlib
-
 import pytest
 from pytest import fixture
 
 import lib.pytest.configure_pytest_repr_length
 import lib.pytest.doctest
 import lib.pytest.hook
+from lib import env
 from lib.constants import TACOS_GHA_HOME
+from lib.env import Environ
 from lib.sh import sh
-from lib.types import Environ
 from lib.types import Generator
 from lib.types import OSPath
 
@@ -33,32 +32,19 @@ configure_pytest_repr_length = fixture(
 )
 
 
-@contextlib.contextmanager
-def _environ_fixture(environ: Environ) -> Generator[Environ]:
-    orig = dict(environ)
-
-    yield environ
-
-    for var in set(orig).union(environ):
-        if var in orig:
-            environ[var] = orig[var]
-        else:
-            del environ[var]
-
-
 @fixture(scope="session")
 def session_environ() -> Generator[Environ]:
     """prevent cross-test pollution of environ"""
-    import os
+    from os import environ
 
-    with _environ_fixture(os.environ) as session_environ:
+    with env.fixed(environ) as session_environ:
         yield session_environ
 
 
 @fixture
 def environ(session_environ: Environ) -> Generator[Environ]:
     """prevent cross-test pollution of environ"""
-    with _environ_fixture(session_environ) as environ:
+    with env.fixed(session_environ) as environ:
         yield environ
 
 
@@ -82,35 +68,39 @@ def cwd(tmp_path: OSPath, environ: Environ) -> Generator[OSPath]:
 
 @fixture
 def home(cwd: OSPath, environ: Environ) -> Generator[tuple[OSPath, OSPath]]:
+    orig_home = environ["HOME"]
+
     home = cwd / "home"
-    orig_home = OSPath(environ["HOME"])
+    home.mkdir()
     environ["HOME"] = str(home)
 
-    yield orig_home, home
+    yield OSPath(orig_home), home
 
-    environ["HOME"] = str(orig_home)
+    environ["HOME"] = orig_home
 
 
-@fixture()
-def xdg_environ(cwd: OSPath, environ: Environ) -> None:
+@fixture
+def xdg_environ(cwd: OSPath, environ: Environ) -> Generator[Environ]:
     """Configure XDG so files are written to / read from cwd by default.
 
     reference:
         https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html
     """
-    for xdg_var in (
-        "CACHE_HOME",
-        "CONFIG_HOME",
-        "DATA_HOME",
-        "STATE_HOME",
-        "RUNTIME_DIR",
-        "CONFIG_DIRS",
-        "DATA_DIRS",
-    ):
-        xdg_var = "XDG_" + xdg_var
-        xdg_val = cwd / xdg_var
-        xdg_val.mkdir()
-        environ[xdg_var] = str(xdg_val)
+    with env.fixed(environ) as xdg_environ:
+        for xdg_var in (
+            "CACHE_HOME",
+            "CONFIG_HOME",
+            "DATA_HOME",
+            "STATE_HOME",
+            "RUNTIME_DIR",
+            "CONFIG_DIRS",
+            "DATA_DIRS",
+        ):
+            xdg_val = cwd / xdg_var.lower()
+            xdg_val.mkdir()
+            xdg_environ["XDG_" + xdg_var] = str(xdg_val)
+
+        yield xdg_environ
 
 
 pytest_configure = lib.pytest.doctest.pytest_configure

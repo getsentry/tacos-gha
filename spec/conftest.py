@@ -48,8 +48,15 @@ def git_remote() -> gh.RemoteRepo:
 
 
 # TODO(P3): refactor to an object that takes token in constructor
-@fixture(scope="session")
-def cli_auth_gcloud(session_environ: Environ) -> None:
+@fixture
+def cli_auth_gcloud(
+    home: tuple[OSPath, OSPath], xdg_environ: Environ
+) -> Environ:
+    # NOTE: must use $HOME here because (ofc) gcloud doesn't respect xdg-config-home
+    config_old, config_new = tuple(home / ".config/gcloud" for home in home)
+    config_new.parent.mkdir(parents=True, exist_ok=True)
+    config_new.symlink_to(config_old)
+
     # https://fig.io/manual/gcloud/config/config-helper
     gcloud_config = sh.json((
         "tty-attach",
@@ -65,23 +72,25 @@ def cli_auth_gcloud(session_environ: Environ) -> None:
 
     # for the gcloud CLI
     # https://cloud.google.com/sdk/docs/authorizing#auth-login
-    session_environ["CLOUDSDK_AUTH_ACCESS_TOKEN"] = gcloud_token
+    xdg_environ["CLOUDSDK_AUTH_ACCESS_TOKEN"] = gcloud_token
 
     # for the gcloud terraform provider
     # https://registry.terraform.io/providers/hashicorp/google/latest/docs/guides/provider_reference#access_token
-    session_environ["GOOGLE_OAUTH_ACCESS_TOKEN"] = gcloud_token
+    xdg_environ["GOOGLE_OAUTH_ACCESS_TOKEN"] = gcloud_token
 
     # this is here mostly to help gcloud generate valid error messages
     # https://stackoverflow.com/a/44824175/146821
-    session_environ["CLOUDSDK_CORE_ACCOUNT"] = json.deepget(
+    xdg_environ["CLOUDSDK_CORE_ACCOUNT"] = json.deepget(
         gcloud_config, str, "configuration", "properties", "core", "account"
     )
+    return xdg_environ
 
 
 # TODO(P3): refactor to an object that takes token in constructor
 @fixture(scope="session")
-def cli_auth_gh(session_environ: Environ) -> None:
+def cli_auth_gh(session_environ: Environ) -> Environ:
     session_environ["GH_TOKEN"] = sh.stdout(("gh", "auth", "token"))
+    return session_environ
 
 
 @fixture(scope="session")
@@ -91,7 +100,7 @@ def cli_auth_op() -> None:
 
 
 @fixture
-def git_config(environ: Environ) -> Path:
+def git_config(environ: Environ) -> Environ:
     # clear out any overriding environment vars
     for var in environ:
         if var.startswith("GIT_"):
@@ -99,30 +108,30 @@ def git_config(environ: Environ) -> Path:
 
     git_config = TACOS_GHA_HOME / "etc/gitconfig"
     environ["GIT_CONFIG_GLOBAL"] = str(git_config)
-    return git_config
+    return environ
 
 
 @fixture(scope="session")
 def session_environ(
-    cli_auth_gcloud: None,
-    cli_auth_gh: None,
-    cli_auth_op: None,
-    session_environ: Environ,
+    cli_auth_gh: Environ, cli_auth_op: None
 ) -> Generator[Environ]:
     """Several small customizations to the default environ, for tacos-demo."""
-    yield session_environ
+    yield cli_auth_gh
 
     # these exist only for pytest fixture dependency hinting
-    del cli_auth_gcloud, cli_auth_gh, cli_auth_op
+    del cli_auth_op
 
 
 @fixture
-def environ(git_config: Path, environ: Environ) -> Generator[Environ]:
+def environ(git_config: Environ) -> Generator[Environ]:
     """Several small customizations to the default environ, for tacos-demo."""
-    yield environ
+    yield git_config
 
-    # these exist only for pytest fixture dependency hinting
-    del git_config
+
+@fixture
+def cwd(cli_auth_gcloud: Environ) -> Generator[OSPath]:
+    """Several small customizations to the default cwd, for tacos-demo."""
+    yield OSPath(cli_auth_gcloud["PWD"])
 
 
 @fixture
