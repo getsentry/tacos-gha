@@ -172,14 +172,9 @@ def pr(
         yield pr
 
 
-GCLOUD_CONFIG = Path(".config/gcloud/configurations")
-
-
-# TODO(P3): refactor to an object that takes token in constructor, remove autouse
-@fixture(autouse=True, scope="session")
-def cli_auth_gcloud() -> None:
-    from os import environ
-
+# TODO(P3): refactor to an object that takes token in constructor
+@fixture(scope="session")
+def cli_auth_gcloud(session_environ: Environ) -> None:
     # https://fig.io/manual/gcloud/config/config-helper
     gcloud_config = sh.json((
         "tty-attach",
@@ -195,34 +190,32 @@ def cli_auth_gcloud() -> None:
 
     # for the gcloud CLI
     # https://cloud.google.com/sdk/docs/authorizing#auth-login
-    environ["CLOUDSDK_AUTH_ACCESS_TOKEN"] = gcloud_token
+    session_environ["CLOUDSDK_AUTH_ACCESS_TOKEN"] = gcloud_token
 
     # for the gcloud terraform provider
     # https://registry.terraform.io/providers/hashicorp/google/latest/docs/guides/provider_reference#access_token
-    environ["GOOGLE_OAUTH_ACCESS_TOKEN"] = gcloud_token
+    session_environ["GOOGLE_OAUTH_ACCESS_TOKEN"] = gcloud_token
 
     # this is here mostly to help gcloud generate valid error messages
     # https://stackoverflow.com/a/44824175/146821
-    environ["CLOUDSDK_CORE_ACCOUNT"] = json.deepget(
+    session_environ["CLOUDSDK_CORE_ACCOUNT"] = json.deepget(
         gcloud_config, str, "configuration", "properties", "core", "account"
     )
 
 
-# TODO(P3): refactor to an object that takes token in constructor, remove autouse
-@fixture(autouse=True, scope="session")
-def cli_auth_gh() -> None:
-    from os import environ
-
-    environ["GH_TOKEN"] = sh.stdout(("gh", "auth", "token"))
+# TODO(P3): refactor to an object that takes token in constructor
+@fixture(scope="session")
+def cli_auth_gh(session_environ: Environ) -> None:
+    session_environ["GH_TOKEN"] = sh.stdout(("gh", "auth", "token"))
 
 
-@fixture(autouse=True, scope="session")
-def prompt_1password() -> None:
+@fixture(scope="session")
+def cli_auth_op() -> None:
     """Get 1password to ask for touch ASAP, so tests can run without me."""
     tacos_demo.get_reviewer()
 
 
-@fixture(autouse=True)
+@fixture
 def git_config(environ: Environ) -> Path:
     # clear out any overriding environment vars
     for var in environ:
@@ -232,3 +225,26 @@ def git_config(environ: Environ) -> Path:
     git_config = TACOS_GHA_HOME / "etc/gitconfig"
     environ["GIT_CONFIG_GLOBAL"] = str(git_config)
     return git_config
+
+
+@fixture(scope="session")
+def session_environ(
+    cli_auth_gcloud: None,
+    cli_auth_gh: None,
+    cli_auth_op: None,
+    session_environ: Environ,
+) -> Generator[Environ]:
+    """Several small customizations to the default environ, for tacos-demo."""
+    yield session_environ
+
+    # these exist only for pytest fixture dependency hinting
+    del cli_auth_gcloud, cli_auth_gh, cli_auth_op
+
+
+@fixture
+def environ(git_config: Path, environ: Environ) -> Generator[Environ]:
+    """Several small customizations to the default environ, for tacos-demo."""
+    yield environ
+
+    # these exist only for pytest fixture dependency hinting
+    del git_config

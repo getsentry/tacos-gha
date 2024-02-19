@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import contextlib
+
 import pytest
 from pytest import fixture
 
@@ -31,12 +33,9 @@ configure_pytest_repr_length = fixture(
 )
 
 
-@fixture
-def environ() -> Generator[Environ]:
-    """prevent cross-test pollution of environ"""
-    from os import environ
-
-    orig = environ.copy()
+@contextlib.contextmanager
+def _environ_fixture(environ: Environ) -> Generator[Environ]:
+    orig = dict(environ)
 
     yield environ
 
@@ -45,6 +44,22 @@ def environ() -> Generator[Environ]:
             environ[var] = orig[var]
         else:
             del environ[var]
+
+
+@fixture(scope="session")
+def session_environ() -> Generator[Environ]:
+    """prevent cross-test pollution of environ"""
+    import os
+
+    with _environ_fixture(os.environ) as session_environ:
+        yield session_environ
+
+
+@fixture
+def environ(session_environ: Environ) -> Generator[Environ]:
+    """prevent cross-test pollution of environ"""
+    with _environ_fixture(session_environ) as environ:
+        yield environ
 
 
 @fixture
@@ -76,8 +91,8 @@ def home(cwd: OSPath, environ: Environ) -> Generator[tuple[OSPath, OSPath]]:
     environ["HOME"] = str(orig_home)
 
 
-@fixture(autouse=True)
-def xdg(cwd: OSPath, environ: Environ) -> None:
+@fixture()
+def xdg_environ(cwd: OSPath, environ: Environ) -> None:
     """Configure XDG so files are written to / read from cwd by default.
 
     reference:
