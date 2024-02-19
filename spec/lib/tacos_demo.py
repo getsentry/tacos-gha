@@ -20,8 +20,8 @@ from spec.lib.gh import gh
 from spec.lib.slice import Slice
 from spec.lib.slice import Slices
 
-COMMENT_TAG = '<!-- getsentry/tacos-gha "'
-COMMENT_TAG_END = '" -->'
+COMMENT_TAG = '\n<!-- getsentry/tacos-gha "'
+COMMENT_TAG_END = '" -->\n'
 APP_INSTALLATION_REVIEWER = (
     "op://Team Tacos gha"
     " dev/gh-app--tacos-gha-reviewer/app-installation/sentryio-org"

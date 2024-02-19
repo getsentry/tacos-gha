@@ -220,3 +220,15 @@ def cli_auth_gh() -> None:
 def prompt_1password() -> None:
     """Get 1password to ask for touch ASAP, so tests can run without me."""
     tacos_demo.get_reviewer()
+
+
+@fixture(autouse=True)
+def git_config(environ: Environ) -> Path:
+    # clear out any overriding environment vars
+    for var in environ:
+        if var.startswith("GIT_"):
+            del environ[var]
+
+    git_config = TACOS_GHA_HOME / "etc/gitconfig"
+    environ["GIT_CONFIG_GLOBAL"] = str(git_config)
+    return git_config
