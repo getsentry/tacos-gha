@@ -7,8 +7,9 @@ inputs:
     default: ./matrix-fan-out
   retention-days:
     description: "Optional. Defaults to repository settings."
-    default: null
+    default: "${{ toJSON(step) }}"
   steps:
+    description: "Required. Please pass: ${{ toJSON(steps) }}"
     default: null
   shell:
     description: "private -- do not use"

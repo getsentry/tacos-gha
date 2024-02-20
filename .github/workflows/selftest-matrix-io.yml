@@ -53,7 +53,7 @@ jobs:
         uses: ./tacos-gha/.github/actions/matrix-fan-out
         with:
           path: ./a/b/c
-          steps: "${{ toJSON(steps) }}"
+          #steps: "${{ toJSON(steps) }}"
 
   fan-in:
     runs-on: ubuntu-latest
