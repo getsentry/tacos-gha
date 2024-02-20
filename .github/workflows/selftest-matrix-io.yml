@@ -12,27 +12,27 @@ defaults:
     shell: bash -euxo pipefail {0}
 
 jobs:
-  keys-job:
-    runs-on: ubuntu-latest
-    outputs:
-      keys: ${{ steps.keys-step.outputs.keys }}
-    steps:
-      - name: Generate matrix-jobs' keys
-        id: keys-step
-        run: |
-          exec >&2  # our only output is logging
+  ###keys-job:
+  ###  runs-on: ubuntu-latest
+  ###  outputs:
+  ###    keys: ${{ steps.keys-step.outputs.keys }}
+  ###  steps:
+  ###    - name: Generate matrix-jobs' keys
+  ###      id: keys-step
+  ###      run: |
+  ###        exec >&2  # our only output is logging
 
-          printf "keys=" >> "$GITHUB_OUTPUT"
-          seq 30 | shuf | jq -R | jq -cs | tee -a "$GITHUB_OUTPUT"
+  ###        printf "keys=" >> "$GITHUB_OUTPUT"
+  ###        seq 30 | shuf | jq -R | jq -cs | tee -a "$GITHUB_OUTPUT"
 
   fan-out:
     runs-on: ubuntu-latest
-    needs:
-      - keys-job
+    ###needs:
+    ###  - keys-job
     strategy:
       matrix:
-        #key: ${{ fromJSON('[3, 10]') }}  # helpful for smoketest
-        key: ${{ fromJSON(needs.keys-job.outputs.keys) }}
+        key: ${{ fromJSON('[3, 10]') }} # helpful for smoketest
+        #key: ${{ fromJSON(needs.keys-job.outputs.keys) }}
     env:
       KEY: ${{ matrix.key }}
 
