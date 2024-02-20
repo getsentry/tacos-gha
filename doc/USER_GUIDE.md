@@ -27,10 +27,10 @@ directory in the repository. These include:
 - `plan.allowlist`
   - Controls the ability to lock and plan a slice, as well as to unlock it.
 - `apply.allowlist`
-  - Controls the ability to apply changes to a slice. If a slice is listed here,
-    it should also be listed in `plan.allowlist`.
+  - Controls the ability to apply changes to a slice. Also allows plan.
 - `drift.allowlist`
-  - Controls if a slice is included in the drift detection job.
+  - Controls if a slice is included in the drift detection job. Also allows
+    apply and plan.
 - `slices.allowlist`
   - The fallback allowlist. A slice listed here is allowed for all actions in
     TACOS-GHA.
