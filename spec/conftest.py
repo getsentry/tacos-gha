@@ -96,6 +96,8 @@ def cli_auth_gh(session_environ: Environ) -> Environ:
 @fixture(scope="session")
 def cli_auth_op() -> None:
     """Get 1password to ask for touch ASAP, so tests can run without me."""
+    # note: start the 1p daemon separately, so it can't hold the flock
+    sh.run(("op", "daemon", "-d"))
     tacos_demo.get_reviewer()
 
 
