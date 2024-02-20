@@ -128,16 +128,12 @@ jobs:
           message: ${{ fromJSON(steps.main.outputs.summary) }}
           comment_tag: plan(${{env.TF_ROOT_MODULE}})
 
-      - name: Store `tfplan`
-        uses: actions/upload-artifact@v4
+      - name: Save matrix result
+        uses: ./tacos-gha/.github/actions/matrix-fan-out
         with:
-          name: ${{steps.main.outputs.artifact_name}}
           path: ${{steps.main.outputs.artifact_path}}
-          if-no-files-found: error
-          overwrite: true # we only want the latest plan
 
-  # FIXME: we need a fan-in summary
-  # summary:
+  summary:
 
   reset-label:
     uses: ./.github/workflows/reset-label.yml
