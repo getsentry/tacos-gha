@@ -88,6 +88,10 @@ when resources or permissions have changed outside of terraform.
 
 ### `🌮:unlock`
 
+This label is only for use by the user who opened the pull request. Use by other
+users will fail. Other users should use normal interaction with the pull request
+to unlock, as described above.
+
 The `🌮:unlock` label can be used to cause TACOS-GHA to release any locks it's
 holding on the slice(s) involved in a pull request. This can be useful if you
 need to unlock a slice, but it isn't desirable to close the pull request or
@@ -95,6 +99,10 @@ convert it to a draft. Note that any subsequent action on the pull request that
 would normally cause TACOS-GHA to take the locks will still do so.
 
 ### `🌮:apply`
+
+This label is only for use by the user who opened the pull request. Use by other
+users will fail. Should the original user not be available, the pull request
+should be closed, and a new one opened by a different user on the same branch.
 
 The `🌮:apply` label can be used to cause TACOS-GHA to apply the slice(s)
 involved in a pull request. For this to work, the pull request must not be a
