@@ -7,6 +7,9 @@ HERE="$GITHUB_ACTION_PATH"
 
 set -x
 
+: show steps context...
+cat
+
 : Record matrix context
 tee \
   <<<"$MATRIX_FAN_OUT_CONTEXT" \

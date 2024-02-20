@@ -21,7 +21,8 @@ runs:
         MATRIX_FAN_OUT_PATH: ${{ inputs.path }}
         MATRIX_FAN_OUT_CONTEXT: ${{ toJSON(matrix) }}
       run: |
-        "$GITHUB_ACTION_PATH/"prepare.sh |
+        "$GITHUB_ACTION_PATH/"prepare.sh \
+          <<< "${{ toJSON(steps) }}" |
           tee -a "$GITHUB_ENV"
 
     - name: Upload artifact
