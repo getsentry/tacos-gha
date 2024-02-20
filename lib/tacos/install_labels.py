@@ -9,9 +9,6 @@ from lib.json import assert_dict_of_strings
 from lib.sh import sh
 from lib.types import Generator
 
-# mypy can't find sh.Command =.=
-# mypy: ignore-errors=True
-
 
 class Color(str):
     def __new__(cls, object: object) -> Self:
