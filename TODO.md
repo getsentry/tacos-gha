@@ -15,15 +15,14 @@ An inbox for quick use during meetings:
 
 P1
 
-- [ ] wide rollout & comms
+- [ ] wide rollout & comms -- use TACOS by default for all ops slices
 
-  - [~] @ellison Tell user that merge conflicts are preventing plan/apply
+  - [x] @ellison Tell user that merge conflicts are preventing plan/apply
   - [~] @buck combined summary comments
     - simple version: concatenate
     - FIXME: we need a fan-in summary
     - FIXME: this really should be done in a fan-in summary job
-  - [x] @filippo jira ticket for bucket permissions
-    - https://gist.github.com/bukzor/ee00a6f75d4a0cc7f865c37cfa67a895
+  - [ ] @jim ops fixes to project & bucket permissions
     - https://getsentry.atlassian.net/browse/OPS-5203
   - [ ] @ellison JIRA backlog to tf-import test-region bucket IAM
     - gs://sentry-test-region-terraform
@@ -32,21 +31,24 @@ P1
 
 - [ ] drift remediation
 
-  - [~] @ellison phased allowlist:
+  - [?] @ellison phased allowlist:
+    https://github.com/getsentry/tacos-gha/pull/119
     1.  [x] off
-    2.  [ ] plan-only
+    2.  ~[ ] plan-only~
     3.  [ ] plan-and-lock
     4.  [x] plan-lock-apply
     5.  [ ] drift detection
-  - [ ] ensure lock conflict message links to the lock-holding PR
+  - [ ] @neo ensure lock conflict message links to the lock-holding PR
     - essential for people know when there's conflicting drift
+  - [ ] @buck raise XFailed("tacos/drift branch not created") branch?
+  - [ ] @buck TODO: check for the opening of the drift remediation branch.
+  - [ ] @buck TODO: anything (scenario: drift detection)
   - [#] how will people know when there's _new_ drift?
     - initial implementation: people need to notice the automatic drift pr
     - slack notification?
     - team-sre needs to decide
-  - [ ] @buck raise XFailed("tacos/drift branch not created") branch?
-  - [ ] @buck TODO: check for the opening of the drift remediation branch.
-  - [ ] @buck TODO: anything (scenario: drift detection)
+
+later...
 
 - [ ] @ellison down the old terraform-plan workflow
   - after full rollout and acceptance
