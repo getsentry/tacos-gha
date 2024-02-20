@@ -72,6 +72,12 @@ def xtrace(cmd: Command, *, level: int = 1) -> None:
     debug("".join((PS4, quote(cmd))), level=level)
 
 
+def comment(*msg: object, level: int = 1) -> None:
+    """Print a bash-style comment to the log, with de-emphasized color."""
+    msg = (ansi.GREY + "#", *msg, ansi.RESET)
+    debugN(msg, level)
+
+
 def debugN(msg: Iterable[object], level: int) -> None:
     if DEBUG >= level:
         info(*msg)
