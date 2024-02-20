@@ -25,7 +25,7 @@ class PathFilter:
         return False
 
     @classmethod
-    def from_config(cls, config: str) -> PathFilter:
+    def from_config(cls, configs: list[str]) -> PathFilter:
         """Get a list of allowed globs from a file
 
         Hash comments are removed and blank lines are ignored.
@@ -33,7 +33,7 @@ class PathFilter:
         If both the provided and default files are missing, allow all.
         Globs are evaluated with the fnmatch module."""
         lines: list[str] = []
-        for path in OSPath(config), OSPath(DEFAULT_PATH):
+        for path in [OSPath(x) for x in configs] + [OSPath(DEFAULT_PATH)]:
             try:
                 with path.open() as config_file:
                     sh.info(
@@ -48,7 +48,7 @@ class PathFilter:
                 continue
         else:
             sh.info(
-                f"TACOS-gha: allowing all slices due to lack of config: {config}"
+                f"TACOS-gha: allowing all slices due to lack of configs: {' '.join(configs)}"
             )
         return cls(allowed=frozenset(lines))
 
@@ -61,7 +61,7 @@ def main() -> int:
     # need to modify argv for fileinput to work
     del argv[1:]
 
-    path_filter = PathFilter.from_config(*args)
+    path_filter = PathFilter.from_config(args)
 
     for line in fileinput.input(encoding="utf-8"):
         line = line.strip()

@@ -252,7 +252,7 @@ def main() -> int:
     fs = FileSystem.from_git()
     modified_paths = lines_to_paths(fileinput.input(encoding="utf-8"))
 
-    path_filter = PathFilter.from_config(*args)
+    path_filter = PathFilter.from_config(args)
 
     for slice in dependent_slices(modified_paths, fs):
         if path_filter.match(str(slice)):
