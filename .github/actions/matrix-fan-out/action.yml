@@ -8,6 +8,8 @@ inputs:
   retention-days:
     description: "Optional. Defaults to repository settings."
     default: null
+  steps:
+    default: null
   shell:
     description: "private -- do not use"
     default: bash -euxo pipefail {0}
@@ -21,6 +23,7 @@ runs:
         MATRIX_FAN_OUT_PATH: ${{ inputs.path }}
         MATRIX_FAN_OUT_CONTEXT: ${{ toJSON(matrix) }}
       run: |
+        : steps: "${{ toJSON(inputs.steps) }}"
         "$GITHUB_ACTION_PATH/"prepare.sh \
           <<< "${{ toJSON(steps) }}" |
           tee -a "$GITHUB_ENV"

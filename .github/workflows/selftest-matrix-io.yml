@@ -45,6 +45,7 @@ jobs:
           sparse-checkout-cone-mode: false
 
       - name: Add content to fan-out
+        id: content
         run: |
           "./tacos-gha/".github/actions/matrix-fan-out/selftest.sh "$KEY"
 
@@ -52,6 +53,7 @@ jobs:
         uses: ./tacos-gha/.github/actions/matrix-fan-out
         with:
           path: ./a/b/c
+          steps: "${{ toJSON(steps) }}"
 
   fan-in:
     runs-on: ubuntu-latest
