@@ -34,10 +34,9 @@ P1
   - [?] @ellison phased allowlist:
     https://github.com/getsentry/tacos-gha/pull/119
     1.  [x] off
-    2.  ~[ ] plan-only~
-    3.  [ ] plan-and-lock
-    4.  [x] plan-lock-apply
-    5.  [ ] drift detection
+    2.  [x] plan-and-lock
+    3.  [x] plan-lock-apply
+    4.  [x] drift detection
   - [ ] @neo ensure lock conflict message links to the lock-holding PR
     - essential for people know when there's conflicting drift
   - [ ] @buck raise XFailed("tacos/drift branch not created") branch?

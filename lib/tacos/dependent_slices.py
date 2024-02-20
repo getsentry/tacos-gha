@@ -243,11 +243,16 @@ def lines_to_paths(lines: Iterable[str]) -> Generator[OSPath]:
 
 def main() -> int:
     import fileinput
+    from sys import argv
+
+    args = argv[1:]
+    # need to modify argv for fileinput to work
+    del argv[1:]
 
     fs = FileSystem.from_git()
     modified_paths = lines_to_paths(fileinput.input(encoding="utf-8"))
 
-    path_filter = PathFilter.from_config()
+    path_filter = PathFilter.from_config(args)
 
     for slice in dependent_slices(modified_paths, fs):
         if path_filter.match(str(slice)):
@@ -257,4 +262,4 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    exit(main())
+    raise SystemExit(main())

@@ -51,7 +51,8 @@ jobs:
       - id: slices
         run: |
           # NB: separate subprocess substitution, to avoid masking return values
-          slices="$("./tacos-gha/"lib/tacos/slices | jq -R | jq -sc)"
+          slices="$("./tacos-gha/"lib/tacos/slices \
+                      .config/tacos-gha/drift.allowlist | jq -R | jq -sc)"
           tee -a "$GITHUB_OUTPUT" <<< "slices=$slices"
 
   tacos_detect_drift:

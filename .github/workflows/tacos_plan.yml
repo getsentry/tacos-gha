@@ -60,6 +60,10 @@ jobs:
       - name: List Slices
         id: list-slices
         uses: ./tacos-gha/.github/actions/list-slices
+        with:
+          allowlist: >-
+            .config/tacos-gha/plan.allowlist .config/tacos-gha/apply.allowlist
+            .config/tacos-gha/drift.allowlist
 
   tacos_plan:
     needs: [determine-tf-root-modules]
