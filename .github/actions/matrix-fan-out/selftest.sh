@@ -34,7 +34,7 @@ echo "title=Hello, $key!" | tee -a "$GITHUB_OUTPUT"
   gha-set-artifact square.txt
 
 square=$((key ** 2))
-echo "$square" | gha-set-output 'matrix'
+echo "$square" | gha-set-output 'matrix.json'
 
 outdir="x/y/z"
 mkdir -p "$outdir"

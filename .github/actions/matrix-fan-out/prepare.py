@@ -28,7 +28,7 @@ def step_outputs(steps: StepsContext) -> Generator[tuple[Path, Val | None]]:
             if key.startswith("artifact."):
                 yield Path(val), None
             else:
-                yield Path(f"{key}.txt"), val
+                yield Path(key), val
 
 
 def mkdirp(path: Path) -> None:
