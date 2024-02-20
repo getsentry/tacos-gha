@@ -5,6 +5,7 @@
 
 set -euo pipefail
 exec >&2  # our only output is logging
+HERE="$(readlink -f "$(dirname "$0")")"
 
 gha-set-output() {
   var="$1"
@@ -14,7 +15,10 @@ gha-set-output() {
 gha-set-artifact() {
   artifact="$1"
   gha-set-output "artifact.$artifact" <<< "$artifact"
-  cat > "$artifact"
+
+  if ! [[ -e "$artifact" ]]; then
+    cat > "$artifact"
+  fi
 }
 
 key="$1"
@@ -26,16 +30,16 @@ set -x
 gha-set-output key <<< "$key"
 echo "title=Hello, $key!" | tee -a "$GITHUB_OUTPUT"
 
-"$GITHUB_ACTION_PATH/"square.py "$key" |
+"$HERE/"square.py "$key" |
   gha-set-artifact square.txt
 
 square=$((key ** 2))
 echo "$square" | gha-set-output 'matrix'
 
 outdir="a/b/c"
+mkdir -p "$outdir/x/y/z"
 gha-set-artifact "$outdir"
 
-mkdir -p "$outdir/x/y/z"
 echo 1 > "$outdir/x/y/matrix.1.json"
 echo "$RANDOM" | tee "$outdir/x/random.txt" "$outdir/x/y/z/random.json"
 
