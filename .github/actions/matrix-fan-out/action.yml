@@ -7,10 +7,10 @@ inputs:
     default: ./matrix-fan-out
   retention-days:
     description: "Optional. Defaults to repository settings."
-    default: "${{ toJSON(step) }}"
-  steps:
-    description: "Required. Please pass: ${{ toJSON(steps) }}"
     default: null
+  steps:
+    description: "Required. Please pass: toJSON(steps)"
+    required: true
   shell:
     description: "private -- do not use"
     default: bash -euxo pipefail {0}
@@ -23,10 +23,11 @@ runs:
       env:
         MATRIX_FAN_OUT_PATH: ${{ inputs.path }}
         MATRIX_FAN_OUT_CONTEXT: ${{ toJSON(matrix) }}
+        STEPS_CONTEXT: ${{ toJSON(inputs.steps) }}
       run: |
-        : steps: "${{ toJSON(inputs.steps) }}"
-        "$GITHUB_ACTION_PATH/"prepare.sh \
-          <<< "${{ toJSON(steps) }}" |
+        : job: "${{ toJSON(inputs.job) }}"
+        : jobs: "${{ toJSON(inputs.jobs) }}"
+        "$GITHUB_ACTION_PATH/"prepare.sh <<<"$STEPS_CONTEXT" |
           tee -a "$GITHUB_ENV"
 
     - name: Upload artifact
