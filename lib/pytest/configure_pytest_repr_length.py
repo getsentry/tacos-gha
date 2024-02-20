@@ -1,6 +1,7 @@
 """Nasty hack: pytest's default ellipsizing behavior varies with verbosity"""
 
 # mypy: disable_error_code="attr-defined"
+# error: Module "_pytest._code.code" does not explicitly export attribute "saferepr"
 
 from __future__ import annotations
 
