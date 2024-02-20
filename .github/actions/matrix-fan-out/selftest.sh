@@ -36,11 +36,11 @@ echo "title=Hello, $key!" | tee -a "$GITHUB_OUTPUT"
 square=$((key ** 2))
 echo "$square" | gha-set-output 'matrix'
 
-outdir="a/b/c"
-mkdir -p "$outdir/x/y/z"
-gha-set-artifact "$outdir"
+outdir="x/y/z"
+mkdir -p "$outdir"
+gha-set-artifact "x"
 
-echo 1 > "$outdir/x/y/matrix.1.json"
-echo "$RANDOM" | tee "$outdir/x/random.txt" "$outdir/x/y/z/random.json"
+echo 1 > "x/y/matrix.1.json"
+echo "$RANDOM" | tee "x/random.txt" "x/y/z/random.json"
 
 find "$outdir" -type f -print0 | xargs -0 head

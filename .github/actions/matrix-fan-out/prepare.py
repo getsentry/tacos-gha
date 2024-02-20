@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import typing
 from pathlib import Path
+from subprocess import run
 from typing import Literal
 
 T = typing.TypeVar("T")
@@ -19,27 +20,36 @@ StepsContext = dict[StepName, dict[Literal["outputs"], dict[Key, Val]]]
 HERE = Path(__file__).resolve().parent
 
 
-def step_outputs(steps: StepsContext) -> Generator[tuple[Path, Val]]:
+def step_outputs(steps: StepsContext) -> Generator[tuple[Path, Val | None]]:
     for step_name, step in sorted(steps.items()):
         del step_name
         outputs = sorted(step.get("outputs", {}).items())
         for key, val in outputs:
             if key.startswith("artifact."):
-                path = Path(val)
-                yield path, path.read_text()
+                yield Path(val), None
             else:
                 yield Path(f"{key}.txt"), val
+
+
+def mkdirp(path: Path) -> None:
+    path.mkdir(exist_ok=True, parents=True)
 
 
 def prepare(
     path: Path, matrix_context: str, steps_context: StepsContext
 ) -> None:
+    mkdirp(path)
     for items in (
         ((Path("GHA_MATRIX_CONTEXT.json"), matrix_context),),
         step_outputs(steps_context),
     ):
         for subpath, val in items:
-            (path / subpath).write_text(val)
+            if val is None:
+                newpath = path / subpath
+                mkdirp(newpath.parent)
+                run(("cp", "-va", subpath, newpath), check=True, stdout=2)
+            else:
+                (path / subpath).write_text(val)
 
 
 def get_artifact_name(matrix_context: str) -> str:
@@ -55,9 +65,11 @@ def get_artifact_name(matrix_context: str) -> str:
 def set_artifact_name(path: Path, matrix_context: str) -> None:
     artifact_name = get_artifact_name(matrix_context)
 
-    from subprocess import run
-
-    run((HERE / "artifact-name.sh", path), input=artifact_name, check=True)
+    run(
+        (HERE / "artifact-name.sh", path),
+        input=artifact_name.encode(),
+        check=True,
+    )
 
 
 def main() -> int:
