@@ -9,8 +9,9 @@ inputs:
     description: "Optional. Defaults to repository settings."
     default: null
   steps:
-    description: "Required. Please pass: toJSON(steps)"
-    required: true
+    description:
+      "Optional. To auto-populate from step output, pass: toJSON(steps)"
+    default: null
   shell:
     description: "private -- do not use"
     default: bash -euxo pipefail {0}
@@ -22,12 +23,10 @@ runs:
     - shell: ${{ inputs.shell }}
       env:
         MATRIX_FAN_OUT_PATH: ${{ inputs.path }}
-        MATRIX_FAN_OUT_CONTEXT: ${{ toJSON(matrix) }}
-        STEPS_CONTEXT: ${{ toJSON(inputs.steps) }}
+        GHA_MATRIX_CONTEXT: ${{ toJSON(matrix) }}
+        GHA_STEPS_CONTEXT: ${{ inputs.steps }}
       run: |
-        : job: "${{ toJSON(inputs.job) }}"
-        : jobs: "${{ toJSON(inputs.jobs) }}"
-        "$GITHUB_ACTION_PATH/"prepare.sh <<<"$STEPS_CONTEXT" |
+        "$GITHUB_ACTION_PATH/"prepare.py |
           tee -a "$GITHUB_ENV"
 
     - name: Upload artifact

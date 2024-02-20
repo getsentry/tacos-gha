@@ -2,13 +2,10 @@
 set -euo pipefail
 export TERRAGRUNT_INCLUDE_MODULE_PREFIX=false
 
-tfplan="$TF_ROOT_MODULE/tfplan"
-matrix_result="$TF_ROOT_MODULE/matrix-result"
-
 # terragrunt in "bare" slices will evaluate relative paths with respect to its
 # hidden terraform working directory, making the plan file hard to find, so
 # it's essential to use an absolute path here.
-export TACOS_TFPLAN="$PWD/$tfplan"
+export TACOS_TFPLAN="$PWD/$TF_ROOT_MODULE/tfplan"
 
 # TODO: let the user know who has the lock
 # TODO: let the user know plan may not be fully accurate, if they dont have the lock
@@ -19,10 +16,6 @@ else
   export TACOS_LOCK=true
 fi
 
-gha-set-output matrix-result <<< "$matrix_result"
-
-mkdir "$matrix_result"
-mv "$tfplan" "$matrix_result/tfplan"
-
+gha-set-output artifact.tfplan <<< "$TF_ROOT_MODULE/tfplan"
 
 exec tf-step-summary "TACOS Plan" "$TACOS_GHA_HOME/"lib/tacos/plan
