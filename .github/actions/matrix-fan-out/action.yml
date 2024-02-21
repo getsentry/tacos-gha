@@ -26,6 +26,13 @@ runs:
         GHA_MATRIX_CONTEXT: ${{ toJSON(matrix) }}
         GHA_STEPS_CONTEXT: ${{ inputs.steps }}
       run: |
+        exec >&2
+        namei -l "$MATRIX_FAN_OUT_PATH" || : code $?
+        namei -l "$PWD/$MATRIX_FAN_OUT_PATH" || : code $?
+        id
+        ls -la "$MATRIX_FAN_OUT_PATH"
+        touch "$MATRIX_FAN_OUT_PATH"/GHA_MATRIX_CONTEXT.json
+
         "$GITHUB_ACTION_PATH/"prepare.py |
           tee -a "$GITHUB_ENV"
 
