@@ -1,16 +1,28 @@
 #!/bin/bash
 set -euo pipefail
 title="$1"
-shift 1
+script="$2"
+tacos_verb="$(basename "$script")"
 
 tf_log=tf-log.hcl
 console_log=console.log
 with-user-env "$TF_ROOT_MODULE" \
-  "$@" 2>&1 >"$tf_log" |
+  "$script" 2>&1 >"$tf_log" |
   tee "$console_log" \
   && status=$? \
   || status=$? \
 ;
+
+# save everything, for analysis during fan-in summary
+gha-set-output title <<< "$title"
+gha-set-output script <<< "$script"
+gha-set-output status <<< "$status"
+gha-set-artifact tf_log <<< "$tf_log"
+gha-set-artifact console_log <<< "$console_log"
+gha-set-output env.HOME <<< "$HOME"
+gha-set-output env.GITHUB_WORKSPACE <<< "$GITHUB_WORKSPACE"
+gha-set-output env.TF_ROOT_MODULE <<< "$TF_ROOT_MODULE"
+gha-set-output env.TACOS_LOCK <<< "${TACOS_LOCK:-}"
 
 summary="$(
   if tac "$tf_log" | uncolor | grep -E -m1 '^(Apply complete|Plan:|No changes)'; then
@@ -23,6 +35,7 @@ summary="$(
     echo "completed (code $status)"
   fi
 )"
+gha-set-output summary <<< "$summary"
 
 if (( status == 0 )); then
   exit_code='success'
@@ -31,15 +44,9 @@ else
 fi
 result_len=$(wc -l < "$tf_log")
 if (( status == 0 )); then
-  result_rollup=true
-  if (( result_len > 0 )); then
-    command_rollup=true
-  else
-    command_rollup=false
-  fi
+  rollup=true
 else
-  result_rollup=false
-  command_rollup=false
+  rollup=false
 fi
 
 (
@@ -47,21 +54,17 @@ fi
   echo
   cat  # put any extended explanation on stdin
 
-  if "$result_rollup"; then
+  if "$rollup"; then
     # hide boring bits
     echo '<details>'
     echo "  <summary>$summary</summary>"
-  else
-    # things failed -- show it
-    echo "  $summary"
-  fi
-  echo
-
-
-  if "$command_rollup"; then
+    echo
     echo '  <details>'
     echo "    <summary>Commands: ($exit_code)</summary>"
   else
+    # things failed -- show it
+    echo "  $summary"
+    echo
     echo "  Commands: ($exit_code)"
   fi
 
@@ -70,7 +73,7 @@ fi
   cat "$console_log"
   echo '```'
 
-  if "$command_rollup"; then
+  if "$rollup"; then
     echo '</details>'
   fi
 
@@ -85,9 +88,11 @@ fi
     echo '(no output)'
   fi
 
-  if "$result_rollup"; then
+  if "$rollup"; then
     echo '</details>'
   fi
+
+  echo '<!-- getsentry/tacos-gha "'"$tacos_verb($TF_ROOT_MODULE)"'" -->'
 ) |
   gha-step-summary >/dev/null
 

@@ -28,12 +28,13 @@ jobs:
       LABEL: ${{ inputs.label }}
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout tacos-gha
+        uses: actions/checkout@v4
         with:
           repository: ${{inputs.tacos_gha_repo}}
           ref: ${{inputs.tacos_gha_ref}}
           path: tacos-gha
-      - name: Reset label
+      - name: "Reset label: ${{inputs.label}}"
         uses: actions/github-script@v7
         if: always()
         with:

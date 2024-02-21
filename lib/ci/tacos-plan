@@ -8,7 +8,7 @@ export TERRAGRUNT_INCLUDE_MODULE_PREFIX=false
 export TACOS_TFPLAN="$PWD/$TF_ROOT_MODULE/tfplan"
 
 # TODO: let the user know who has the lock
-# TODO: let the user know plan may not be fully accurate
+# TODO: let the user know plan may not be fully accurate, if they dont have the lock
 
 if "$GITHUB_PR_DRAFT"; then
   export TACOS_LOCK=false
@@ -16,10 +16,6 @@ else
   export TACOS_LOCK=true
 fi
 
-gha-set-output artifact_path <<< "$TF_ROOT_MODULE/tfplan" |
-  # Invalid characters include: " : < > | * ? \r \n \ /
-  tr / ' ' |
-  gha-set-output artifact_name \
->/dev/null
+gha-set-output artifact.tfplan <<< "$TF_ROOT_MODULE/tfplan"
 
 exec tf-step-summary "TACOS Plan" "$TACOS_GHA_HOME/"lib/tacos/plan

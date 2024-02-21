@@ -28,3 +28,7 @@ class OSPath(PosixPath, Path):
     def cwd(cls, environ: object = None) -> typing.Self:
         del environ
         return super().cwd()
+
+
+class URL(str):
+    pass

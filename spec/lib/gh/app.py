@@ -26,11 +26,13 @@ class Installation:
 
     @classmethod
     def from_1password(cls, op_url: URL) -> Self:
-        id = one(sh.lines(("op", "read", op_url)))
+        id = one(sh.lines(("tty-attach", "op", "read", op_url)))
 
         app = Parse(op_url).before.last("/", "/")
-        app_id = one(sh.lines(("op", "read", f"{app}/id")))
-        app_secret = sh.stdout(("op", "read", f"{app}/private key"))
+        app_id = one(sh.lines(("tty-attach", "op", "read", f"{app}/id")))
+        app_secret = sh.stdout(
+            ("tty-attach", "op", "read", f"{app}/private key")
+        )
 
         return cls(id, app_id, app_secret)
 

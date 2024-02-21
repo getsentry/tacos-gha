@@ -1,0 +1,11 @@
+#!/bin/bash
+# usage: gha-set-output PATH
+#
+# mark a file or directory for upload as an artifact
+# stdin is piped to PATH if it doesn't exist
+artifact="$1"
+gha-set-output "artifact.$artifact" <<< "$artifact"
+
+if ! [[ -e "$artifact" ]]; then
+  cat > "$artifact"
+fi

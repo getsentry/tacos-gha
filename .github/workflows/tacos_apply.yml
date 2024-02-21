@@ -95,7 +95,8 @@ jobs:
 
       # TODO: fetch and apply the tfplan artifact from plan workflow
       # so that apply matches the plan reviewed by construction
-      ### - uses: actions/download-artifact@v4
+      ### - name: fetch tfplan: ${{which}}
+      ###   uses: actions/download-artifact@v4
       ###   with:
       ###     name: tfplan
       ###     # TODO: github-script to fetch run-id of the most recent tfplan
@@ -106,6 +107,7 @@ jobs:
           "$TACOS_GHA_HOME/"lib/ci/github-pr-setenv "${{ github.event.pull_request.html_url }}"
         env:
           GH_TOKEN: ${{ github.token }}
+
       - name: Apply
         id: main
         run: |
