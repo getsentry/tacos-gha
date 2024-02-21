@@ -28,8 +28,8 @@ jq . > matrix-fan-out/matrix.json <<EOF
     "script": "$script"
   },
   "result": {
-    "returncode": "$returncode",
-  },
+    "returncode": "$returncode"
+  }
 }
 EOF
 
