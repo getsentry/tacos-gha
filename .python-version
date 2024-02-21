@@ -5,3 +5,4 @@
 #   4. pyproject.toml tool.pyright.extraPaths
 #   5. pyproject.toml tool.mypy.python_version
 3.12
+3.8
