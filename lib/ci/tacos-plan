@@ -16,6 +16,6 @@ else
   export TACOS_LOCK=true
 fi
 
-gha-set-output artifact.tfplan <<< "$TF_ROOT_MODULE/tfplan"
+gha-set-artifact result/tfplan <<< "$TF_ROOT_MODULE/tfplan"
 
 exec tf-step-summary "TACOS Plan" "$TACOS_GHA_HOME/"lib/tacos/plan

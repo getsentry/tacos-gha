@@ -124,6 +124,7 @@ jobs:
         uses: ./tacos-gha/.github/actions/matrix-fan-out
         with:
           steps: "${{ toJSON(steps) }}"
+          path: tfplan
 
   summary:
     needs: tacos_plan
@@ -139,6 +140,11 @@ jobs:
 
       - name: Run matrix-fan-in
         uses: ./tacos-gha/.github/actions/matrix-fan-in
+        with:
+          path: tfplan
+
+      - name: Summarize
+        uses: ./tacos-gha/lib/ci/tacos-plan-summary
 
       - name: Update PR
         # we want to report failures, too

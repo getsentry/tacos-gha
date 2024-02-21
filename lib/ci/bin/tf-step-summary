@@ -14,15 +14,17 @@ with-user-env "$TF_ROOT_MODULE" \
 ;
 
 # save everything, for analysis during fan-in summary
-gha-set-output title <<< "$title"
-gha-set-output script <<< "$script"
-gha-set-output status <<< "$status"
-gha-set-artifact tf_log <<< "$tf_log"
-gha-set-artifact console_log <<< "$console_log"
-gha-set-output env.HOME <<< "$HOME"
-gha-set-output env.GITHUB_WORKSPACE <<< "$GITHUB_WORKSPACE"
-gha-set-output env.TF_ROOT_MODULE <<< "$TF_ROOT_MODULE"
-gha-set-output env.TACOS_LOCK <<< "${TACOS_LOCK:-}"
+gha-set-output param/title <<< "$title"
+gha-set-output param/script <<< "$script"
+
+gha-set-output result/returncode <<< "$status"
+gha-set-artifact result/tf.log <<< "$tf_log"
+gha-set-artifact result/console.log <<< "$console_log"
+
+gha-set-output env/HOME <<< "$HOME"
+gha-set-output env/GITHUB_WORKSPACE <<< "$GITHUB_WORKSPACE"
+gha-set-output env/TF_ROOT_MODULE <<< "$TF_ROOT_MODULE"
+gha-set-output env/TACOS_LOCK <<< "${TACOS_LOCK:-}"
 
 summary="$(
   if tac "$tf_log" | uncolor | grep -E -m1 '^(Apply complete|Plan:|No changes)'; then
@@ -35,7 +37,7 @@ summary="$(
     echo "completed (code $status)"
   fi
 )"
-gha-set-output summary <<< "$summary"
+gha-set-output result/summary <<< "$summary"
 
 if (( status == 0 )); then
   exit_code='success'
