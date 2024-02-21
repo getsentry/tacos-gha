@@ -13,6 +13,7 @@ with-user-env "$TF_ROOT_MODULE" \
 ;
 
 mkdir matrix-fan-out
+ls -ld matrix-fan-out
 
 # save everything, for analysis during fan-in summary
 jq . > matrix-fan-out/matrix.json <<EOF
@@ -35,5 +36,8 @@ EOF
 
 # copy any files we want to keep
 cp "$tf_log" "$console_log" matrix-fan-out/
+
+ls -la matrix-fan-out
+cat matrix-fan-out/matrix.json
 
 exit "$returncode"
