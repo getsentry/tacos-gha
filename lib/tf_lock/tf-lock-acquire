@@ -18,6 +18,9 @@ if "$lock"; then
     exit 0
   else
     echo >&2 "tf-lock-acquire: failure: not $lock_user: $root_module($tf_user)"
+    echo >&2 "root_module: $root_module"
+    echo >&2 "lock_info: $lock_info"
+    echo >&2 "lock: $lock"
     echo >&2 "the PR holding the lock: https://github.com/getsentry/$lock_user"
     exit "$TF_LOCK_EHELD"
   fi
