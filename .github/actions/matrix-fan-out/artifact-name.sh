@@ -11,7 +11,6 @@ set -x
 : Calculate artifact name
 (
   echo "artifact_name="
-  echo "matrix/"
   # remove any leading ./
   sed -r 's@^\./+@@g' <<<"$path"
   cat  # send extra path components on stdin

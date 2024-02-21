@@ -2,10 +2,11 @@
 # usage: gha-set-output PATH
 #
 # mark a file or directory for upload as an artifact
-# stdin is piped to PATH if it doesn't exist
+# stdin is used to create a file at `PATH` if it doesn't already exist
 artifact="$1"
-gha-set-output "artifact.$artifact" <<< "$artifact"
+gha-set-output "artifact/$artifact" <<< "$artifact"
 
 if ! [[ -e "$artifact" ]]; then
+  mkdir -p "$(dirname "$artifact")"
   cat > "$artifact"
 fi

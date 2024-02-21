@@ -11,7 +11,7 @@ tmpfile="$1"
 newfile="$(
   "$HERE/"ghadecode <<<"$tmpfile" |
     # FIXME: matrix-fan-in/rename-tmp should really be python
-    sed -r 's@^\./matrix-fan-in\.tmp/matrix/([^(]*/)\((.*)\)$@\1\2@'
+    sed -r 's@^\./matrix-fan-in\.tmp/([^(]*/)\((.*)\)$@\1\2@'
 )"
 parent="$(dirname "$newfile")"
 

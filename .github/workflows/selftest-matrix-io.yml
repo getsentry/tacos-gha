@@ -11,6 +11,12 @@ defaults:
   run:
     shell: bash -euxo pipefail {0}
 
+# Cancel in progress workflows on pull_requests.
+# https://docs.github.com/en/actions/using-jobs/using-concurrency#example-using-a-fallback-value
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
 jobs:
   keys-job:
     runs-on: ubuntu-latest
@@ -21,9 +27,9 @@ jobs:
         id: keys-step
         run: |
           exec >&2  # our only output is logging
-
-          printf "keys=" >> "$GITHUB_OUTPUT"
-          seq 30 | shuf | jq -R | jq -cs | tee -a "$GITHUB_OUTPUT"
+          printf "keys=[10, 27]" >> "$GITHUB_OUTPUT"
+          # for scale testing:
+          ###seq 30 | shuf | jq -R | jq -cs | tee -a "$GITHUB_OUTPUT"
 
   fan-out:
     runs-on: ubuntu-latest
@@ -31,7 +37,6 @@ jobs:
       - keys-job
     strategy:
       matrix:
-        #key: ${{ fromJSON('[3, 10]') }} # helpful for smoketest
         key: ${{ fromJSON(needs.keys-job.outputs.keys) }}
     env:
       KEY: ${{ matrix.key }}
@@ -54,6 +59,7 @@ jobs:
         with:
           path: ./a/b/c
           steps: "${{ toJSON(steps) }}"
+          retention-days: 1
 
   fan-in:
     runs-on: ubuntu-latest

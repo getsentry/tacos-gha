@@ -18,15 +18,17 @@ StepName = str
 StepsContext = dict[StepName, dict[Literal["outputs"], dict[Key, Val]]]
 
 HERE = Path(__file__).resolve().parent
+ARTIFACT_PREFIX = "artifact/"
 
 
-def step_outputs(steps: StepsContext) -> Generator[tuple[Path, Val | None]]:
+def step_outputs(steps: StepsContext) -> Generator[tuple[Path, Val | Path]]:
     for step_name, step in sorted(steps.items()):
         del step_name
         outputs = sorted(step.get("outputs", {}).items())
         for key, val in outputs:
-            if key.startswith("artifact."):
-                yield Path(val), None
+            if key.startswith(ARTIFACT_PREFIX):
+                key = key.replace(ARTIFACT_PREFIX, "", 1)
+                yield Path(key), Path(val)
             else:
                 yield Path(key), val
 
@@ -44,12 +46,12 @@ def prepare(
         step_outputs(steps_context),
     ):
         for subpath, val in items:
-            if val is None:
-                newpath = path / subpath
-                mkdirp(newpath.parent)
-                run(("cp", "-va", subpath, newpath), check=True, stdout=2)
+            newpath = path / subpath
+            mkdirp(newpath.parent)
+            if isinstance(val, Path):
+                newpath.hardlink_to(val)
             else:
-                (path / subpath).write_text(val)
+                newpath.write_text(val)
 
 
 def get_artifact_name(matrix_context: str) -> str:

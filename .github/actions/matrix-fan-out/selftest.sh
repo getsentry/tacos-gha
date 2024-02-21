@@ -14,9 +14,10 @@ gha-set-output() {
 }
 gha-set-artifact() {
   artifact="$1"
-  gha-set-output "artifact.$artifact" <<< "$artifact"
+  gha-set-output "artifact/$artifact" <<< "$artifact"
 
   if ! [[ -e "$artifact" ]]; then
+    mkdir -p "$(dirname "$artifact")"
     cat > "$artifact"
   fi
 }
@@ -27,11 +28,12 @@ set -x
 
 : Processing... "$key"
 
-gha-set-output key <<< "$key"
-echo "title=Hello, $key!" | tee -a "$GITHUB_OUTPUT"
+gha-set-output param/key.json <<< "$key"
+echo "result/title.txt=Hello, $key!" |
+  tee -a "$GITHUB_OUTPUT"
 
 "$HERE/"square.py "$key" |
-  gha-set-artifact square.txt
+  gha-set-artifact result/square.txt
 
 square=$((key ** 2))
 echo "$square" | gha-set-output 'matrix.json'
