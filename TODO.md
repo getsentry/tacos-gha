@@ -1,6 +1,8 @@
 # TODO
 
-## Action items
+## Misc. Action Items
+
+This is the inbox during standup and weeklies.
 
 An inbox for quick use during meetings:
 
@@ -10,58 +12,89 @@ An inbox for quick use during meetings:
   - [ ] Make it much more clear that the lock was taken
   - [ ] Make it clear why the lock was taken
   - [ ] Leave a breadcrumb to User's Guide
+- [ ] TSC presentatino about IAM long-term
 
 ## Major Milestones
 
 P1
 
-- [ ] wide rollout & comms -- use TACOS by default for all ops slices
+### M3 Wide Rollout
 
-  - [x] @ellison Tell user that merge conflicts are preventing plan/apply
+Definition: All ops slices are subject to TACOS lock-on-PR.
+
+- commitment: 2024-03-06
+- goal: 2024-02-28
+- assignees: buck ellison neo
+
+* [ ] wide rollout & comms -- use TACOS by default for all ops slices
+
+  - [ ] set an "unlock in progress" message in the PR (use the mode:delete
+        option) #good-first-pr
+    - [ ] similarly, for plan
+    - [ ] similarly, for apply
+  - [ ] :tacos::unlock should not cancel convert-to-draft
+    - remove :tacos::unlock in favor of convert-to-draft
+    - deprecation phase: post a PR comment about "convert to draft instead"
   - [~] @buck combined summary comments
     - simple version: concatenate
     - FIXME: we need a fan-in summary
     - FIXME: this really should be done in a fan-in summary job
-  - [ ] @jim ops fixes to project & bucket permissions
+    - [ ] fan-in summary for the tacos_unlock workflow
+  - [~] @jim ops fixes to project & bucket permissions
     - https://getsentry.atlassian.net/browse/OPS-5203
-  - [ ] @ellison JIRA backlog to tf-import test-region bucket IAM
-    - gs://sentry-test-region-terraform
-  - [x] @ellison clickops quickfix test-region bucket
-    - https://gist.github.com/bukzor/ee00a6f75d4a0cc7f865c37cfa67a895
+  - done:
+    - [x] @ellison Tell user that merge conflicts are preventing plan/apply
+    - [x] @ellison JIRA backlog to tf-import test-region bucket IAM
+      - gs://sentry-test-region-terraform
+      - https://getsentry.atlassian.net/browse/OPS-5244
+    - [x] @ellison clickops quickfix test-region bucket
+      - https://gist.github.com/bukzor/ee00a6f75d4a0cc7f865c37cfa67a895
 
-- [ ] drift remediation
+### M4 Drift Remediation
+
+Definition: All ops slices are subject to TACOS lock-on-drift.
+
+- commitment: 2024-03-13
+- goal: 2024-03-06
+- assignees: buck ellison neo
+
+* [ ] drift remediation
 
   - [?] @ellison phased allowlist:
     https://github.com/getsentry/tacos-gha/pull/119
     1.  [x] off
-    2.  ~[ ] plan-only~
+    2.  ~[wontfix] plan-only~
     3.  [ ] plan-and-lock
     4.  [x] plan-lock-apply
     5.  [ ] drift detection
-  - [ ] @neo ensure lock conflict message links to the lock-holding PR
+  - [~] @neo ensure lock conflict message links to the lock-holding PR
     - essential for people know when there's conflicting drift
+    - i.e. Ensure there's a good, human-readable PR message for unlock failure
   - [ ] @buck raise XFailed("tacos/drift branch not created") branch?
   - [ ] @buck TODO: check for the opening of the drift remediation branch.
   - [ ] @buck TODO: anything (scenario: drift detection)
-  - [#] how will people know when there's _new_ drift?
-    - initial implementation: people need to notice the automatic drift pr
-    - slack notification?
-    - team-sre needs to decide
 
-later...
+later, after full rollout and acceptance
 
 - [ ] @ellison down the old terraform-plan workflow
-  - after full rollout and acceptance
-
-## Misc. Action Items
-
-This is the inbox during standup and weeklies.
-
-- (none, currently)
+- [x?] how will people know when there's _new_ drift?
+  - will need to reconsider once we have more user experience
+  - initial implementation: people need to notice the automatic drift pr
+  - slack notification?
+  - team-sre needs to decide
 
 ## Maintainability
 
 P2
+
+### M4 into Maintenance Mode
+
+Definition: All tacos-gha work beyond this milestone work is optional and can be
+done on a 20%-time basis. (To be clear, this milestone is non-optional.)
+
+- commitment: 2024-04-03
+- goal: 2024-03-20
+- assignees @50% time: buck ellison neo?
 
 - [ ] ownership/stewardship transition
   - [ ] @ellison developer's guide
@@ -72,7 +105,8 @@ P2
 - [ ] @ellison user guide
   - how-to: avoid GHA notification spam
 - [ ] @buck run tests in CI -- stretch
-- convert the rest of the sh to python https://github.com/getsentry/tacos-gha
+- [ ] convert the rest of the sh to python
+      https://github.com/getsentry/tacos-gha
   - @ian: "I'll look and take some part of it"
   - use `./lib/git/ls-sh` for a listing
   - [ ] lib/ci/bin
