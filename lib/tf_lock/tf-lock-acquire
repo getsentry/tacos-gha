@@ -17,7 +17,7 @@ if "$lock"; then
     jq -r .ID <<< "$lock_info"
     exit 0
   else
-    echo >&2 "tf-lock-acquire: failure: not $lock_user: $root_module($tf_user)"
+    # echo >&2 "tf-lock-acquire: failure: not $lock_user: $root_module($tf_user)"
     echo >&2 "the PR holding the lock: https://github.com/getsentry/$root_module/$lock_info"
     exit "$TF_LOCK_EHELD"
   fi
