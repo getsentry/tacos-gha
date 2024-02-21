@@ -94,7 +94,7 @@ jobs:
           # We explicitly list the low-concern actions, during which users
           # will use the identity of the original PR author.
           # see doc/permissions.md
-          user: |
+          user: |-
             ${{
               true
               && github.event_name == 'pull_request'
