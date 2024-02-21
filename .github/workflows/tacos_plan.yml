@@ -120,6 +120,26 @@ jobs:
         run: |
           "$TACOS_GHA_HOME/"lib/ci/tacos-plan
 
+      - name: Save matrix result
+        uses: ./tacos-gha/.github/actions/matrix-fan-out
+        with:
+          steps: "${{ toJSON(steps) }}"
+
+  summary:
+    needs: tacos_plan
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout tacos-gha
+        uses: actions/checkout@v4
+        with:
+          repository: ${{inputs.tacos_gha_repo}}
+          ref: ${{inputs.tacos_gha_ref}}
+          path: tacos-gha
+
+      - name: Run matrix-fan-in
+        uses: ./tacos-gha/.github/actions/matrix-fan-in
+
       - name: Update PR
         # we want to report failures, too
         if: always()
@@ -127,13 +147,6 @@ jobs:
         with:
           message: ${{ fromJSON(steps.main.outputs.summary) }}
           comment_tag: plan(${{env.TF_ROOT_MODULE}})
-
-      - name: Save matrix result
-        uses: ./tacos-gha/.github/actions/matrix-fan-out
-        with:
-          path: ${{steps.main.outputs.artifact_path}}
-
-  summary:
 
   reset-label:
     uses: ./.github/workflows/reset-label.yml
