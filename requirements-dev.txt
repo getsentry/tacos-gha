@@ -27,7 +27,7 @@ coverage==7.4.1
     #   coverage-enable-subprocess
 coverage-enable-subprocess==1.0
     # via -r requirements-dev.in
-cryptography==42.0.2
+cryptography==42.0.4
     # via pyjwt
 dill==0.3.8
     # via pylint
