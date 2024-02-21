@@ -49,7 +49,7 @@ def prepare(
             newpath = path / subpath
             mkdirp(newpath.parent)
             if isinstance(val, Path):
-                newpath.hardlink_to(val)
+                run(("cp", "-va", val, newpath), check=True, stdout=2)
             else:
                 newpath.write_text(val)
 
