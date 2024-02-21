@@ -16,6 +16,13 @@ else
   export TACOS_LOCK=true
 fi
 
-gha-set-artifact result/tfplan <<< "$TF_ROOT_MODULE/tfplan"
 
-exec tf-step-summary "TACOS Plan" "$TACOS_GHA_HOME/"lib/tacos/plan
+tf-step-summary "TACOS Plan" "$TACOS_GHA_HOME/"lib/tacos/plan \
+  && returncode=$? \
+  || returncode=$? \
+;
+
+# copy any files we want to keep
+cp "$TF_ROOT_MODULE/tfplan" matrix-fan-out/tfplan
+
+exit "$returncode"

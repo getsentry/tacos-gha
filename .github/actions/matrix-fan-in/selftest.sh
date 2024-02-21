@@ -21,11 +21,6 @@ find a/b/c -type f -name 'random.txt' -print0 | xargs -0 head
 find a/b/c -type f -name 'random.json' -print0 | xargs -0 jq .
 find a/b/c -type f -name 'key.json' -print0 | xargs -0 cat | sort -n
 
-find a/b/c -type d -mindepth 1 -maxdepth 1 -print0 | 
-  while IFS='' read -rd '' file ; do
-    echo A "$file" Z
-  done
-
 cat >> "$GITHUB_STEP_SUMMARY" <<EOF
 
 
