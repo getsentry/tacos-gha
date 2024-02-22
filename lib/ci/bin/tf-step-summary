@@ -2,6 +2,7 @@
 set -euo pipefail
 title="$1"
 script="$2"
+tacos_verb="$(basename "$script")"
 
 tf_log=tf-log.hcl
 console_log=console.log
@@ -11,6 +12,8 @@ with-user-env "$TF_ROOT_MODULE" \
   && returncode=$? \
   || returncode=$? \
 ;
+
+cat "$tf_log"
 
 mkdir matrix-fan-out
 ls -ld matrix-fan-out
@@ -40,4 +43,9 @@ cp "$tf_log" "$console_log" matrix-fan-out/
 ls -la matrix-fan-out
 cat matrix-fan-out/matrix.json
 
-exit "$returncode"
+if [[ "$tacos_verb" == "plan" ]] && (( returncode == 2 )); then
+  # plan succeeded but found that changes need to be applied
+  exit 0
+else
+  exit "$returncode"
+fi
