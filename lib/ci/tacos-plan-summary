@@ -1,54 +1,181 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
-import json
-from pathlib import Path
+from typing import NamedTuple
+from typing import Self
 from typing import TypeAlias
 
+from lib import json
+from lib.sh import sh
+from lib.types import Generator
+from lib.types import OSPath
+from lib.types import Path
+
 ExitCode = None | str | int
+Line = str
 StrBag: TypeAlias = "dict[str, str | StrBag]"
 
 
-def retrieve_matrix_data(matrix: Path) -> StrBag:
-    print("---")
-    print("MATRIX:", matrix)
-    result: StrBag = {}
-    env = result["env"] = {}
-    for path in matrix.glob("outputs/**/*"):
-        if not path.is_file():
-            continue
+class SliceSummary(NamedTuple):
+    name: str
+    path: OSPath
+    tacos_verb: str
+    explanation: str
+    returncode: int
 
-        relpath = path.relative_to(matrix)
-        print(" ", relpath)
+    @classmethod
+    def from_json(cls, json_path: OSPath) -> Self:
+        # convert a bag of json into something well-typed
+        data = json.load(json_path)
+        assert isinstance(data, dict), data
 
-        dest = result
-        for part in relpath.parent.parts:
-            for part in part.split("."):
-                tmp = dest.get(part)
-                if tmp is None:
-                    dest = dest[part] = {}
-                else:
-                    assert isinstance(tmp, dict)
-                    dest = tmp
+        env = json.assert_dict_of_strings(data["env"])
+        param = json.assert_dict_of_strings(data["param"])
+        result = json.assert_dict_of_strings(data["result"])
 
-        if path.name.startswith("env."):
-            var = path.name.replace("env.", "", 1)
-            env[var] = path.read_text()
-        elif path.name.endswith(".json"):
-            var = path.with_suffix("").name
-            env[var] = json.load(path.open())
+        return cls(
+            name=env["TF_ROOT_MODULE"],
+            path=json_path.parent,
+            tacos_verb=Path(param["script"]).name,
+            explanation=param["explanation"],
+            returncode=int(result["returncode"]),
+        )
+
+    @classmethod
+    def summarize(cls, slices: json.Value) -> Generator[Self]:
+        assert isinstance(slices, dict), slices
+        for json_path in slices:
+            yield cls.from_json(OSPath(json_path))
+
+    # see lib/ci/bin/tf-step-summary:
+    @property
+    def tf_log(self) -> OSPath:
+        return self.path / "tf-log.hcl"
+
+    @property
+    def console_log(self) -> OSPath:
+        return self.path / "tf-log.hcl"
+
+    @property
+    def dirty(self) -> bool:
+        return self.returncode == 2
+
+    @property
+    def clean(self) -> bool:
+        return self.returncode == 0
+
+    @property
+    def error(self) -> bool:
+        return self.returncode not in (0, 2)
+
+    def summary(self) -> str:
+        log = tuple(sh.lines(("uncolor", self.tf_log)))
+        for line in reversed(log):
+            for success in ("Apply complete", "Plan:", "No changes"):
+                if success in line:
+                    return line  # :D
+
+        log = tuple(sh.lines(("uncolor", self.console_log)))
+        for line in log:
+            if "error" in line.lower():
+                return line  # D:
+
+        for line in reversed(log):
+            lowered = line.lower()
+            if "success" in lowered:
+                return line  # :D
+            elif "failure" in lowered:
+                return line  # D:
+
+        # we didn't find anything significant-looking at all
+        return f"completed (code {self.returncode})"
+
+    def markdown(self, rollup: bool) -> Generator[Line]:
+        yield f"### {self.name}"
+        yield self.explanation
+        yield ""
+
+        tf_log = sh.stdout(("uncolor", self.tf_log)).strip()
+
+        if rollup:
+            # hide boring bits
+            yield "<details>"
+            yield f"  <summary>{self.summary()}</summary>"
         else:
-            env[path.name] = path.read_text()
+            # things failed -- show it
+            yield f"  {self.summary()}"
+        yield ""
 
-        print("  ", path.name)
-    return result
+        yield "  <details>"
+        yield f"    <summary>Commands: (exit: {self.returncode})</summary>"
+        yield ""
+        yield "```console"
+        yield sh.stdout(("uncolor", self.console_log)).strip()
+        yield "```"
+        yield ""
+
+        if rollup:
+            yield "</details>"
+
+        if tf_log:
+            yield "```hcl"
+            yield tf_log
+            yield "```"
+        else:
+            yield "(no output)"
+        yield ""
+
+        if rollup:
+            yield "</details>"
+            yield ""
+
+        yield f'<!-- getsentry/tacos-gha "{self.tacos_verb}({self.name})" -->'
+        yield ""
+
+    def __str__(self) -> str:
+        return self.name
 
 
-def tacos_plan_summary(path: Path) -> ExitCode:
-    for path in path.glob("*"):
-        retrieve_matrix_data(path)
+def tacos_plan_summary(path: OSPath) -> Generator[Line]:
+    slices = tuple(
+        SliceSummary.summarize(sh.json(("jq", ".", path / "matrix.json")))
+    )
 
-    return 0
+    dirty = tuple(slice for slice in slices if slice.dirty)
+    clean = tuple(slice for slice in slices if slice.dirty)
+    error = tuple(slice for slice in slices if slice.dirty)
+
+    yield "# Terraform Plan"
+    yield f"TACOS genearted a terraform plan for {len(slices)} slices:"
+    yield ""
+    if error:
+        yield f"  * {len(error)} failed to plan"
+    if dirty:
+        yield f"  * {len(dirty)} affected"
+    if clean:
+        yield f"  * {len(clean)} unaffected"
+
+    first = False
+    if error:
+        yield "## Errors"
+        yield ""
+        for slice in error:
+            yield from slice.markdown(rollup=not first)
+            first = False
+
+    if dirty:
+        yield "## Changes"
+        yield ""
+
+        for slice in dirty:
+            yield from slice.markdown(rollup=not first)
+            first = False
+
+    if clean:
+        yield "## Clean"
+        yield "You might want to consider refactoring to put your change out of scope of these slices."
+        for slice in clean:
+            yield f"  * {slice}"
 
 
 def main() -> ExitCode:
@@ -57,11 +184,14 @@ def main() -> ExitCode:
     try:
         arg = argv[1]
     except IndexError:
-        arg = "."
+        arg = "./matrix-fan-out"
 
-    path = Path(arg)
+    path = OSPath(arg)
 
-    return tacos_plan_summary(path)
+    for line in tacos_plan_summary(path):
+        print(line)
+
+    return 0
 
 
 if __name__ == "__main__":

@@ -29,7 +29,8 @@ jq . > matrix-fan-out/matrix.json <<EOF
   },
   "param": {
     "title": "$title",
-    "script": "$script"
+    "script": "$script",
+    "explanation": "$(cat)"
   },
   "result": {
     "returncode": "$returncode"
