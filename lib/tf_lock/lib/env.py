@@ -1,4 +1,7 @@
 #!/usr/bin/env py.test
+
+# TODO: Delete env.sh
+
 from __future__ import annotations
 
 from os import environ

@@ -72,13 +72,15 @@ You are authenticated for the next hour as: tacos-gha-tf-state-admin@sac-dev-sa.
         tf_result: Parse = Parse(comment).between("</details>", "</details>")
         assert "\nTerraform will perform the following actions:\n" in tf_result
 
-        assert tf_result.strip().endswith("""\
+        assert tf_result.strip().endswith(
+            """\
 Saved the plan to:
 tfplan
 
 To perform exactly these actions, run the following command to apply:
     terraform apply "tfplan"
-```""")
+```"""
+        )
 
     # lock should continue to be held
     pr.slices.assert_locked()

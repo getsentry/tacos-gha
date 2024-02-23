@@ -3,49 +3,73 @@
 
 from __future__ import annotations
 
-import sys
 from os import environ
 
 from lib.parse import Parse
 from lib.sh import sh
-from lib.tf_lock.lib import env
+from lib.tf_lock.lib.env import tf_working_dir
+from lib.types import Environ
 from lib.types import OSPath
+from lib.types import Path
 
 HERE = sh.get_HERE(__file__)
 
-try:
-    root_module = sys.argv[1]
-except IndexError:
-    root_module = "."
 
-lock_info = sh.json((HERE / "tf-lock-info", root_module))
-assert isinstance(lock_info, dict), lock_info
-lock = lock_info["lock"]
+def tf_lock_acquire(root_module: Path, env: Environ) -> None:
+    while True:
+        lock_info = sh.json((HERE / "tf-lock-info", root_module))
+        assert isinstance(lock_info, dict), lock_info
+        lock = lock_info["lock"]
 
-assert isinstance(lock, bool), lock
+        assert isinstance(lock, bool), lock
 
-if lock:
-    lock_user = lock_info["Who"]
-    tf_user = sh.stdout(("whoami",)) + "@" + sh.stdout(("hostname", "-f"))
+        if lock:
+            lock_user = lock_info["Who"]
+            tf_user = (
+                sh.stdout(("whoami",)) + "@" + sh.stdout(("hostname", "-f"))
+            )
 
-    if lock_user == tf_user:
-        # already done!
-        sh.info(f"tf-lock-acquire: success: {lock_user}")
-        sh.info(f"{lock_info}")
-        exit(0)
+            if lock_user == tf_user:
+                # already done!
+                sh.info(f"tf-lock-acquire: success: {lock_user}")
+                sh.info(f"{lock_info}")
+                exit(0)
+            else:
+                sh.info(
+                    f"tf-lock-acquire: failure: not {lock_user}: {tf_user}"
+                )
+                p = Parse(lock_user)
+                pr_number = p.after.first("@").before.first(".")
+                repo_name = p.after.first(".").before.last(".", ".", ".")
+                org_name = p.after.first(repo_name, ".").before.last(".github")
+                pr_link = f"https://github.com/{org_name}/{repo_name}/pull/{pr_number}"
+                sh.info(f"The PR holding the lock: {pr_link}")
+                exit(environ["TF_LOCK_EHELD"])
+
+        root_module_path = OSPath(root_module)
+        assert isinstance(root_module_path, OSPath), root_module_path
+        with sh.cd(tf_working_dir(root_module_path)):
+            sh.run(("f{HERE}/acquire.py",))
+        # start over
+
+
+def main() -> int:
+    from os import environ
+    from sys import argv
+
+    args = argv[1:]
+    if args:
+        paths = [Path(arg) for arg in args]
     else:
-        sh.info(f"tf-lock-acquire: failure: not {lock_user}: {tf_user}")
-        p = Parse(lock_user)
-        pr_number = p.after.first("@").before.first(".")
-        repo_name = p.after.first(".").before.last(".", ".", ".")
-        org_name = p.after.first(repo_name, ".").before.last(".github")
-        pr_link = f"https://github.com/{org_name}/{repo_name}/pull/{pr_number}"
-        sh.info(f"The PR holding the lock: {pr_link}")
-        exit(environ["TF_LOCK_EHELD"])
+        paths = [Path(".")]
 
-root_module_path = OSPath(root_module)
-assert isinstance(root_module_path, OSPath), root_module_path
-sh.cd(env.tf_working_dir(root_module_path))
-sh.run(("f{HERE}/acquire.py",))
+    from os import environ
 
-sh.run(("exec", sys.argv[0], sys.argv[1:]))  # start over
+    for path in paths:
+        tf_lock_acquire(path, env=environ.copy())
+
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
