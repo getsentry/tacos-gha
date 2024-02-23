@@ -1,121 +1,74 @@
-#!/usr/bin/env python3.12
+#!/usr/bin/env python3
+"""Acquire the terraform state lock and print its ID (an integer)"""
+
 from __future__ import annotations
 
-import asyncio
-from os import getenv
+from os import environ
 
-Command = tuple[str, ...]
-ExitCode = str | int
+from lib.parse import Parse
+from lib.sh import sh
+from lib.tf_lock.lib.env import tf_working_dir
+from lib.types import Environ
+from lib.types import OSPath
+from lib.types import Path
 
-TF_SLEEP = 10  # terraform has a ten-second sleep loop
-EOF = b""
-DEBUG: int = int(getenv("DEBUG") or "0")
-
-if DEBUG >= 3:
-    TIMEOUT = 1
-    TERRAFORM: Command = (
-        "sh",
-        "-exc",
-        """\
-printf "> "
-read -r line
-echo line: "$line"
-""",
-    )
-else:
-    TIMEOUT = 1 * TF_SLEEP + 1
-TERRAFORM = ("terraform", "console")
+HERE = sh.get_HERE(__file__)
 
 
-def debug(*msg: object) -> None:
-    if DEBUG:
-        from sys import stderr
-
-        print("+ :", *msg, file=stderr, flush=True)
-
-
-def ansi_denoise(ansi_text: bytes) -> bytes:
-    import re
-
-    csi = b"\033["  # ]  auto-indenter is stupid =.=
-    control_re = re.escape(csi) + b"[^A-Za-z]*[A-Za-z]"
-    backspace_re = b".\b"
-    noise_re = re.compile(b"|".join((backspace_re, control_re)))
-    return noise_re.sub(b"", ansi_text)
-
-
-async def get_prompt(output: asyncio.StreamReader) -> str:
-    while not output.at_eof():
-        try:
-            data = await output.read(128)
-        except OSError as error:
-            if error.errno == 5:  # input/output error, i.e. a broken pipe
-                break
-            else:
-                raise
-        prompt = ansi_denoise(data)
-        if prompt:
-            return prompt.decode("UTF-8")
-    return ""
-
-
-async def run_terraform(
-    cmd: Command,
-) -> tuple[asyncio.subprocess.Process, asyncio.StreamReader]:
-    import os
-
-    parent, child = os.openpty()
-
-    import tty
-
-    tty.setraw(parent)
-
-    proc = await asyncio.create_subprocess_exec(
-        *cmd, stdout=child, stdin=child
-    )
-    os.close(child)
-
-    loop = asyncio.get_running_loop()
-    output = asyncio.StreamReader(loop=loop)
-
-    await loop.connect_read_pipe(
-        lambda: asyncio.StreamReaderProtocol(output, loop=loop),
-        os.fdopen(parent, "rb", buffering=0),
-    )
-    return proc, output
-
-
-async def tf_lock_acquire() -> ExitCode:
-    proc, output = await run_terraform(TERRAFORM)
-    wait = asyncio.create_task(proc.wait())
-    timer = asyncio.create_task(asyncio.sleep(TIMEOUT))
-
+def tf_lock_acquire(root_module: Path, env: Environ) -> None:
     while True:
-        prompt = asyncio.create_task(get_prompt(output))
-        await asyncio.wait(
-            [wait, prompt, timer], return_when=asyncio.FIRST_COMPLETED
-        )
-        if wait.done():
-            returncode = wait.result()
-            return f"terraform exitted early, code {returncode}"
-        elif timer.done() or not prompt.done():
-            proc.kill()
-            return f"timeout (seconds): {TIMEOUT}"
-        elif (result := prompt.result()).endswith("> "):
-            debug("got prompt, exit un-gracefully")
-            assert not wait.done(), wait
-            proc.kill()
-            debug("terraform exitted, code", await proc.wait())
-            return 0
-        else:
-            debug(f"unexpected output: {repr(result)}")
+        lock_info = sh.json((HERE / "tf-lock-info", root_module))
+        assert isinstance(lock_info, dict), lock_info
+        lock = lock_info["lock"]
+
+        assert isinstance(lock, bool), lock
+
+        if lock:
+            lock_user = lock_info["Who"]
+            tf_user = (
+                sh.stdout(("whoami",)) + "@" + sh.stdout(("hostname", "-f"))
+            )
+
+            if lock_user == tf_user:
+                # already done!
+                sh.info(f"tf-lock-acquire: success: {lock_user}")
+                sh.info(f"{lock_info}")
+                exit(0)
+            else:
+                sh.info(
+                    f"tf-lock-acquire: failure: not {lock_user}: {tf_user}"
+                )
+                p = Parse(lock_user)
+                pr_number = p.after.first("@").before.first(".")
+                repo_name = p.after.first(".").before.last(".", ".", ".")
+                org_name = p.after.first(repo_name, ".").before.last(".github")
+                pr_link = f"https://github.com/{org_name}/{repo_name}/pull/{pr_number}"
+                sh.info(f"The PR holding the lock: {pr_link}")
+                exit(environ["TF_LOCK_EHELD"])
+
+        root_module_path = OSPath(root_module)
+        assert isinstance(root_module_path, OSPath), root_module_path
+        with sh.cd(tf_working_dir(root_module_path)):
+            sh.run(("f{HERE}/acquire.py",))
+        # start over
 
 
-def main() -> ExitCode:
-    import logging
+def main() -> int:
+    from os import environ
+    from sys import argv
 
-    logging.basicConfig(level=logging.DEBUG if DEBUG >= 2 else logging.INFO)
-    return asyncio.run(tf_lock_acquire(), debug=DEBUG > 0)
+    args = argv[1:]
+    if args:
+        paths = [Path(arg) for arg in args]
+    else:
+        paths = [Path(".")]
+
+    from os import environ
+
+    for path in paths:
+        tf_lock_acquire(path, env=environ.copy())
+
+    return 0
 
 
 if __name__ == "__main__":
