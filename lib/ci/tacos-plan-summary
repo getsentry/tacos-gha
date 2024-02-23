@@ -3,17 +3,13 @@ from __future__ import annotations
 
 from typing import NamedTuple
 from typing import Self
-from typing import TypeAlias
 
-from lib import json
 from lib.sh import sh
 from lib.types import Generator
 from lib.types import OSPath
-from lib.types import Path
 
 ExitCode = None | str | int
 Line = str
-StrBag: TypeAlias = "dict[str, str | StrBag]"
 
 
 class SliceSummary(NamedTuple):
@@ -24,28 +20,22 @@ class SliceSummary(NamedTuple):
     returncode: int
 
     @classmethod
-    def from_json(cls, json_path: OSPath) -> Self:
-        # convert a bag of json into something well-typed
-        data = json.load(json_path)
-        assert isinstance(data, dict), data
-
-        env = json.assert_dict_of_strings(data["env"])
-        param = json.assert_dict_of_strings(data["param"])
-        result = json.assert_dict_of_strings(data["result"])
-
+    def from_matrix_fan_out(cls, path: OSPath) -> Self:
+        # convert a bunch of files into something well-typed
         return cls(
-            name=env["TF_ROOT_MODULE"],
-            path=json_path.parent,
-            tacos_verb=Path(param["script"]).name,
-            explanation=param["explanation"],
-            returncode=int(result["returncode"]),
+            name=get_file(path / "env/TF_ROOT_MODULE"),
+            path=path,
+            tacos_verb=get_file(path / "tacos_verb"),
+            explanation=get_file(path / "explanation"),
+            returncode=int(get_file(path / "returncode")),
         )
 
     @classmethod
-    def summarize(cls, slices: json.Value) -> Generator[Self]:
-        assert isinstance(slices, dict), slices
-        for json_path in slices:
-            yield cls.from_json(OSPath(json_path))
+    def from_matrix_fan_in(cls, path: OSPath) -> Generator[Self]:
+        for matrix in (path / "matrix.list").open():
+            matrix = matrix.strip()
+
+            yield cls.from_matrix_fan_out(path / matrix)
 
     # see lib/ci/bin/tf-step-summary:
     @property
@@ -137,9 +127,7 @@ class SliceSummary(NamedTuple):
 
 
 def tacos_plan_summary(path: OSPath) -> Generator[Line]:
-    slices = tuple(
-        SliceSummary.summarize(sh.json(("jq", ".", path / "matrix.json")))
-    )
+    slices = tuple(SliceSummary.from_matrix_fan_in(path))
 
     dirty = tuple(slice for slice in slices if slice.dirty)
     clean = tuple(slice for slice in slices if slice.dirty)

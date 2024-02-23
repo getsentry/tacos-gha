@@ -26,7 +26,6 @@ find ./matrix-fan-in.tmp \
 rmdir matrix-fan-in.tmp
 
 : now lets us have a looksee, shall we?
-namei -l "$path" || : code $?
-find "$path" -type f -print0 | xargs -0 ls -lh || : code $?
+tree -Chap --metafirst "$path" || : code $?
 
 tail -vn99 "$path/"matrix.list

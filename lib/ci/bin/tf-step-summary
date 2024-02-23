@@ -2,10 +2,22 @@
 set -euo pipefail
 title="$1"
 script="$2"
-tacos_verb="$(basename "$script")"
+
+
+save_var() {
+  path="$1"
+  var="$2"
+
+  eval 'echo "${'"$var"':-}"' > "$path/$var"
+}
+
 
 tf_log=tf-log.hcl
 console_log=console.log
+outdir="matrix-fan-out"
+
+tacos_verb="$(basename "$script")"
+echo "# $title:"
 with-user-env "$TF_ROOT_MODULE" \
   "$script" 2>&1 >"$tf_log" |
   tee "$console_log" \
@@ -15,34 +27,22 @@ with-user-env "$TF_ROOT_MODULE" \
 
 cat "$tf_log"
 
-mkdir matrix-fan-out
-ls -ld matrix-fan-out
+mkdir "$outdir"
 
-# save everything, for analysis during fan-in summary
-jq . > matrix-fan-out/matrix.json <<EOF
-{
-  "env": {
-    "HOME": "$HOME",
-    "GITHUB_WORKSPACE": "$GITHUB_WORKSPACE",
-    "TF_ROOT_MODULE": "$TF_ROOT_MODULE",
-    "TACOS_LOCK": "${TACOS_LOCK:-}"
-  },
-  "param": {
-    "title": "$title",
-    "script": "$script",
-    "explanation": "$(cat)"
-  },
-  "result": {
-    "returncode": "$returncode"
-  }
-}
-EOF
+# save any local vars we'll need for analysis during fan-in summary
+mkdir -p "$outdir/env"
+for var in HOME GITHUB_WORKSPACE TF_ROOT_MODULE TACOS_LOCK; do
+  save_var "$outdir/env" "$var"
+done
+for var in tacos_verb title script returncode; do
+  save_var "$outdir" "$var"
+done
+cat > "$outdir/explanation"
 
 # copy any files we want to keep
-cp "$tf_log" "$console_log" matrix-fan-out/
+cp "$tf_log" "$console_log" "$outdir"
 
-ls -la matrix-fan-out
-cat matrix-fan-out/matrix.json
+tree "$outdir"
 
 if [[ "$tacos_verb" == "plan" ]] && (( returncode == 2 )); then
   # plan succeeded but found that changes need to be applied

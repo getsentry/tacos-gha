@@ -135,19 +135,24 @@ jobs:
           ref: ${{inputs.tacos_gha_ref}}
           path: tacos-gha
 
+      - name: Setup
+        uses: ./tacos-gha/.github/actions/just-the-basics
       - name: Run matrix-fan-in
         uses: ./tacos-gha/.github/actions/matrix-fan-in
-
       - name: Summarize
-        uses: ./tacos-gha/lib/ci/tacos-plan-summary
+        id: summary
+        run: |
+          ./tacos-gha/lib/ci/tacos-plan-summary |
+            gha-step-summary
 
       - name: Update PR
         # we want to report failures, too
         if: always()
         uses: thollander/actions-comment-pull-request@v2.4.3
         with:
-          message: ${{ fromJSON(steps.main.outputs.summary) }}
-          comment_tag: plan(${{env.TF_ROOT_MODULE}})
+          message: ${{ fromJSON(steps.summary.outputs.summary) }}
+          comment_tag: plan
+          mode: recreate
 
   reset-label:
     uses: ./.github/workflows/reset-label.yml
