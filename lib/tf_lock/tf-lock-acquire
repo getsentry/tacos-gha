@@ -1,35 +1,51 @@
-#!/bin/bash
-# acquire the terraform state lock and print its ID (an integer)
-set -euo pipefail
-HERE="$(dirname "$(readlink -f "$0")")"
-. "$HERE/"lib/env.sh
+#!/usr/bin/env python3
+"""Acquire the terraform state lock and print its ID (an integer)"""
 
-root_module="${1:-"."}"
-lock_info="$("$HERE/"tf-lock-info "$root_module")"
-lock="$(jq .lock <<< "$lock_info")"
+from __future__ import annotations
 
-if "$lock"; then
-  lock_user="$(jq -r .Who <<< "$lock_info")"
-  tf_user="$(whoami)@$(hostname -f)"
-  if [[ "$lock_user" == "$tf_user" ]]; then
-    # already done!
-    echo >&2 "tf-lock-acquire: success: $root_module($lock_user)"
-    jq -r .ID <<< "$lock_info"
-    exit 0
-  else
-    # generate link to locked pr
-    pr_number="${lock_user#*@}"
-    pr_number="${pr_number%%.*}"
+import sys
+from os import environ
 
-    echo >&2 "tf-lock-acquire: failure: not $lock_user: $root_module($tf_user)"
-    echo >&2 "pr number: $pr_number"
-    echo >&2 "the PR holding the lock: https://github.com/getsentry/$lock_user"
-    
-    exit "$TF_LOCK_EHELD"
-  fi
-fi
+from lib.parse import Parse
+from lib.sh import sh
+from lib.tf_lock.lib import env
+from lib.types import OSPath
 
-( cd "$(tf_working_dir "$root_module")"
-  "$HERE/"acquire.py
-)
-exec "$0" "$@"  # start over
+HERE = sh.get_HERE(__file__)
+
+try:
+    root_module = sys.argv[1]
+except IndexError:
+    root_module = "."
+
+lock_info = sh.json((HERE / "tf-lock-info", root_module))
+assert isinstance(lock_info, dict), lock_info
+lock = lock_info["lock"]
+
+assert isinstance(lock, bool), lock
+
+if lock:
+    lock_user = lock_info["Who"]
+    tf_user = sh.stdout(("whoami",)) + "@" + sh.stdout(("hostname", "-f"))
+
+    if lock_user == tf_user:
+        # already done!
+        sh.info(f"tf-lock-acquire: success: {lock_user}")
+        sh.info(f"{lock_info}")
+        exit(0)
+    else:
+        sh.info(f"tf-lock-acquire: failure: not {lock_user}: {tf_user}")
+        p = Parse(lock_user)
+        pr_number = p.after.first("@").before.first(".")
+        repo_name = p.after.first(".").before.last(".", ".", ".")
+        org_name = p.after.first(repo_name, ".").before.last(".github")
+        pr_link = f"https://github.com/{org_name}/{repo_name}/pull/{pr_number}"
+        sh.info(f"The PR holding the lock: {pr_link}")
+        exit(environ["TF_LOCK_EHELD"])
+
+root_module_path = OSPath(root_module)
+assert isinstance(root_module_path, OSPath), root_module_path
+sh.cd(env.tf_working_dir(root_module_path))
+sh.run(("f{HERE}/acquire.py",))
+
+sh.run(("exec", sys.argv[0], sys.argv[1:]))  # start over
