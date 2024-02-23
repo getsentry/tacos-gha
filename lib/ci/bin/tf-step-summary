@@ -11,7 +11,6 @@ save_var() {
   eval 'echo "${'"$var"':-}"' > "$path/$var"
 }
 
-
 tf_log=tf-log.hcl
 console_log=console.log
 outdir="matrix-fan-out"

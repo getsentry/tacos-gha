@@ -106,6 +106,7 @@ class SliceSummary(NamedTuple):
 
         if rollup:
             yield "</details>"
+            yield ""
 
         if tf_log:
             yield "```hcl"
@@ -130,8 +131,8 @@ def tacos_plan_summary(path: OSPath) -> Generator[Line]:
     slices = tuple(SliceSummary.from_matrix_fan_in(path))
 
     dirty = tuple(slice for slice in slices if slice.dirty)
-    clean = tuple(slice for slice in slices if slice.dirty)
-    error = tuple(slice for slice in slices if slice.dirty)
+    clean = tuple(slice for slice in slices if slice.clean)
+    error = tuple(slice for slice in slices if slice.error)
 
     yield "# Terraform Plan"
     yield f"TACOS genearted a terraform plan for {len(slices)} slices:"
@@ -161,7 +162,10 @@ def tacos_plan_summary(path: OSPath) -> Generator[Line]:
 
     if clean:
         yield "## Clean"
-        yield "You might want to consider refactoring to put your change out of scope of these slices."
+        yield ""
+        yield "These slices are in scope of your changes, but Terraform found"
+        yield "no necessary changes."
+        yield ""
         for slice in clean:
             yield f"  * {slice.name}"
 
