@@ -30,8 +30,8 @@ def test(pr: tacos_demo.PR, test_name: str) -> None:
 
     for slice, comment in sorted(comments.items()):
         assert (
-            Parse(comment).before.first("\n")
-            == f"### TACOS Plan: {pr.slices.subpath}/{slice}"
+            Parse(comment).after.first("\n### ").before.first("\n")
+            == f"{pr.slices.subpath}/{slice}"
         )
 
         summary = (

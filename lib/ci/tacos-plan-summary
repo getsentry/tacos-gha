@@ -12,6 +12,10 @@ ExitCode = None | str | int
 Line = str
 
 
+def get_file(path: OSPath) -> str:
+    return path.read_text().strip()
+
+
 class SliceSummary(NamedTuple):
     name: str
     path: OSPath
@@ -44,7 +48,7 @@ class SliceSummary(NamedTuple):
 
     @property
     def console_log(self) -> OSPath:
-        return self.path / "tf-log.hcl"
+        return self.path / "console.log"
 
     @property
     def dirty(self) -> bool:
@@ -103,11 +107,12 @@ class SliceSummary(NamedTuple):
         yield sh.stdout(("uncolor", self.console_log)).strip()
         yield "```"
         yield ""
+        yield "  </details>"
+        yield ""
 
-        if rollup:
-            yield "</details>"
-            yield ""
-
+        yield ""
+        yield "  Result:"
+        yield ""
         if tf_log:
             yield "```hcl"
             yield tf_log
@@ -135,7 +140,7 @@ def tacos_plan_summary(path: OSPath) -> Generator[Line]:
     error = tuple(slice for slice in slices if slice.error)
 
     yield "# Terraform Plan"
-    yield f"TACOS genearted a terraform plan for {len(slices)} slices:"
+    yield f"TACOS generated a terraform plan for {len(slices)} slices:"
     yield ""
     if error:
         yield f"  * {len(error)} failed to plan"
