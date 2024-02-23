@@ -40,10 +40,16 @@ def tf_lock_acquire(root_module: Path, env: Environ) -> int:
                 )
                 p = Parse(lock_user)
                 pr_number = p.after.first("@").before.first(".")
+                username = p.before.first("@")
                 repo_name = p.after.first(".").before.last(".", ".", ".")
                 org_name = p.after.first(repo_name, ".").before.last(".github")
                 pr_link = f"https://github.com/{org_name}/{repo_name}/pull/{pr_number}"
-                sh.info(f"The PR holding the lock: {pr_link}")
+                sh.info(
+                    f"""The terraform/terragrunt slice(s) your PR is touching are locked. 
+                        User {username} is holding the lock in this PR: {pr_link}
+                        """
+                )
+
                 return TF_LOCK_EHELD
 
         root_module_path = OSPath(root_module)
