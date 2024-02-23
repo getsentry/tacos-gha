@@ -163,7 +163,7 @@ def tacos_plan_summary(path: OSPath) -> Generator[Line]:
         yield "## Clean"
         yield "You might want to consider refactoring to put your change out of scope of these slices."
         for slice in clean:
-            yield f"  * {slice}"
+            yield f"  * {slice.name}"
 
 
 def main() -> ExitCode:

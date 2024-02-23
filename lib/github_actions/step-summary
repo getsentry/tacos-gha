@@ -3,6 +3,8 @@
 # this step.
 set -euo pipefail
 
+set -x
+
 tee >(
   # step summary and PR comments can't handle ansi-color like GHA logging does =(
   uncolor |

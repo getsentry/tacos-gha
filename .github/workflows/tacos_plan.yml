@@ -142,6 +142,8 @@ jobs:
       - name: Summarize
         id: summary
         run: |
+          export DEBUG=1
+          gha-set-output xyz <<< abc
           ./tacos-gha/lib/ci/tacos-plan-summary |
             gha-step-summary
 
