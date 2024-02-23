@@ -7,42 +7,21 @@ set -euo pipefail
 exec >&2  # our only output is logging
 HERE="$(readlink -f "$(dirname "$0")")"
 
-gha-set-output() {
-  var="$1"
-  val="$(cat)"
-  tee -a "$GITHUB_OUTPUT" <<< "$var=$val"
-}
-gha-set-artifact() {
-  artifact="$1"
-  gha-set-output "artifact/$artifact" <<< "$artifact"
-
-  if ! [[ -e "$artifact" ]]; then
-    mkdir -p "$(dirname "$artifact")"
-    cat > "$artifact"
-  fi
-}
-
 key="$1"
 
 set -x
 
 : Processing... "$key"
+outdir="a/b/c"
+mkdir -p "$outdir/x/y/z"
 
-gha-set-output param/key.json <<< "$key"
-echo "result/title.txt=Hello, $key!" |
-  tee -a "$GITHUB_OUTPUT"
-
-"$HERE/"square.py "$key" |
-  gha-set-artifact result/square.txt
+echo "$key" > "$outdir/key"
+echo 1 > "$outdir/x/y/matrix.1.json"
+"$HERE/"square.py "$key" > "$outdir/"square.txt
 
 square=$((key ** 2))
-echo "$square" | gha-set-output 'matrix.json'
+echo "$square" | tee "$outdir/square" "$outdir/x/y/z/matrix.json"
+echo "$RANDOM" | tee "$outdir/x/random.txt" "$outdir/x/y/z/random.json"
 
-outdir="x/y/z"
-mkdir -p "$outdir"
-gha-set-artifact "x"
-
-echo 1 > "x/y/matrix.1.json"
-echo "$RANDOM" | tee "x/random.txt" "x/y/z/random.json"
-
+outdir="a/b/c"
 find "$outdir" -type f -print0 | xargs -0 head

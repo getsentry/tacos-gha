@@ -1,7 +1,7 @@
 name: Selftest Matrix IO
 
 on:
-  push:
+  pull_request:
     paths:
       - ".github/actions/matrix-fan-out/**"
       - ".github/actions/matrix-fan-in/**"
@@ -58,7 +58,6 @@ jobs:
         uses: ./tacos-gha/.github/actions/matrix-fan-out
         with:
           path: ./a/b/c
-          steps: "${{ toJSON(steps) }}"
           retention-days: 1
 
   fan-in:
@@ -80,5 +79,15 @@ jobs:
           path: a/b/c
 
       - name: Check matrix-fan-in.json
+        id: main
         run: |
           "./tacos-gha/".github/actions/matrix-fan-in/selftest.sh
+
+      - name: Update PR
+        # we want to report failures, too
+        if: always()
+        uses: thollander/actions-comment-pull-request@v2.4.3
+        with:
+          message: ${{ fromJSON(steps.main.outputs.summary) }}
+          comment_tag: selftest-matrix-io
+          mode: recreate

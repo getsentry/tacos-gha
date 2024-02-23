@@ -3,9 +3,8 @@
 #
 #   before: ./matrix-fan-in.tmp/matrix a b c (key=10)
 #   after: a/b/c/key=10
-
 set -euo pipefail
-exec >&2  # our only output is logging
+# note stdout becomes matrix.list
 
 tmpfile="$1"
 newfile="$(
@@ -15,7 +14,6 @@ newfile="$(
 )"
 parent="$(dirname "$newfile")"
 
-set -x
-: tmpfile: "$tmpfile"
 mkdir -p "$parent"
-mv -v "$tmpfile" "$newfile"
+mv "$tmpfile" "$newfile"
+cat "$newfile/matrix.list"

@@ -13,7 +13,6 @@ set -x
   echo "artifact_name="
   # remove any leading ./
   sed -r 's@^\./+@@g' <<<"$path"
-  cat  # send extra path components on stdin
 ) |
   tr -d '\n' |
   "$HERE/"ghaencode \
