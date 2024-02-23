@@ -18,8 +18,8 @@ environ["USER"] = get_current_user(environ)
 environ["HOST"] = get_current_host(environ)
 environ["HOSTNAME"] = environ["HOST"]
 
-environ["TF_LOCK_ENONE"] = "2"
-environ["TF_LOCK_EHELD"] = "3"
+TF_LOCK_ENONE = 2
+TF_LOCK_EHELD = 3
 
 TACOS_GHA_HOME = environ.setdefault("TACOS_GHA_HOME", str(HERE / "../../.."))
 
