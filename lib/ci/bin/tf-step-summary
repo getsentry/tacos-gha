@@ -19,6 +19,7 @@ tacos_verb="$(basename "$script")"
 echo "# $title:"
 with-user-env "$TF_ROOT_MODULE" \
   "$script" 2>&1 >"$tf_log" |
+  tf-log-normalize |
   tee "$console_log" \
   && returncode=$? \
   || returncode=$? \

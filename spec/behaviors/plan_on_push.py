@@ -41,7 +41,7 @@ def test(pr: tacos_demo.PR, test_name: str) -> None:
         # ... X to add, Y to change, Z ...
         assert summary.endswith(" to destroy.")
 
-        assert "<summary>Commands: (success)</summary>" in comment
+        assert "<summary>Commands: (success, tfplan todo)</summary>" in comment
 
         commands: Parse = (
             Parse(comment).after.last("</summary>").before.first("</details>")

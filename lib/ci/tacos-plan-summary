@@ -26,13 +26,10 @@ def gha_summary_and_details(
     else:
         yield f"  {summary}"
 
-    yield ""
     yield from details
-    yield ""
 
     if rollup:
         yield "  </details>"
-        yield ""
 
 
 class SliceSummary(NamedTuple):
@@ -84,6 +81,8 @@ class SliceSummary(NamedTuple):
     def summarize_exit(self) -> str:
         if self.returncode == 0:
             return "success"
+        elif self.tacos_verb == "plan" and self.returncode == 2:
+            return "success, tfplan todo"
         else:
             return f"error code {self.returncode}"
 
@@ -110,8 +109,10 @@ class SliceSummary(NamedTuple):
         return f"completed ({self.summarize_exit()})"
 
     def markdown(self, rollup: bool) -> Generator[Line]:
+        yield ""
         yield f"### {self.name}"
-        yield self.explanation
+        if self.explanation:
+            yield self.explanation
         yield ""
 
         yield from gha_summary_and_details(
@@ -131,19 +132,17 @@ class SliceSummary(NamedTuple):
                 "```console",
                 sh.stdout(("uncolor", self.console_log)).strip(),
                 "```",
-                "",
             ),
         )
 
         yield "  Result:"
-        yield ""
         if tf_log := sh.stdout(("uncolor", self.tf_log)).strip():
+            yield ""
             yield "```hcl"
             yield tf_log
             yield "```"
         else:
             yield "(no output)"
-        yield ""
 
     def __str__(self) -> str:
         return self.name
@@ -160,34 +159,32 @@ def tacos_plan_summary(path: OSPath) -> Generator[Line]:
     yield f"TACOS generated a terraform plan for {len(slices)} slices:"
     yield ""
     if error:
-        yield f"  * {len(error)} failed to plan"
+        yield f"  * {len(error)} slices failed to plan"
     if dirty:
-        yield f"  * {len(dirty)} affected"
+        yield f"  * {len(dirty)} slices have pending changes to apply"
     if clean:
-        yield f"  * {len(clean)} unaffected"
+        yield f"  * {len(clean)} slices are unaffected"
 
     first = False
     if error:
-        yield "## Errors"
         yield ""
+        yield "## Errors"
         for slice in error:
             yield from slice.markdown(rollup=not first)
             first = False
 
     if dirty:
-        yield "## Changes"
         yield ""
-
+        yield "## Changes"
         for slice in dirty:
             yield from slice.markdown(rollup=not first)
             first = False
 
     if clean:
+        yield ""
         yield "## Clean"
-        yield ""
-        yield "These slices are in scope of your changes, but Terraform found"
-        yield "no necessary changes."
-        yield ""
+        yield "These slices are in scope of your PR, but Terraform"
+        yield "found no infra changes are currently necessary:"
         for slice in clean:
             yield f"  * {slice.name}"
 

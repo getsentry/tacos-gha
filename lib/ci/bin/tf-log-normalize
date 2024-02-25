@@ -1,0 +1,17 @@
+#!/bin/bash
+set -euo pipefail
+
+sed -r '
+    # clarify noop ":" commands as comments
+    s/^\++ \$ : /\n# /
+
+    # match `console` syntax highlighting by removing "+ " from xtrace lines
+    s/^\++ \$ /\n$ /
+
+    # symbolize some absolute paths
+    # note: relative paths are too ambiguous, here, becase we chdir some
+    s@~/@'"$HOME"'/@g
+    s@'"$GITHUB_WORKSPACE/$TF_ROOT_MODULE"'@$slice@g
+    s@'"$GITHUB_WORKSPACE"'@$repo@g
+    s@'"$HOME"'/@~/@g
+'
