@@ -1,6 +1,8 @@
 #!/usr/bin/env py.test
 from __future__ import annotations
 
+import pytest
+
 from lib import wait
 from lib.parse import Parse
 from spec.lib import tacos_demo
@@ -9,18 +11,26 @@ from spec.lib.slice import Slice
 from spec.lib.testing import assert_sequence_in_log
 
 
-def test(pr: tacos_demo.PR, test_name: str) -> None:
+@pytest.fixture
+def pr(pr: tacos_demo.PR, test_name: str) -> tacos_demo.PR:
+
     slices2 = pr.slices.with_some_overlap()
     branch, message = tacos_demo.edit_slices(
         slices2, test_name, message="more code"
     )
-    pr = pr.with_slices(pr.slices | slices2)
 
     since = gh.commit_and_push(branch, message)
-    assert pr.check("Terraform Plan").wait(since).success
+
+    from dataclasses import replace
+
+    return replace(pr, slices=pr.slices | slices2, since=since)
+
+
+def test(pr: tacos_demo.PR) -> None:
+    assert pr.check("Terraform Plan").wait().success
 
     def get_comments() -> dict[Slice, gh.Comment]:
-        comments = pr.get_comments_for_job("plan", since)
+        comments = pr.get_comments_for_job("plan")
 
         slices_found = frozenset(comments)
         assert pr.slices.slices == slices_found
