@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+from lib import ansi
 from lib.parse import Parse
 from lib.sh import sh
 from lib.types import Environ
@@ -45,10 +46,18 @@ def tf_lock_acquire(root_module: Path, env: Environ) -> int:
                 org_name = p.after.first(repo_name, ".").before.last(".github")
                 pr_link = f"https://github.com/{org_name}/{repo_name}/pull/{pr_number}"
                 sh.info(
-                    f"""The terraform/terragrunt slice(s) your PR is touching are locked. 
-                        User {username} is holding the lock in this PR: {pr_link}
-                        """
+                    f"The terraform/terragrunt slice(s) your PR is touching are locked."
                 )
+                sh.info(
+                    f"User {username} is holding the lock in this PR: {pr_link}"
+                )
+                sh.info((
+                    ansi.TEAL,
+                    f"User {username} is holding the lock in this PR: {pr_link}",
+                    ansi.RESET,
+                ))
+                # f"+ {ansi.TEAL}${ansi.RESET} "
+                # info(ansi.GREEN, "=" * 8, *msg, "=" * 8, ansi.RESET)
 
                 return TF_LOCK_EHELD
 
