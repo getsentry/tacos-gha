@@ -62,6 +62,9 @@ class PR(gh.PR):
             message = "Draft " + message
         sh.banner(message, self.url)
 
+        # this is useful for manual short-circuiting to the middle of the test
+        sh.debug(repr(self))
+
         return self
 
     def close(

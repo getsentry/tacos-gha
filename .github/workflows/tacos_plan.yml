@@ -124,6 +124,8 @@ jobs:
         uses: ./tacos-gha/.github/actions/matrix-fan-out
 
   summary:
+    # we want to report failures, too
+    if: always()
     needs: tacos_plan
     runs-on: ubuntu-latest
 

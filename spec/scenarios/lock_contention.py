@@ -41,18 +41,26 @@ def test(
                 raise AssertionError(f"Unexpected conclusion: {conclusion}")
 
         assert winner is not None, winner
+        assert loser is not None, loser
         assert winner.check("Terraform Plan").wait().success
 
+        print("loser:", loser)
+        loser_comments = loser.get_comments_for_job("plan")
+        print("Loser comments:")
+        print(loser_comments)
+
+        print("winner:", winner)
+        winner_comments = winner.get_comments_for_job("plan")
+        print("Winner comments:")
+        print(winner_comments)
+
         sh.banner("Loser recieves a comment about the locking failure")
-        assert loser is not None
-        comments = loser.get_comments_for_job("plan")
         for slice in loser.slices:
-            assert MESSAGE in comments[slice]
+            assert MESSAGE in loser_comments[slice]
 
         sh.banner("Winner doesn't")
-        comments = winner.get_comments_for_job("plan")
         for slice in winner.slices:
-            assert MESSAGE not in comments[slice]
+            assert MESSAGE not in winner_comments[slice]
 
         sh.banner("Winner closes their PR")
         since = winner.close()

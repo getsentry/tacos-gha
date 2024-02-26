@@ -54,15 +54,9 @@ save_legacy_summary() {
   fi
   result_len=$(wc -l < "$tf_log")
   if (( returncode == 0 )); then
-    result_rollup=true
-    if (( result_len > 0 )); then
-      command_rollup=true
-    else
-      command_rollup=false
-    fi
+    rollup=true
   else
-    result_rollup=false
-    command_rollup=false
+    rollup=false
   fi
 
   (
@@ -70,21 +64,17 @@ save_legacy_summary() {
     echo
     echo "$explanation"
 
-    if "$result_rollup"; then
+    if "$rollup"; then
       # hide boring bits
       echo '<details>'
       echo "  <summary>$summary</summary>"
-    else
-      # things failed -- show it
-      echo "  $summary"
-    fi
-    echo
-
-
-    if "$command_rollup"; then
+      echo
       echo '  <details>'
       echo "    <summary>Commands: ($exit_code)</summary>"
     else
+      # things failed -- show it
+      echo "  $summary"
+      echo
       echo "  Commands: ($exit_code)"
     fi
 
@@ -93,7 +83,7 @@ save_legacy_summary() {
     cat "$console_log"
     echo '```'
 
-    if "$command_rollup"; then
+    if "$rollup"; then
       echo '</details>'
     fi
 
@@ -108,9 +98,11 @@ save_legacy_summary() {
       echo '(no output)'
     fi
 
-    if "$result_rollup"; then
+    if "$rollup"; then
       echo '</details>'
     fi
+
+    echo '<!-- getsentry/tacos-gha "'"$tacos_verb($TF_ROOT_MODULE)"'" -->'
   ) |
     gha-step-summary >/dev/null
 }
