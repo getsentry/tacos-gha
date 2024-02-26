@@ -9,20 +9,20 @@ set -x
 
 : Record matrix context
 tee \
-  <<<"$MATRIX_FAN_OUT_CONTEXT" \
+  <<<"$GHA_MATRIX_CONTEXT" \
   "$MATRIX_FAN_OUT_PATH/gha-matrix-context.json" \
   >&2 \
 ;
 
-: Calculate artifact name
-(
-  echo '/('
+matrix="$(
   jq \
-    <<<"$MATRIX_FAN_OUT_CONTEXT" \
+    <<<"$GHA_MATRIX_CONTEXT" \
     'to_entries | sort | map("\(.key)=\(.value)") | join("/")' \
     --raw-output \
   ;
-  echo ')'
-) |
-  "$HERE/"artifact-name.sh "$MATRIX_FAN_OUT_PATH" \
-;
+)"
+
+tee "$MATRIX_FAN_OUT_PATH"/matrix.list <<< "$matrix"
+
+: Calculate artifact name
+"$HERE/"set-artifact-name.sh "$MATRIX_FAN_OUT_PATH/($matrix)"
