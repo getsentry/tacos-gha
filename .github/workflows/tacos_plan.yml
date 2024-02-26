@@ -121,6 +121,8 @@ jobs:
           "$TACOS_GHA_HOME/"lib/ci/tacos-plan
 
       - name: Save matrix result
+        # we need to show any errors to end-users
+        if: always()
         uses: ./tacos-gha/.github/actions/matrix-fan-out
 
   summary:
