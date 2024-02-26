@@ -102,8 +102,9 @@ done on a 20%-time basis. (To be clear, this milestone is non-optional.)
   - [ ] onboard a new team member from SRE
     - neo dmitrii jim richard
     - [x] invite to standup
-- [ ] @ellison user guide
+- [~] @ellison user guide
   - how-to: avoid GHA notification spam
+  - https://github.com/getsentry/tacos-gha/pull/168
 - [ ] @buck run tests in CI -- stretch
 - [ ] convert the rest of the sh to python
       https://github.com/getsentry/tacos-gha
