@@ -5,6 +5,7 @@
 
 set -euo pipefail
 exec >&2  # our only output is logging
+HERE="$(readlink -f "$(dirname "$0")")"
 
 key="$1"
 
@@ -14,11 +15,12 @@ set -x
 outdir="a/b/c"
 mkdir -p "$outdir/x/y/z"
 
-echo "$key" > "$outdir/key.json"
-echo 1 > "$outdir/x/y/matrix.json"
+echo "$key" > "$outdir/key"
+echo 1 > "$outdir/x/y/matrix.1.json"
+"$HERE/"square.py "$key" > "$outdir/"square.txt
 
 square=$((key ** 2))
-echo "$square" | tee "$outdir/x/y/z/matrix.json"
+echo "$square" | tee "$outdir/square" "$outdir/x/y/z/matrix.json"
 echo "$RANDOM" | tee "$outdir/x/random.txt" "$outdir/x/y/z/random.json"
 
 outdir="a/b/c"

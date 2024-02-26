@@ -7,11 +7,6 @@ inputs:
   path:
     description: Must match matrix-fan-out `path`.
     default: ./matrix-fan-out
-  fan-out-files:
-    description: |-
-      Optionally filter which fan-out files to include in the fan-in.
-      syntax: find(1) -name
-    default: matrix*.json
   pattern:
     description: |-
       Optionally filter which matrix results to include e.g. "color=blue"
@@ -29,7 +24,7 @@ runs:
       env:
         MATRIX_FAN_OUT_PATH: ${{ inputs.path }}
       run: |
-        "$GITHUB_ACTION_PATH/"artifact-name.sh "$MATRIX_FAN_OUT_PATH" |
+        "$GITHUB_ACTION_PATH/"set-artifact-name.sh "$MATRIX_FAN_OUT_PATH" |
           tee -a "$GITHUB_ENV"
 
     - name: Download artifacts
@@ -38,12 +33,11 @@ runs:
         pattern: ${{ env.artifact_name }} *${{ inputs.pattern }}*
         path: matrix-fan-in.tmp
 
-    - name: Combine JSON files
+    - name: fix up archive files
       shell: bash
       env:
         MATRIX_FAN_OUT_PATH: ${{ inputs.path }}
-        MATRIX_FAN_OUT_FILES: ${{ inputs.fan-out-files }}
 
       # note: "$GITHUB_ACTION_PATH" contains this action directory's path
       run: |
-        "$GITHUB_ACTION_PATH/"combine-json.sh "$MATRIX_FAN_OUT_PATH" "$MATRIX_FAN_OUT_FILES"
+        "$GITHUB_ACTION_PATH/"rename-tmp-dirs.sh "$MATRIX_FAN_OUT_PATH"
