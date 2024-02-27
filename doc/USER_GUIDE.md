@@ -1,16 +1,12 @@
-# Installation
-
-To configure a GitHub repository to use TACOS-GHA, you need to configure a
-number of workflows in the `.github/workflows/` directory in the repository.
-Examples of these workflow files can be found [here](workflows).
-
 # Concepts
 
 - slice
   - A collection of terraform resources sharing a single non-local terraform
-    state backend.
+    state backend. Generally resources in a slice share a logical grouping.
 - lock
-  - A standard terraform lock, thus visible to any tool using terraform.
+  - A standard terraform lock, thus visible to any tool using terraform. This
+    lock prevents concurrent operations on the same slice. Normally transient,
+    TACOS-GHA may use longer lasting locks.
 - drift
   - A state where changes have been made to resources controlled by a slice
     which have not been merged into the default branch of the repository.
