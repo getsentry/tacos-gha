@@ -15,7 +15,8 @@ jobs:
     uses: getsentry/tacos-gha/.github/workflows/tacos_plan.yml@stable
     with:
       tacos_gha_ref: refs/heads/stable
-# Add keys here if your terraform/terragrunt gets modules from a private repo.
+# Add keys here if your terraform/terragrunt gets modules from a private repo
+# separate from the repo that TACOS is installed in.
 #    secrets:
 #      ssh-private-key: |
 #        ${{ secrets.YOUR_PRIVATE_KEY }}

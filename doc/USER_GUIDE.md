@@ -4,9 +4,9 @@
   - A collection of terraform resources sharing a single non-local terraform
     state backend. Generally resources in a slice share a logical grouping.
 - lock
-  - A standard terraform lock, thus visible to any tool using terraform. This
-    lock prevents concurrent operations on the same slice. Normally transient,
-    TACOS-GHA may use longer lasting locks.
+  - A standard terraform state lock, thus visible to any tool using terraform.
+    This lock prevents concurrent operations on the same slice. Normally
+    transient, TACOS-GHA may use longer lasting locks.
 - drift
   - A state where changes have been made to resources controlled by a slice
     which have not been merged into the default branch of the repository.
