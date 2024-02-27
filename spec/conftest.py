@@ -48,8 +48,11 @@ def git_remote() -> gh.RemoteRepo:
 
 
 @fixture
-def demo(cwd: OSPath, git_remote: gh.RemoteRepo) -> Generator[gh.LocalRepo]:
+def demo(
+    cwd: OSPath, git_remote: gh.RemoteRepo, git_config: None
+) -> Generator[gh.LocalRepo]:
     """A local, cloned working copy of the "demo" repo."""
+    del git_config
     with git_remote.cloned(cwd) as clone:
         yield clone
 
@@ -214,3 +217,15 @@ def cli_auth_gh() -> None:
     from os import environ
 
     environ["GH_TOKEN"] = sh.stdout(("gh", "auth", "token"))
+
+
+@fixture
+def git_config(environ: Environ) -> Environ:
+    # clear out any overriding environment vars
+    for var in environ:
+        if var.startswith("GIT_"):
+            del environ[var]
+
+    git_config = TACOS_GHA_HOME / "etc/gitconfig"
+    environ["GIT_CONFIG_GLOBAL"] = str(git_config)
+    return environ
