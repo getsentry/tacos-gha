@@ -56,9 +56,6 @@ def tf_lock_acquire(root_module: Path, env: Environ) -> int:
                     f"User {username} is holding the lock in this PR: {pr_link}",
                     ansi.RESET,
                 ))
-                # sh.banner("test")
-                # f"+ {ansi.TEAL}${ansi.RESET} "
-                # info(ansi.GREEN, "=" * 8, *msg, "=" * 8, ansi.RESET)
 
                 return TF_LOCK_EHELD
 
