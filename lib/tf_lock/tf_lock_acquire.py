@@ -3,6 +3,8 @@
 
 from __future__ import annotations
 
+import asyncio
+
 from lib import ansi
 from lib.parse import Parse
 from lib.sh import sh
@@ -10,15 +12,18 @@ from lib.types import Environ
 from lib.types import OSPath
 from lib.types import Path
 
+from .lib.acquire import DEBUG
+from .lib.acquire import ExitCode
+from .lib.acquire import acquire
+from .lib.env import HOST
 from .lib.env import TF_LOCK_EHELD
+from .lib.env import USER
 from .lib.env import tf_working_dir
 
-HERE = sh.get_HERE(__file__)
 
-
-def tf_lock_acquire(root_module: Path, env: Environ) -> int:
+def tf_lock_acquire(root_module: Path, env: Environ) -> ExitCode:
     while True:
-        lock_info = sh.json((HERE / "tf-lock-info", root_module))
+        lock_info = sh.json(("tf-lock-info", root_module))
         assert isinstance(lock_info, dict), lock_info
         lock = lock_info["lock"]
 
@@ -26,9 +31,7 @@ def tf_lock_acquire(root_module: Path, env: Environ) -> int:
 
         if lock:
             lock_user = lock_info["Who"]
-            tf_user = (
-                sh.stdout(("whoami",)) + "@" + sh.stdout(("hostname", "-f"))
-            )
+            tf_user = f"{USER}@{HOST}"
 
             if lock_user == tf_user:
                 # already done!
@@ -62,11 +65,11 @@ def tf_lock_acquire(root_module: Path, env: Environ) -> int:
         root_module_path = OSPath(root_module)
         assert isinstance(root_module_path, OSPath), root_module_path
         with sh.cd(tf_working_dir(root_module_path)):
-            sh.run((f"{HERE}/acquire.py",))
+            return asyncio.run(acquire(), debug=DEBUG > 0)
         # start over
 
 
-def main() -> int:
+def main() -> ExitCode:
     from os import environ
     from sys import argv
 

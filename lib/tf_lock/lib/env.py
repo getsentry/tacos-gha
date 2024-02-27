@@ -14,12 +14,13 @@ from ..release import get_current_host
 from ..release import get_current_user
 
 HERE = sh.get_HERE(__file__)
-environ["USER"] = get_current_user(environ)
-environ["HOST"] = get_current_host(environ)
-environ["HOSTNAME"] = environ["HOST"]
+USER = environ["USER"] = get_current_user(environ)
+HOST = environ["HOST"] = get_current_host(environ)
+HOSTNAME = environ["HOSTNAME"] = environ["HOST"]
 
 TF_LOCK_ENONE = 2
 TF_LOCK_EHELD = 3
+
 
 TACOS_GHA_HOME = environ.setdefault("TACOS_GHA_HOME", str(HERE / "../../.."))
 
