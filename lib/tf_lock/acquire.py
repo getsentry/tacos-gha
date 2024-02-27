@@ -56,6 +56,7 @@ def tf_lock_acquire(root_module: Path, env: Environ) -> int:
                     f"User {username} is holding the lock in this PR: {pr_link}",
                     ansi.RESET,
                 ))
+                # sh.banner("test")
                 # f"+ {ansi.TEAL}${ansi.RESET} "
                 # info(ansi.GREEN, "=" * 8, *msg, "=" * 8, ansi.RESET)
 
@@ -64,7 +65,7 @@ def tf_lock_acquire(root_module: Path, env: Environ) -> int:
         root_module_path = OSPath(root_module)
         assert isinstance(root_module_path, OSPath), root_module_path
         with sh.cd(tf_working_dir(root_module_path)):
-            sh.run(("f{HERE}/acquire.py",))
+            sh.run((f"{HERE}/acquire.py",))
         # start over
 
 
