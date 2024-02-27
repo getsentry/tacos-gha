@@ -26,19 +26,22 @@ class DidNotRun(Exception):
 @dataclass(frozen=True)
 class CheckFilter:
     pr: PR
-    workflow: WorkflowName
+    workflow: WorkflowName | None
     check: CheckName | None
 
-    def latest(self, since: datetime) -> Generator[CheckRun]:
+    def latest(self, since: datetime | None = None) -> Generator[CheckRun]:
         """Return the _most recent_ status of the named check."""
         __tracebackhide__ = True
+
+        if since is None:
+            since = self.pr.since
 
         buckets: defaultdict[str, list[CheckRun]] = defaultdict(list)
         for run in self.pr.get_check_runs(since):
             if (
                 True
                 and run.started_at > since
-                and run.workflow == self.workflow
+                and (self.workflow is None or run.workflow == self.workflow)
                 and (
                     self.check is None
                     or run.name == self.check
@@ -52,7 +55,7 @@ class CheckFilter:
             sh.info(run)
             yield run
 
-    def exists(self, since: datetime) -> CheckRun | None:
+    def exists(self, since: datetime | None = None) -> CheckRun | None:
         """Does such a thing exist, at all?"""
         __tracebackhide__ = True
 
@@ -66,7 +69,7 @@ class CheckFilter:
         sh.banner(run.url)
         return run
 
-    def ran(self, since: datetime) -> CheckRun | None:
+    def ran(self, since: datetime | None = None) -> CheckRun | None:
         """Did a specified github-action run, lately?"""
         __tracebackhide__ = True
 
@@ -82,13 +85,10 @@ class CheckFilter:
             return None
 
     def wait(
-        self, since: datetime | None = None, timeout: float = wait.WAIT_LIMIT
+        self, since: datetime | None = None, timeout: float = 180
     ) -> CheckRun:
         """Wait for a check to run."""
         __tracebackhide__ = True
-
-        if since is None:
-            since = self.pr.since
 
         start = now()
         sh.info(f"waiting for {self} (since {since})...")
@@ -106,7 +106,8 @@ class CheckFilter:
         return result
 
     def __str__(self) -> str:
+        workflow = "(any)" if self.workflow is None else self.workflow
         if self.check:
-            return f"{self.workflow} / {self.check}"
+            return f"{workflow} / {self.check}"
         else:
-            return self.workflow
+            return workflow

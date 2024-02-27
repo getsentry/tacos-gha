@@ -17,29 +17,26 @@ tf-lock-acquire: failure: not """
 def assert_there_can_be_only_one(slice: Slice, *prs: tacos_demo.PR) -> None:
     sh.banner(f"Slice: {slice}")
 
-    checks: dict[tacos_demo.PR, gh.CheckRun] = {
-        pr: pr.check(
-            "Terraform Plan", f"tacos_plan ({pr.slices.subpath / slice})"
-        ).wait()
-        for pr in prs
-    }
-    assert {check.conclusion for check in checks.values()} == {
-        "SUCCESS",
-        "FAILURE",
-    }
-
-    for pr, check in checks.items():
+    winner = loser = 0
+    for pr in prs:
         comments = pr.get_comments_for_job("plan")
+        check = pr.check(
+            "Terraform Plan", f"tacos_plan ({pr.slices.subpath / slice})"
+        ).ran()
+        assert check is not None
         if check.conclusion == "SUCCESS":
-            print("Winner:", pr.url)
-            for slice in pr.slices:
-                assert CONFLICT_MESSAGE not in comments[slice]
+            winner += 1
+            print("Winner:", pr)
+            assert CONFLICT_MESSAGE not in comments[slice]
         elif check.conclusion == "FAILURE":
-            print("Loser:", pr.url)
-            for slice in pr.slices:
-                assert CONFLICT_MESSAGE in comments[slice]
+            loser += 1
+            print("Loser:", pr)
+            assert CONFLICT_MESSAGE in comments[slice]
         else:
             raise AssertionError(check)
+
+    # for some particular slice, there's one winner and one loser
+    assert winner == loser == 1
 
 
 def test(

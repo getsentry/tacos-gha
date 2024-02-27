@@ -137,7 +137,7 @@ class Slices:
         return len(self.slices)
 
     def __iter__(self) -> Iterator[Slice]:
-        return iter(self.slices)
+        return iter(sorted(self.slices))
 
     def _check_related(self, other: Self) -> None:
         if (self.workdir, self.subpath) != (other.workdir, other.subpath):

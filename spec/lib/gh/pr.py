@@ -185,7 +185,9 @@ class PR:
         return tuple(result)
 
     def check(
-        self, workflow: WorkflowName, check_name: CheckName | None = None
+        self,
+        workflow: WorkflowName | None = None,
+        check_name: CheckName | None = None,
     ) -> CheckFilter:
         from .check import CheckFilter
 

@@ -56,6 +56,7 @@ exclude = [
     "**/bak",
     "**/scratch",
 ]
+follow_imports_for_stubs = true
 
 pythonPlatform = "Linux"
 
@@ -127,9 +128,10 @@ warn_unreachable = true
 
 # these are better-covered by pyright:
 disallow_untyped_defs = false
-
-# NOTE: the pylsp server itself cannot be configured via pyproject.toml =.=
+disallow_untyped_calls = false
 
 [tool.pylsp-mypy]
+# NOTE: the pylsp server itself cannot be configured via pyproject.toml =.=
+
 enabled = true
 live_mode = true

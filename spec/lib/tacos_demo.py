@@ -102,6 +102,13 @@ class PR(gh.PR):
         if since is None:
             since = self.since
 
+        if job_filter is None:
+            job = ""
+        else:
+            job = f" '{job_filter}'"
+
+        sh.debug(f"ensure the{job} comments are already posted...")
+        self.check().wait(since)
         return parse_comments(
             job_filter, self.slices.subpath, self.comments(since)
         )
