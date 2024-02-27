@@ -13,7 +13,6 @@ FIXME: we need a fan-in summary
 FIXME: we need pip packaging
 TODO(P3): refactor to an object that takes token in constructor, remove autouse
 TODO(P3): sh.show_json(): use jq to highlight
-TODO: Delete env.sh
 TODO: add a :taco::lock label
 TODO: amend if the previous commit was a similar auto-commit
 TODO: anything (scenario: drift detection)
