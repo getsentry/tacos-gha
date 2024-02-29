@@ -40,12 +40,6 @@ def tf_lock_acquire(root_module: Path, env: Environ) -> ExitCode:
                 sh.info(f"{lock_info}")
                 return 0
             else:
-                sh.info(
-                    f"tf-lock-acquire: failure: not {lock_user}: {tf_user}"
-                )
-                sh.info(
-                    f"The terraform/terragrunt slice(s) your PR is touching are locked."
-                )
                 p = Parse(lock_user)
                 username = p.before.first("@")
                 # a pr holds the lock.
@@ -57,18 +51,14 @@ def tf_lock_acquire(root_module: Path, env: Environ) -> ExitCode:
                     )
                     pr_link = f"https://github.com/{org_name}/{repo_name}/pull/{pr_number}"
                     sh.info(
-                        f"User {username} is holding the lock in this PR: {pr_link}"
+                        f"tf-lock-acquire: Lock failed. User {ansi.TEAL}{username}{ansi.RESET} is holding the lock in this PR: {ansi.TEAL}{pr_link}{ansi.RESET}"
                     )
-                    sh.info((
-                        f"{ansi.TEAL}User {username} is holding the lock in this PR: {pr_link}{ansi.RESET}"
-                    ))
                 else:
                     host = p.after.first("@")
                     sh.info((
-                        f"{ansi.TEAL}User {username} is holding the lock. It looks like they took it manually, from {host}.{ansi.RESET}"
+                        f"tf-lock-acquire: Lock failed. User {ansi.TEAL}{username}{ansi.RESET} is holding the lock. It looks like they took it manually, from {ansi.TEAL}{host}{ansi.RESET}."
                     ))
 
-                sh.info(f"Please talk to the engineer holding the lock!")
                 return TF_LOCK_EHELD
 
         root_module_path = OSPath(root_module)
