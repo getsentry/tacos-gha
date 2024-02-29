@@ -54,6 +54,7 @@ def test(pr: tacos_demo.PR, test_name: str) -> None:
                 """\
 $ sudo-gcp tf-lock-acquire
 You are authenticated for the next hour as: tacos-gha-tf-state-admin@sac-dev-sa.iam.gserviceaccount.com
+$ tf-lock-info .
 tf-lock-acquire: success: .(""",  # the next bit is github-username@fake-pr-domain, which seems tricky
                 """\
 
