@@ -24,7 +24,6 @@ from .lib.env import tf_working_dir
 def tf_lock_acquire(root_module: Path, env: Environ) -> ExitCode:
     while True:
         lock_info = sh.json(("tf-lock-info", root_module))
-        sh.info(f"dir: {root_module}")
         assert isinstance(lock_info, dict), lock_info
         lock = lock_info["lock"]
 
