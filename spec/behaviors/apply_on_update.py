@@ -57,8 +57,15 @@ def test(pr: tacos_demo.PR) -> None:
                 """
 $ sudo-gcp tf-lock-acquire
 You are authenticated for the next hour as: tacos-gha-tf-apply@sac-dev-sa.iam.gserviceaccount.com
+
 $ tf-lock-info .
-tf-lock-acquire: success: .(""",  # the next bit is github-username@fake-pr-domain, which seems tricky
+
+$ terragrunt --terragrunt-no-auto-init=false validate-inputs
+
+$ terragrunt --terragrunt-no-auto-init=false terragrunt-info
+
+$ tf-lock-info .
+tf-lock-acquire: success: """,  # the next bit is github-username@fake-pr-domain, which seems tricky
                 """
 $ sudo-gcp terragrunt run-all init
 You are authenticated for the next hour as: tacos-gha-tf-apply@sac-dev-sa.iam.gserviceaccount.com
