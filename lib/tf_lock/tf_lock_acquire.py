@@ -63,7 +63,7 @@ def tf_lock_acquire(root_module: Path, env: Environ) -> ExitCode:
         root_module_path = OSPath(root_module)
         assert isinstance(root_module_path, OSPath), root_module_path
         with sh.cd(tf_working_dir(root_module_path)):
-            return asyncio.run(acquire(), debug=DEBUG > 0)
+            asyncio.run(acquire(), debug=DEBUG > 0)
         # start over
 
 
