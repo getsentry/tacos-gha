@@ -1,28 +1,7 @@
 #!/bin/bash
-# acquire the terraform state lock and print its ID (an integer)
 set -euo pipefail
 HERE="$(dirname "$(readlink -f "$0")")"
 . "$HERE/"lib/env.sh
 
-root_module="${1:-"."}"
-lock_info="$("$HERE/"tf-lock-info "$root_module")"
-lock="$(jq .lock <<< "$lock_info")"
-
-if "$lock"; then
-  lock_user="$(jq -r .Who <<< "$lock_info")"
-  tf_user="$(whoami)@$(hostname -f)"
-  if [[ "$lock_user" == "$tf_user" ]]; then
-    # already done!
-    echo >&2 "tf-lock-acquire: success: $root_module($lock_user)"
-    jq -r .ID <<< "$lock_info"
-    exit 0
-  else
-    echo >&2 "tf-lock-acquire: failure: not $lock_user: $root_module($tf_user)"
-    exit "$TF_LOCK_EHELD"
-  fi
-fi
-
-( cd "$(tf_working_dir "$root_module")"
-  "$HERE/"acquire.py
-)
-exec "$0" "$@"  # start over
+# FIXME: we need pip packaging
+python3.12 -m lib.tf_lock.tf_lock_acquire "$@"

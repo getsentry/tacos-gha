@@ -1,17 +1,16 @@
 #!/usr/bin/env python3.12
 from __future__ import annotations
 
-from typing import Mapping
 from typing import Tuple
 
 from lib import json
 from lib.sh import sh
+from lib.types import Environ
 from lib.types import OSPath
 from lib.types import Path
 from lib.user_error import UserError
 
 HERE = sh.get_HERE(__file__)
-Environ = Mapping[str, str]
 TF_LOCK_EHELD = 3
 
 

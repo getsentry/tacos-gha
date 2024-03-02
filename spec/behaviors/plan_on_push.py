@@ -46,15 +46,22 @@ def test(pr: tacos_demo.PR, test_name: str) -> None:
         commands: Parse = (
             Parse(comment).after.last("</summary>").before.first("</details>")
         )
-
         assert_sequence_in_log(
             commands,
             (
                 f"\n$ cd {pr.slices.subpath}/{slice}\n",
-                """\
+                """
 $ sudo-gcp tf-lock-acquire
 You are authenticated for the next hour as: tacos-gha-tf-state-admin@sac-dev-sa.iam.gserviceaccount.com
-tf-lock-acquire: success: .(""",  # the next bit is github-username@fake-pr-domain, which seems tricky
+
+$ tf-lock-info .
+
+$ terragrunt --terragrunt-no-auto-init=false validate-inputs
+
+$ terragrunt --terragrunt-no-auto-init=false terragrunt-info
+
+$ tf-lock-info .
+tf-lock-acquire: success: """,  # the next bit is github-username@fake-pr-domain, which seems tricky
                 """\
 
 $ sudo-gcp terragrunt run-all init
@@ -72,13 +79,15 @@ You are authenticated for the next hour as: tacos-gha-tf-state-admin@sac-dev-sa.
         tf_result: Parse = Parse(comment).between("</details>", "</details>")
         assert "\nTerraform will perform the following actions:\n" in tf_result
 
-        assert tf_result.strip().endswith("""\
+        assert tf_result.strip().endswith(
+            """\
 Saved the plan to:
 tfplan
 
 To perform exactly these actions, run the following command to apply:
     terraform apply "tfplan"
-```""")
+```"""
+        )
 
     # lock should continue to be held
     pr.slices.assert_locked()

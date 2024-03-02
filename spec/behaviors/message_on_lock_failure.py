@@ -7,11 +7,12 @@ from spec.lib.gh import gh
 from spec.lib.slice import Slice
 from spec.lib.slice import Slices
 
-# TODO: improve the conflict message: "lock failed, on slice prod/slice-3-vm, due to user1, PR #334 "
 CONFLICT_MESSAGE = """
 $ sudo-gcp tf-lock-acquire
 You are authenticated for the next hour as: tacos-gha-tf-state-admin@sac-dev-sa.iam.gserviceaccount.com
-tf-lock-acquire: failure: not """
+
+$ tf-lock-info .
+tf-lock-acquire: Lock failed. User """
 
 
 def assert_there_can_be_only_one(slice: Slice, *prs: tacos_demo.PR) -> None:
