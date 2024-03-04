@@ -112,7 +112,7 @@ class SliceSummary(NamedTuple):
 
     def markdown(self, rollup: bool = True) -> Generator[Line]:
         yield ""
-        yield f"## {self.name}"
+        yield f"### {self.name}"
         if self.explanation:
             yield self.explanation
         yield ""
