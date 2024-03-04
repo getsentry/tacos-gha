@@ -104,9 +104,10 @@ class CombinedTeeCapture(CombinedCapture):
 
         self.dest: IO[bytes] = tee.stdin
 
-        # This extra newline adds significant readability, because pytest
-        # *prepends* newlines to its status lines, like an anarcho-nihilist.
-        self.writeorg("\n")
+        # TODO: apparently pytest calls resume() once per test during discovery?
+        ### # This extra newline adds significant readability, because pytest
+        ### # *prepends* newlines to its status lines, like an anarcho-nihilist.
+        ### self.writeorg("\n")
 
         # FIXME: this is "right" but it causes stdio deadlock D:
         ### # the tee should live longer than the redirect, to avoid EPIPE
@@ -139,6 +140,8 @@ def get_captureclass(nproc: XdistNumProcesses) -> type[CaptureBase[str]]:
         else:  # nproc in ("auto", "logical", 0) or nproc > 1
             # running tests in parallel -- supress unusable interleaved output
             return CombinedCapture(1, 2)
+
+    captureclass.EMPTY_BUFFER = ""  # type:ignore
 
     # Callable[int, CaptureBase[str]] is *actually* fully compatible with
     # type[CaptureBase[str]], as long as the args exactly match

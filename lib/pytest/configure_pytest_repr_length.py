@@ -20,7 +20,7 @@ def configure_pytest_repr_length(
         obj: object, maxsize: int | None = None, use_ascii: bool = False
     ) -> str:
         if maxsize is None:
-            maxsize = module.DEFAULT_REPR_MAX_SIZE * (verbose + 1)
+            maxsize = module.DEFAULT_REPR_MAX_SIZE * (2**verbose)
         return old[1](obj, maxsize=maxsize, use_ascii=use_ascii)
 
     from _pytest._code import code
