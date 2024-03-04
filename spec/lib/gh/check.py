@@ -90,6 +90,9 @@ class CheckFilter:
         """Wait for a check to run."""
         __tracebackhide__ = True
 
+        if since is None:
+            since = self.pr.since
+
         start = now()
         sh.info(f"waiting for {self} (since {since})...")
 
