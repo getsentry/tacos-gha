@@ -40,7 +40,7 @@ Definition: All ops slices are subject to TACOS lock-on-PR.
     - FIXME: we need a fan-in summary
     - FIXME: this really should be done in a fan-in summary job
     - [ ] fan-in summary for the tacos_unlock workflow
-  - [~] @jim ops fixes to project & bucket permissions
+  - [x] @jim ops fixes to project & bucket permissions
     - https://getsentry.atlassian.net/browse/OPS-5203
   - done:
     - [x] @ellison Tell user that merge conflicts are preventing plan/apply
