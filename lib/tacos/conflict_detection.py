@@ -25,7 +25,7 @@ resolved.
 def pr_conflict_status(pr_url: URL) -> str:
     pr = sh.json(("gh", "pr", "view", pr_url, "--json=state,mergeStateStatus"))
     state = json.get(pr, str, "state")
-    if state == "MERGED":
+    if state in ("MERGED", "CLOSED"):
         return state
     else:
         return json.get(pr, str, "mergeStateStatus")
