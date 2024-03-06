@@ -18,11 +18,13 @@ TEST_HOME = TACOS_GHA_HOME / "spec"
 
 
 import lib.pytest.plugin.cap1fd
+import lib.pytest.plugin.collectonly_json
 import lib.pytest.plugin.pytest_repr_length
 
 pytest_plugins = (
     # they insist on strings =.=
     lib.pytest.plugin.cap1fd.__name__,
+    lib.pytest.plugin.collectonly_json.__name__,
     lib.pytest.plugin.pytest_repr_length.__name__,
 )
 

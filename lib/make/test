@@ -2,6 +2,13 @@
 set -euo pipefail
 exec >&2  # all output is logging
 
+test_count="$(py.test --collectonly-json  . | jq length)"
+worker_count="$((NPROC * 2))"
+if (( test_count < worker_count )); then
+  worker_count="$test_count"
+fi
+
 set -x
 
-py.test -n "$((NPROC * 2))" "$@"
+
+py.test -n "$worker_count" "$@"
