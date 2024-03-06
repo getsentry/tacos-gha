@@ -140,9 +140,11 @@ class PR:
         sh.run(("gh", "pr", "edit", self.url, "--add-label", label))
         return since
 
-    def merge(self) -> str:
+    def merge(self) -> datetime:
         sh.banner("merging PR")
-        return sh.stdout(("gh", "pr", "merge", self.url, "--squash"))
+        since = mknow()
+        sh.run(("gh", "pr", "merge", self.url, "--squash"))
+        return since
 
     def labels(self) -> Sequence[Label]:
         result: list[Label] = []

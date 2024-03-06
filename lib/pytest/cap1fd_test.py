@@ -1,3 +1,4 @@
+#!/usr/bin/env py.test
 from __future__ import annotations
 
 import pytest
@@ -24,9 +25,9 @@ class DescribeCaptureCombined:
         std = cap1fd.readouterr()
         print("STDOUT:\n", std.out)
         print("STDERR:\n", std.err)
-        assert std.err == ""
+        assert std.out == ""
         assert (
-            std.out
+            std.err
             == """\
 + \x1b[36;1m$\x1b[m sh -c 'echo stdout >&1; echo stderr >&2'
 stdout
