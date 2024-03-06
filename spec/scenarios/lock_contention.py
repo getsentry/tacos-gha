@@ -1,6 +1,8 @@
 #!/usr/bin/env py.test
 from __future__ import annotations
 
+from pytest import fixture
+
 from lib.sh import sh
 from spec.lib import tacos_demo
 from spec.lib.gh import gh
@@ -10,6 +12,11 @@ MESSAGE = """
 $ sudo-gcp tf-lock-acquire
 You are authenticated for the next hour as: tacos-gha-tf-state-admin@sac-dev-sa.iam.gserviceaccount.com
 tf-lock-acquire: failure: not """
+
+
+@fixture
+def slices(slices: Slices) -> Slices:
+    return slices.all
 
 
 def test(

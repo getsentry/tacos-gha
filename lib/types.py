@@ -32,3 +32,6 @@ class OSPath(PosixPath, Path):
 
 class URL(str):
     pass
+
+
+Boolish = object  # I'd like to define this more strictly
