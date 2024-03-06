@@ -85,7 +85,7 @@ async def run_terraform(
     return proc, output
 
 
-async def tf_lock_acquire() -> ExitCode:
+async def acquire() -> ExitCode:
     proc, output = await run_terraform(TERRAFORM)
     wait = asyncio.create_task(proc.wait())
     timer = asyncio.create_task(asyncio.sleep(TIMEOUT))
@@ -115,7 +115,7 @@ def main() -> ExitCode:
     import logging
 
     logging.basicConfig(level=logging.DEBUG if DEBUG >= 2 else logging.INFO)
-    return asyncio.run(tf_lock_acquire(), debug=DEBUG > 0)
+    return asyncio.run(acquire(), debug=DEBUG > 0)
 
 
 if __name__ == "__main__":

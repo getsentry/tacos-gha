@@ -6,9 +6,9 @@
 #
 astroid==3.1.0
     # via pylint
-black==24.1.1
+black==24.2.0
     # via -r requirements-dev.in
-build==1.0.3
+build==1.1.1
     # via pip-tools
 cffi==1.16.0
     # via cryptography
@@ -85,7 +85,7 @@ pyproject-hooks==1.0.0
     # via
     #   build
     #   pip-tools
-pyright==1.1.351
+pyright==1.1.352
     # via -r requirements-dev.in
 pytest==8.0.2
     # via
@@ -95,7 +95,7 @@ pytest-xdist==3.5.0
     # via -r requirements-dev.in
 pyyaml==6.0.1
     # via pre-commit
-tomlkit==0.12.3
+tomlkit==0.12.4
     # via pylint
 typing-extensions==4.10.0
     # via mypy

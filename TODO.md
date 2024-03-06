@@ -40,7 +40,7 @@ Definition: All ops slices are subject to TACOS lock-on-PR.
     - FIXME: we need a fan-in summary
     - FIXME: this really should be done in a fan-in summary job
     - [ ] fan-in summary for the tacos_unlock workflow
-  - [~] @jim ops fixes to project & bucket permissions
+  - [x] @jim ops fixes to project & bucket permissions
     - https://getsentry.atlassian.net/browse/OPS-5203
   - done:
     - [x] @ellison Tell user that merge conflicts are preventing plan/apply
@@ -87,7 +87,7 @@ later, after full rollout and acceptance
 
 P2
 
-### M4 into Maintenance Mode
+### M5 into Maintenance Mode
 
 Definition: All tacos-gha work beyond this milestone work is optional and can be
 done on a 20%-time basis. (To be clear, this milestone is non-optional.)
@@ -102,8 +102,9 @@ done on a 20%-time basis. (To be clear, this milestone is non-optional.)
   - [ ] onboard a new team member from SRE
     - neo dmitrii jim richard
     - [x] invite to standup
-- [ ] @ellison user guide
+- [~] @ellison user guide
   - how-to: avoid GHA notification spam
+  - https://github.com/getsentry/tacos-gha/pull/168
 - [ ] @buck run tests in CI -- stretch
 - [ ] convert the rest of the sh to python
       https://github.com/getsentry/tacos-gha
@@ -116,13 +117,6 @@ done on a 20%-time basis. (To be clear, this milestone is non-optional.)
   - [ ] lib/unix/super
   - [ ] lib/unix/quietly
   - [ ] lib/unix/tty-attach
-- [ ] convert lib/tf-lock to use the (private!?) golang api
-  - will need to fork terraform -- it's the only way to force un-private in go
-  - this will help with several issues:
-    - listing all locked slices efficiently
-    - locking slices efficiently (don't need to kill -9 terraform-console)
-    - retrieving lock info (don't need to parse `terraform force-unlock` errors)
-    - setting lock info (no need for .github/actions/set-user-and-hostname)
 - [x] @buck get the test suite passing
 
 k8s is able to manage VMs (and other non-k8s GCP objects) via "config connector"
@@ -215,6 +209,8 @@ P2
 
 ## Future Improvements
 
+These may never happen, but that's okay.
+
 - [ ] TODO: fetch and apply the `--out tfplan` file from plan workflow
 - [ ] TODO: github-script to fetch run-id of the most recent tfplan
 - [ ] TODO: convert from matrix job to unlock slices "all at once"
@@ -224,6 +220,13 @@ P2
 - [ ] integrate TACOS into terraform-sandbox repo:
       https://github.com/getsentry/terraform-sandboxes.private
   - this will help kickstart #proj-clickops
+- [ ] convert lib/tf-lock to use the (private!?) golang api
+  - will need to fork terraform -- it's the only way to force un-private in go
+  - this will help with several issues:
+    - listing all locked slices efficiently
+    - locking slices efficiently (don't need to kill -9 terraform-console)
+    - retrieving lock info (don't need to parse `terraform force-unlock` errors)
+    - setting lock info (no need for .github/actions/set-user-and-hostname)
 
 ## Epics
 

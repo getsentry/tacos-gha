@@ -4,9 +4,9 @@ exec >&2  # all output is logging
 
 set -x
 
+# pip-compile takes care to only touch output-file on success
 pip-compile \
   requirements-dev.in "$@" \
   --upgrade \
   --strip-extras \
-  > requirements-dev.txt \
 ;
