@@ -5,7 +5,6 @@ from __future__ import annotations
 import pytest
 from pytest import fixture
 
-import lib.pytest.configure_pytest_repr_length
 import lib.pytest.doctest
 import lib.pytest.hook
 from lib import env
@@ -18,18 +17,21 @@ from lib.types import OSPath
 TEST_HOME = TACOS_GHA_HOME / "spec"
 
 
+import lib.pytest.plugin.cap1fd
+import lib.pytest.plugin.pytest_repr_length
+
+pytest_plugins = (
+    # they insist on strings =.=
+    lib.pytest.plugin.cap1fd.__name__,
+    lib.pytest.plugin.pytest_repr_length.__name__,
+)
+
+
 @fixture
 def user() -> str:
     from lib.constants import USER
 
     return USER
-
-
-configure_pytest_repr_length = fixture(
-    lib.pytest.configure_pytest_repr_length.configure_pytest_repr_length,
-    autouse=True,
-    scope="session",
-)
 
 
 @fixture(scope="session")

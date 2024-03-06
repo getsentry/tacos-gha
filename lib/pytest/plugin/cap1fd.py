@@ -7,7 +7,7 @@ from _pytest.config import hookimpl
 
 from lib.patched import patched
 
-from .cap1fd import CombinedCaptureManager
+from ..cap1fd import CombinedCaptureManager
 
 
 @hookimpl(hookwrapper=True)

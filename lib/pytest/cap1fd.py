@@ -21,8 +21,8 @@ from _pytest.capture import (
 from _pytest.fixtures import SubRequest
 from _pytest.fixtures import fixture
 
-from lib.constants import UNSET
-from lib.constants import Unset
+from lib.constants import UNSET as UNSET
+from lib.constants import Unset as Unset
 from lib.sh import sh
 
 T = TypeVar("T")
@@ -130,16 +130,16 @@ XdistNumProcesses: TypeAlias = (
 def get_captureclass(nproc: XdistNumProcesses) -> type[CaptureBase[str]]:
 
     def captureclass(fd: FD) -> CaptureBase[str]:
-        if fd == 2:
-            return NoCapture(-1)  # CombinedCapture, below, will handle stderr
-        elif fd != 1:
+        if fd == 1:
+            return NoCapture(-1)  # CombinedCapture, below, will handle stdout
+        elif fd != 2:
             raise AssertionError("expected stdout", fd)
         elif nproc is None or (isinstance(nproc, int) and nproc < 2):
             # running tests in serial -- tee to orig stderr so we can watch
-            return CombinedTeeCapture(1, 2)
+            return CombinedTeeCapture(2, 1)
         else:  # nproc in ("auto", "logical", 0) or nproc > 1
             # running tests in parallel -- supress unusable interleaved output
-            return CombinedCapture(1, 2)
+            return CombinedCapture(2, 1)
 
     captureclass.EMPTY_BUFFER = ""  # type:ignore
 
@@ -161,12 +161,20 @@ def get_multicapture(
 
 class CombinedCaptureManager(CaptureManager):
     nproc: XdistNumProcesses | Unset = UNSET
+    stdout: FD | Unset = UNSET
 
     @classmethod
     def set_numprocesses(cls, nproc: XdistNumProcesses) -> None:
         cls.nproc = nproc
 
     def start_global_capturing(self) -> None:
+        if self.stdout is UNSET:
+            from os import dup
+            from os import dup2
+
+            self.stdout = dup(1)
+            dup2(2, 1)  # our only output is logging
+
         assert self._global_capturing is None
         assert self.nproc is not UNSET
 
