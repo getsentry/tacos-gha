@@ -11,8 +11,7 @@ from spec.lib.slice import Slice
 CONFLICT_MESSAGE = """
 $ sudo-gcp tf-lock-acquire
 You are authenticated for the next hour as: tacos-gha-tf-state-admin@sac-dev-sa.iam.gserviceaccount.com
-
-tf-lock-acquire: Lock failed. User """
+tf-lock-acquire: failure: not """
 
 
 def assert_sequence_in_log(log: str, sequence: Iterable[str]) -> Parse:
