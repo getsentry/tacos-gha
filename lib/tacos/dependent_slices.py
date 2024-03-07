@@ -8,6 +8,7 @@ from typing import Iterable
 from typing import NewType
 from typing import Self
 
+from lib.sh import sh
 from lib.types import OSPath
 from lib.types import Path
 
@@ -252,6 +253,8 @@ def main() -> int:
     for slice in dependent_slices(modified_paths, fs):
         if path_filter.match(str(slice)):
             print(slice)
+        else:
+            sh.debug(f"slice ignored due to allowlist: {slice}")
 
     return 0
 
