@@ -33,6 +33,8 @@ concurrency:
 
 jobs:
   conflict-detection:
+    name: Detect Merge Conflicts
+
     runs-on: ubuntu-latest
     permissions:
       pull-requests: write
@@ -61,6 +63,7 @@ jobs:
 
   reset-label:
     if: github.event.pull_request.mergeable_state == 'conflicting'
+
     uses: ./.github/workflows/reset-label.yml
     with:
       # These 3 labels may have been applied but not run due to a conflict.

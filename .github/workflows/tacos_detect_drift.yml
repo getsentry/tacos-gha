@@ -30,15 +30,15 @@ concurrency:
 
 jobs:
   determine-tf-root-modules:
+    name: List Slices
+    if: github.event.pull_request.draft == false
+    outputs:
+      slices: ${{ steps.list-slices.outputs.slices }}
+
     runs-on: ubuntu-latest
     permissions:
       contents: read
       pull-requests: write
-
-    name: list all slices
-    if: github.event.pull_request.draft == false
-    outputs:
-      slices: ${{ steps.slices.outputs.slices }}
 
     steps:
       - name: Checkout IAC
@@ -50,20 +50,28 @@ jobs:
           ref: ${{inputs.tacos_gha_ref}}
           path: tacos-gha
 
-      - name: List slices
-        id: slices
+      - name: List All Slices
+        id: list-slices
         run: |
           # NB: separate subprocess substitution, to avoid masking return values
           slices="$("./tacos-gha/"lib/tacos/slices | jq -R | jq -sc)"
           tee -a "$GITHUB_OUTPUT" <<< "slices=$slices"
 
+  # TODO: should we detect drift in parallel across every slice?
   tacos_detect_drift:
+    name: TACOS Drift Detection
+    needs: [determine-tf-root-modules]
+    if: |
+      needs.determine-tf-root-modules.outputs.slices != '[]'
+
     runs-on: ubuntu-latest
     permissions:
       contents: read
       pull-requests: write
       id-token: write
 
+    env:
+      TF_ROOT_MODULES: ${{needs.determine-tf-root-modules.outputs.slices}}
     steps:
       - name: Checkout IAC
         uses: actions/checkout@v4

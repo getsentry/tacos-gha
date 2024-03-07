@@ -14,19 +14,19 @@ on:
 
 jobs:
   reset_label:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      pull-requests: write
-
+    name: Reset Label
     if: |
       true
       && github.event.action == 'labeled'
       && github.event.label.name == inputs.label
 
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+
     env:
       LABEL: ${{ inputs.label }}
-
     steps:
       - name: Checkout tacos-gha
         uses: actions/checkout@v4

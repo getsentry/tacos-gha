@@ -19,9 +19,12 @@ concurrency:
 
 jobs:
   keys-job:
-    runs-on: ubuntu-latest
+    name: Generate Input
     outputs:
       keys: ${{ steps.keys-step.outputs.keys }}
+
+    runs-on: ubuntu-latest
+
     steps:
       - name: Generate matrix-jobs' keys
         id: keys-step
@@ -32,15 +35,17 @@ jobs:
           ###seq 30 | shuf | jq -R | jq -cs | tee -a "$GITHUB_OUTPUT"
 
   fan-out:
-    runs-on: ubuntu-latest
+    name: Compute Squares
     needs:
       - keys-job
     strategy:
       matrix:
         key: ${{ fromJSON(needs.keys-job.outputs.keys) }}
+
+    runs-on: ubuntu-latest
+
     env:
       KEY: ${{ matrix.key }}
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -61,8 +66,11 @@ jobs:
           retention-days: 1
 
   fan-in:
-    runs-on: ubuntu-latest
+    name: Summary
     needs: fan-out
+
+    runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -86,6 +94,7 @@ jobs:
       - name: Update PR
         # we want to report failures, too
         if: always()
+
         uses: thollander/actions-comment-pull-request@v2.4.3
         with:
           message: ${{ fromJSON(steps.main.outputs.summary) }}
