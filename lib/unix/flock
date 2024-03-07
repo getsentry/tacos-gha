@@ -1,5 +1,5 @@
 #!/bin/bash
 set -euo pipefail
 # a simple wrapper on homebrew flock
-exec "$(brew --prefix util-linux)/bin/flock" "$@"
-
+flock_prefix="$(brew --prefix util-linux)"
+exec "$flock_prefix/bin/flock" "$@"
