@@ -133,7 +133,7 @@ jobs:
   summary:
     needs: tacos_plan
     # we need to report failures, too
-    if: always()
+    if: always() && needs.tacos_plan.result != 'skipped'
 
     runs-on: ubuntu-latest
 
