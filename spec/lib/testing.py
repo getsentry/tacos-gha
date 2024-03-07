@@ -34,7 +34,7 @@ def assert_there_can_be_only_one(
     for pr in prs:
         comments = pr.get_comments_for_job("plan")
         check = pr.check(
-            "Terraform Plan", f"tacos_plan ({pr.slices.subpath / slice})"
+            "Terraform Plan", f"TACOS Plan ({pr.slices.subpath / slice})"
         ).ran()
         assert check is not None
         if check.conclusion == "SUCCESS":

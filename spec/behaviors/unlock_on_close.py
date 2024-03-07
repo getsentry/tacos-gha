@@ -15,4 +15,4 @@ def test(pr: tacos_demo.PR) -> None:
     since = pr.close(tacos_demo.get_reviewer())
 
     sh.banner("Make sure the PR is unlocked.")
-    assert pr.check("Terraform Unlock", "tacos_unlock").wait(since).success
+    assert pr.check("Terraform Unlock", "TACOS Unlock").wait(since).success

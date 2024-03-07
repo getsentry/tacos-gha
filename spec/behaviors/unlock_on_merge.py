@@ -14,4 +14,4 @@ def test(pr: tacos_demo.PR) -> None:
 
     pr.merge()
 
-    assert pr.check("Terraform Unlock", "tacos_unlock").wait(since).success
+    assert pr.check("Terraform Unlock", "TACOS Unlock").wait(since).success
