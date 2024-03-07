@@ -38,7 +38,9 @@ def tf_lock_acquire(root_module: Path) -> ExitCode:
 
             if lock_user == tf_user:
                 # already done!
-                sh.info(f"tf-lock-acquire: success: {lock_user}")
+                sh.info(
+                    f"tf-lock-acquire: success: {root_module}({lock_user})"
+                )
                 return 0
 
             sh.info(
