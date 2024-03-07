@@ -18,9 +18,6 @@ resolved.
 {TAG}
 """
 
-# mypy can't find LessThanOneError
-# mypy: ignore-errors
-
 
 def pr_conflict_status(pr_url: URL) -> str:
     pr = sh.json(("gh", "pr", "view", pr_url, "--json=state,mergeStateStatus"))
