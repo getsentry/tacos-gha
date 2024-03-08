@@ -1,26 +1,38 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import typing
+from typing import Callable
+from typing import Collection
 from typing import Iterable
 from typing import NamedTuple
 from typing import Self
+from typing import Sequence
+from typing import TypeVar
 
 from lib.sh import sh
 from lib.types import Boolish
 from lib.types import Generator
 from lib.types import OSPath
+from lib.types import P
 
 ExitCode = None | str | int
 Line = str  # these lines have no trailing newline attached
 Lines = Iterable[Line]
+Log = Sequence[Line]
 COMMENT_SIZE_LIMIT = 64 * 2**10
+Sized = typing.TypeVar("Sized", bound=typing.Sized)
+T = TypeVar("T")
+U = TypeVar("U")
+V = TypeVar("V")
 
 
 def get_file(path: OSPath) -> str:
     return path.read_text().strip()
 
 
-def ensmallen(lines: Lines, limit: float) -> Generator[Line]:
+def ensmallen(lines: Lines, size_limit: int) -> Generator[Line]:
+    """Skip the middle portion of several lines if above the size size_limit."""
     from itertools import chain
 
     bufsize = 0
@@ -28,7 +40,7 @@ def ensmallen(lines: Lines, limit: float) -> Generator[Line]:
 
     for line in lines:
         linelen = len(line) + 1
-        if bufsize + linelen > limit * 1 / 3:
+        if bufsize + linelen > size_limit * 1 / 3:
             lines = chain(reversed(tuple(lines)), [line])
             break
 
@@ -40,7 +52,7 @@ def ensmallen(lines: Lines, limit: float) -> Generator[Line]:
     end_buffer: list[Line] = []
     for line in lines:
         linelen = len(line) + 1
-        if bufsize + linelen > limit * 2 / 3:
+        if bufsize + linelen > size_limit * 2 / 3:
             lines = reversed([line, *lines])
             break
 
@@ -51,12 +63,17 @@ def ensmallen(lines: Lines, limit: float) -> Generator[Line]:
 
     middle_buffer = list(lines)
     middle_size = sum(len(line) + 1 for line in middle_buffer)
-    if bufsize + middle_size <= limit:
+    if bufsize + middle_size <= size_limit:
         yield from middle_buffer
     else:
-        yield "..."
-        yield f"( {middle_size >> 10}KB, {len(middle_buffer)} lines skipped )"
-        yield "..."
+        middle_summary = f"""\
+...
+( {middle_size / 1000:.1f}KB, {len(middle_buffer)} lines skipped )
+..."""
+        if len(middle_summary) < middle_size:
+            yield from middle_summary.split("\n")
+        else:
+            yield from middle_buffer
 
     yield from reversed(end_buffer)
 
@@ -76,9 +93,14 @@ def gha_summary_and_details(
         yield "</details>"
 
 
+def get_lines(path: OSPath) -> Log:
+    return tuple(sh.stdout(("uncolor", path)).strip().splitlines())
+
+
 class SliceSummary(NamedTuple):
     name: str
-    path: OSPath
+    tf_log: Log
+    console_log: Log
     tacos_verb: str
     explanation: str
     returncode: int
@@ -86,9 +108,11 @@ class SliceSummary(NamedTuple):
     @classmethod
     def from_matrix_fan_out(cls, path: OSPath) -> Self:
         # convert a bunch of files into something well-typed
+
         return cls(
             name=get_file(path / "env/TF_ROOT_MODULE"),
-            path=path,
+            tf_log=get_lines(path / "tf-log.hcl"),
+            console_log=get_lines(path / "console.log"),
             tacos_verb=get_file(path / "tacos_verb"),
             explanation=get_file(path / "explanation"),
             returncode=int(get_file(path / "returncode")),
@@ -100,15 +124,6 @@ class SliceSummary(NamedTuple):
             matrix = matrix.strip()
 
             yield cls.from_matrix_fan_out(path / matrix)
-
-    # see lib/ci/bin/tf-step-summary:
-    @property
-    def tf_log(self) -> OSPath:
-        return self.path / "tf-log.hcl"
-
-    @property
-    def console_log(self) -> OSPath:
-        return self.path / "console.log"
 
     @property
     def dirty(self) -> bool:
@@ -133,18 +148,16 @@ class SliceSummary(NamedTuple):
             return False, f"error code {self.returncode}"
 
     def summary(self) -> str:
-        log = tuple(sh.lines(("uncolor", self.tf_log)))
-        for line in reversed(log):
+        for line in reversed(self.tf_log):
             for success in ("Apply complete", "Plan:", "No changes"):
                 if success in line:
                     return line  # :D
 
-        log = tuple(sh.lines(("uncolor", self.console_log)))
-        for line in log:
+        for line in self.console_log:
             if "error" in line.lower():
                 return line  # D:
 
-        for line in reversed(log):
+        for line in reversed(self.console_log):
             lowered = line.lower()
             if "success" in lowered:
                 return line  # :D
@@ -172,13 +185,16 @@ class SliceSummary(NamedTuple):
             rollup=rollup,
         )
 
-        yield f'<!-- getsentry/tacos-gha "{self.tacos_verb}({self.name})" -->'
+        yield self.tag
         yield ""
+
+    @property
+    def tag(self) -> str:
+        return f'<!-- getsentry/tacos-gha "{self.tacos_verb}({self.name})" -->'
 
     def markdown_details(
         self, size_budget: float, rollup: Boolish
     ) -> Generator[Line]:
-        tf_log = sh.stdout(("uncolor", self.tf_log)).strip()
         success, summary = self.summarize_exit()
 
         size_budget -= 1000
@@ -188,23 +204,20 @@ class SliceSummary(NamedTuple):
             details=(
                 "",
                 "```console",
-                *ensmallen(
-                    sh.stdout(("uncolor", self.console_log)).strip(),
-                    limit=size_budget / 2,
-                ),
+                *ensmallen(self.console_log, size_limit=int(size_budget / 2)),
                 "```",
             ),
-            rollup=rollup or tf_log or success,
+            rollup=rollup or self.tf_log or success,
         )
 
-        if not tf_log and not success:
+        if not self.tf_log and not success:
             return
 
         yield "  Result:"
-        if tf_log:
+        if self.tf_log:
             yield ""
             yield "```hcl"
-            yield from ensmallen(tf_log, limit=size_budget / 2)
+            yield from ensmallen(self.tf_log, size_limit=int(size_budget / 2))
             yield "```"
         else:
             yield "(no output)"
@@ -213,17 +226,36 @@ class SliceSummary(NamedTuple):
         return self.name
 
 
-def tacos_plan_summary(path: OSPath) -> Generator[Line]:
-    slices = tuple(SliceSummary.from_matrix_fan_in(path))
+def lines_length(lines: Collection[Line]) -> int:
+    return sum(len(line) + 1 for line in lines)
 
-    dirty = tuple(slice for slice in slices if slice.dirty)
-    clean = tuple(slice for slice in slices if slice.clean)
-    error = tuple(slice for slice in slices if slice.error)
 
-    # FIXME: write to a file
-    yield "# Terraform Plan"
-    yield f"TACOS generated a terraform plan for {len(slices)} slices:"
-    yield ""
+def totalled(
+    generator: Callable[P, Iterable[Sized]],
+) -> Callable[P, typing.Generator[Sized, None, int]]:
+    def wrapped(
+        *args: P.args, **kwargs: P.kwargs
+    ) -> typing.Generator[Sized, None, int]:
+        total = 0
+        for x in generator(*args, **kwargs):
+            yield x
+            total += len(x)
+        return total
+
+    return wrapped
+
+
+@totalled
+def header(
+    error: Collection[SliceSummary],
+    dirty: Collection[SliceSummary],
+    clean: Collection[SliceSummary],
+) -> Lines:
+    slices = len(error) + len(dirty) + len(clean)
+    yield f"# Terraform Plan"
+    yield f"TACOS generated a terraform plan for {slices} slices:"
+    yield f""
+
     if error:
         yield f"  * {len(error)} slices failed to plan"
     if dirty:
@@ -231,34 +263,100 @@ def tacos_plan_summary(path: OSPath) -> Generator[Line]:
     if clean:
         yield f"  * {len(clean)} slices are unaffected"
 
-    if error:
-        # FIXME: write to a file
-        yield ""
-        yield "## Errors"
 
-        first = True
-        for slice in error:
-            # present the first error (only) expanded
-            yield from slice.markdown(
-                rollup=not first, size_budget=0.8 * COMMENT_SIZE_LIMIT
-            )
-            first = False
+@totalled
+def footer(clean: Collection[SliceSummary]) -> Lines:
+    if not clean:
+        return
 
-    if dirty:
-        # FIXME: write to a file
-        yield ""
-        yield "## Changes"
-        for slice in dirty:
-            yield from slice.markdown()
+    yield ""
+    yield "## Clean"
+    yield "These slices are in scope of your PR, but Terraform"
+    yield "found no infra changes are currently necessary:"
+    for slice in clean:
+        yield f"  * {slice.name}"
+    for slice in clean:
+        yield slice.tag
+
+
+@totalled
+def error_sections(
+    error: Collection[SliceSummary], size_budget: int, section_count: int
+) -> Lines:
+    if not error:
+        return
 
     # FIXME: write to a file
-    if clean:
-        yield ""
-        yield "## Clean"
-        yield "These slices are in scope of your PR, but Terraform"
-        yield "found no infra changes are currently necessary:"
-        for slice in clean:
-            yield f"  * {slice.name}"
+    yield ""
+    yield "## Errors"
+
+    first = True
+    for slice in error:
+        # present the first error (only) expanded
+        for line in slice.markdown(
+            rollup=not first,
+            size_budget=(
+                size_budget if first else size_budget / section_count
+            ),
+        ):
+            yield line
+            size_budget -= len(line)
+        section_count -= 1
+        first = False
+
+
+@totalled
+def dirty_sections(dirty: Collection[SliceSummary], size_budget: int) -> Lines:
+    if not dirty:
+        return
+
+    yield ""
+    yield "## Changes"
+
+    section_count = len(dirty)
+    for slice in dirty:
+        for line in slice.markdown(size_budget=size_budget / section_count):
+            yield line
+            size_budget -= len(line)
+        section_count -= 1
+
+
+class ValuedGenerator(typing.Generic[T, U, V]):
+    value: V | None = None
+
+    def __init__(self, generator: typing.Generator[T, U, V]):
+        self.generator = generator
+        super().__init__()
+
+    def __iter__(self) -> typing.Generator[T, U, None]:
+        self.value = yield from self.generator
+
+
+def tacos_plan_summary(
+    slices: Collection[SliceSummary], size_budget: int
+) -> Generator[Line]:
+    error = tuple(slice for slice in slices if slice.error)
+    dirty = tuple(slice for slice in slices if slice.dirty)
+    clean = tuple(slice for slice in slices if slice.clean)
+
+    footer_lines = list(gen := ValuedGenerator(footer(clean)))
+    assert gen.value is not None
+
+    size_budget -= gen.value
+    assert size_budget >= 0, size_budget
+
+    size_budget -= yield from header(error, dirty, clean)
+    assert size_budget >= 0, size_budget
+
+    size_budget -= yield from error_sections(
+        error, size_budget, section_count=len(error) + len(dirty)
+    )
+    # assert size_budget >= 0, size_budget
+
+    size_budget -= yield from dirty_sections(dirty, size_budget)
+    # assert size_budget >= 0, size_budget
+
+    yield from footer_lines
 
 
 def main() -> ExitCode:
@@ -270,8 +368,10 @@ def main() -> ExitCode:
         arg = "./matrix-fan-out"
 
     path = OSPath(arg)
+    slices = tuple(SliceSummary.from_matrix_fan_in(path))
+    size_budget = COMMENT_SIZE_LIMIT - 1000
 
-    for line in tacos_plan_summary(path):
+    for line in tacos_plan_summary(slices, size_budget):
         print(line)
 
     return 0
