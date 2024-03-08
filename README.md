@@ -25,5 +25,5 @@ coverage-enabled ./lib/json.py
 make coverage-server
 ```
 
-#### Install TACOS-GHA
+#### Install tacos-gha
 [INSTALL.md](doc/INSTALL.md)
