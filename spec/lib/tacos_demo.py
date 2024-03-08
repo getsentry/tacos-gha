@@ -13,6 +13,7 @@ from lib.constants import NOW
 from lib.constants import USER
 from lib.parse import Parse
 from lib.sh import sh
+from lib.types import URL
 from lib.types import Generator
 from lib.types import OSPath
 from lib.types import Path
@@ -22,10 +23,12 @@ from spec.lib.slice import Slices
 
 COMMENT_TAG = '\n<!-- getsentry/tacos-gha "'
 COMMENT_TAG_END = '" -->\n'
-APP_INSTALLATION_REVIEWER = (
+APP_INSTALLATION_REVIEWER = URL(
     "op://Team Tacos gha"
-    " dev/gh-app--tacos-gha-reviewer/app-installation/sentryio-org"
+    + " dev/gh-app--tacos-gha-reviewer/app-installation/sentryio-org"
 )
+
+CommentPart = str
 
 
 @cache
@@ -97,7 +100,7 @@ class PR(gh.PR):
 
     def get_comments_by_job(
         self, since: datetime | None = None, job_filter: str | None = None
-    ) -> dict[gh.CheckName, dict[Slice, gh.Comment]]:
+    ) -> dict[gh.CheckName, dict[Slice, CommentPart]]:
         """Map Slices to the text of PR comments containing their tf-plan."""
         if since is None:
             since = self.since
@@ -115,7 +118,7 @@ class PR(gh.PR):
 
     def get_comments_for_job(
         self, job: str, since: datetime | None = None
-    ) -> dict[Slice, gh.Comment]:
+    ) -> dict[Slice, CommentPart]:
         comments = self.get_comments_by_job(since, job_filter=job)
         if comments:
             return comments[job]
@@ -124,7 +127,7 @@ class PR(gh.PR):
 
     def get_plans(
         self, since: datetime | None = None
-    ) -> dict[Slice, gh.Comment]:
+    ) -> dict[Slice, CommentPart]:
         """Map Slices to the text of PR comments containing their tf-plan."""
         assert self.check("Terraform Plan").wait(since).success
         return self.get_comments_for_job("plan")
@@ -199,20 +202,20 @@ def parse_comments(
     job_filter: str | None,
     slices_subpath: Path,
     comments: Iterable[gh.Comment],
-) -> dict[gh.CheckName, dict[Slice, gh.Comment]]:
-    result: dict[gh.CheckName, dict[Slice, gh.Comment]] = {}
+) -> dict[gh.CheckName, dict[Slice, CommentPart]]:
+    result: dict[gh.CheckName, dict[Slice, CommentPart]] = {}
     for comment in comments:
-        for job, slice, comment in parse_comment(
+        for job, slice, comment_part in parse_comment(
             job_filter, slices_subpath, comment
         ):
             job_comments = result.setdefault(job, {})
-            job_comments[slice] = comment
+            job_comments[slice] = comment_part
     return result
 
 
 def parse_comment(
     job_filter: str | None, slices_subpath: Path, comment: str
-) -> Generator[tuple[str, Slice, str]]:
+) -> Generator[tuple[gh.CheckName, Slice, CommentPart]]:
     remainder = comment
     while True:
         comment, tag_start, remainder = remainder.partition(COMMENT_TAG)

@@ -13,22 +13,21 @@ from lib import wait
 from lib.functions import now as mknow
 from lib.sh import sh
 from lib.types import Generator
-from spec.lib.gh import gh
 
 from . import app
+from .comment import Comment
 from .types import URL
 from .types import Branch
 from .types import CheckName
 from .types import Label
 from .types import Message
 from .types import WorkflowName
+from .up_to_date import up_to_date
 
 APP_INSTALLATION_REVIEWER = (
     "op://Team Tacos gha dev/tacos-gha-reviewer/installation.json"
 )
 
-
-Comment = str  # a PR comment
 
 if TYPE_CHECKING:
     from .check import CheckFilter
@@ -62,7 +61,7 @@ class PR:
             ("gh", "pr", "create", "--fill-first", "--head", branch)
             + (("--draft",) if draft else ())
         )
-        return cls(branch, url, since, draft, **attrs)
+        return cls(branch, URL(url), since, draft, **attrs)
 
     @contextmanager
     @classmethod
@@ -161,7 +160,7 @@ class PR:
             result.append(label)
         return tuple(result)
 
-    def comments(self, since: datetime) -> Sequence[Comment]:
+    def comments(self, since: datetime | None = None) -> Sequence[Comment]:
         # Fetch the comments on the PR
         comments = sh.jq(
             (
@@ -172,7 +171,7 @@ class PR:
                 "--json",
                 "comments",
                 "--jq",
-                ".comments.[] | {body, createdAt}",
+                ".comments.[] | {body, createdAt, url}",
             ),
             encoding="UTF-8",
         )
@@ -182,8 +181,10 @@ class PR:
             comment = json.assert_dict_of_strings(comment)
             created_at = datetime.fromisoformat(comment["createdAt"])
 
-            if created_at >= since:
-                result.append(comment["body"])
+            if since is None or created_at >= since:
+                result.append(
+                    Comment(comment["body"], created_at, URL(comment["url"]))
+                )
         return tuple(result)
 
     def check(
@@ -204,27 +205,32 @@ class PR:
         return since
 
     @classmethod
-    def from_branch(cls, branch: Branch, since: datetime) -> Self:
-        url = sh.stdout(("gh", "pr", "view", branch, "--json", "url"))
-        draft = sh.json((
+    def from_gh(cls, pr: URL | Branch, since: datetime | None = None) -> Self:
+        pr_data = sh.json((
             "gh",
             "pr",
             "view",
-            branch,
+            pr,
             "--json",
-            "isDraft",
-            "--jq",
-            ".isDraft",
+            "headRefName,url,createdAt,isDraft",
         ))
-        assert isinstance(draft, bool)
-        return cls(branch, url, since, draft)
+
+        return cls(
+            branch=json.get(pr_data, str, "headRefName"),
+            url=URL(json.get(pr_data, str, "url")),
+            since=(
+                since
+                or datetime.fromisoformat(json.get(pr_data, str, "createdAt"))
+            ),
+            draft=json.get(pr_data, bool, "isDraft"),
+        )
 
     @classmethod
     def wait_for(cls, branch: str, since: datetime, timeout: int = 60) -> Self:
         def branch_pr() -> Self | None:
             if not sh.success(("gh", "pr", "view", branch)):
                 return None
-            return cls.from_branch(branch, since)
+            return cls.from_gh(branch, since)
 
         return wait.for_(branch_pr, timeout=timeout, sleep=5)
 
@@ -246,7 +252,7 @@ class PR:
 def commit_and_push(branch: Branch, message: object = None) -> datetime:
     since = mknow()
     sh.run(("git", "commit", "-qam", message))
-    with gh.up_to_date():
+    with up_to_date():
         sh.run(("git", "show", "--stat"))
         sh.run(("git", "push", "origin", f"HEAD:{branch}"))
     return since

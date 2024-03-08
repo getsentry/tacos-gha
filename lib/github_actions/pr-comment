@@ -1,0 +1,7 @@
+#!/bin/bash
+set -euo pipefail
+
+PYTHONPATH="$TACOS_GHA_HOME" \
+  python -m lib.github_actions.pr_comment \
+  "$@" \
+;
