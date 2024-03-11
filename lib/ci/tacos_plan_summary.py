@@ -23,6 +23,7 @@ Lines = Iterable[Line]
 Log = Sequence[Line]
 COMMENT_SIZE_LIMIT = 64 * 2**10
 Sized = typing.TypeVar("Sized", bound=typing.Sized)
+SectionFunction = Callable[[Sequence["SliceSummary"], int], tuple[Lines, int]]
 T = TypeVar("T")
 U = TypeVar("U")
 V = TypeVar("V")
@@ -287,7 +288,7 @@ def clean_section(slices: Collection[SliceSummary], size_budget: int) -> Lines:
 
 
 @totalled
-def error_sections(slices: Sequence[SliceSummary], size_budget: int) -> Lines:
+def error_section(slices: Sequence[SliceSummary], size_budget: int) -> Lines:
     if not slices:
         return
 
@@ -332,7 +333,7 @@ def error_sections(slices: Sequence[SliceSummary], size_budget: int) -> Lines:
 
 
 @totalled
-def dirty_sections(slices: Sequence[SliceSummary], size_budget: int) -> Lines:
+def dirty_section(slices: Sequence[SliceSummary], size_budget: int) -> Lines:
     if not slices:
         return
 
@@ -406,23 +407,21 @@ def tacos_plan_summary(
     size_budget -= size
     yield from lines
 
-    section_budget = int(size_budget / 3)
-    clean_lines, size = clean_section(clean, section_budget)
-    if size > section_budget:
-        raise AssertionError(size, section_budget)
-    size_budget -= size
+    def budget(
+        mksection: SectionFunction,
+        slices: Sequence[SliceSummary],
+        section_budget: float,
+    ) -> Lines:
+        nonlocal size_budget
+        lines, size = mksection(slices, int(section_budget))
+        if size > section_budget:
+            raise AssertionError(size, section_budget)
+        size_budget -= size
+        return lines
 
-    section_budget = int(size_budget / 2)
-    dirty_lines, size = dirty_sections(dirty, size_budget=section_budget)
-    if size > section_budget:
-        raise AssertionError(size, section_budget)
-    size_budget -= size
-
-    section_budget = size_budget  # use all the remainder to show errors
-    error_lines, size = error_sections(error, size_budget=section_budget)
-    if size > section_budget:
-        raise AssertionError(size, section_budget)
-    size_budget -= size
+    clean_lines = budget(clean_section, clean, size_budget / 3)
+    dirty_lines = budget(dirty_section, dirty, size_budget / 2)
+    error_lines = budget(error_section, error, size_budget / 1)
 
     assert size_budget >= 0, size_budget
 
