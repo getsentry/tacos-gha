@@ -13,7 +13,6 @@ from lib.sh import sh
 # from lib.types import Generator
 from lib.types import Boolish
 from lib.types import OSPath
-from lib.types import P
 
 COMMENT_SIZE_LIMIT = 64 * 2**10
 
@@ -21,21 +20,7 @@ ExitCode = None | str | int
 Line = str  # these lines have no trailing newline attached
 Lines = Iterable[Line]  # often a generator
 Log = Sequence[Line]  # often a list
-SectionFunction = Callable[[Sequence["SliceSummary"], int], tuple[Lines, int]]
-
-
-def totalled(generator: Callable[P, Lines]) -> Callable[P, tuple[Log, int]]:
-    """Modify a Lines generator to also return the total character count."""
-
-    def wrapped(*args: P.args, **kwargs: P.kwargs) -> tuple[Log, int]:
-        total = 0
-        result: list[Line] = []
-        for line in generator(*args, **kwargs):
-            result.append(line)
-            total += len(line) + 1
-        return result, total
-
-    return wrapped
+SectionFunction = Callable[[Sequence["SliceSummary"], int], Lines]
 
 
 def lines_totalled(lines: Lines) -> tuple[Log, int]:
@@ -184,7 +169,6 @@ class SliceSummary(NamedTuple):
         _, summary = self.summarize_exit()
         return summary
 
-    @totalled
     def markdown(self, size_budget: int, rollup: Boolish = True) -> Lines:
         section_budget = size_budget - (
             int(len(self.explanation) + len(self.tag) + 100)
@@ -246,7 +230,6 @@ class SliceSummary(NamedTuple):
         return self.tag
 
 
-@totalled
 def header(
     error: Collection[SliceSummary],
     dirty: Collection[SliceSummary],
@@ -291,7 +274,9 @@ def mksection(
         # present (only) the first error expanded
         first = first and (i == 0)
         section_budget = size_budget // section_count
-        lines, size = slice.markdown(section_budget, rollup=not first)
+        lines, size = lines_totalled(
+            slice.markdown(section_budget, rollup=not first)
+        )
         first = False
         section_count -= 1
 
@@ -319,17 +304,14 @@ def mksection(
             yield f" * {line}"
 
 
-@totalled
 def error_section(slices: Collection[SliceSummary], size_budget: int) -> Lines:
     return mksection(slices, size_budget, title="Errors", first=True)
 
 
-@totalled
 def dirty_section(slices: Collection[SliceSummary], size_budget: int) -> Lines:
     return mksection(slices, size_budget, title="Changes", first=False)
 
 
-@totalled
 def clean_section(slices: Collection[SliceSummary], size_budget: int) -> Lines:
     if not slices:
         return
@@ -356,7 +338,7 @@ def tacos_plan_summary(
     dirty = tuple(slice for slice in slices if slice.dirty)
     clean = tuple(slice for slice in slices if slice.clean)
 
-    lines, size = header(error, dirty, clean)
+    lines, size = lines_totalled(header(error, dirty, clean))
     size_budget -= size
     yield from lines
 
@@ -366,7 +348,7 @@ def tacos_plan_summary(
         section_budget: float,
     ) -> Lines:
         nonlocal size_budget
-        lines, size = mksection(slices, int(section_budget))
+        lines, size = lines_totalled(mksection(slices, int(section_budget)))
         if size > section_budget:
             raise AssertionError(size, section_budget)
         size_budget -= size
