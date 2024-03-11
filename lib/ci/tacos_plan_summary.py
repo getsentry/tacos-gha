@@ -11,8 +11,9 @@ from typing import Sequence
 from typing import TypeVar
 
 from lib.sh import sh
+
+# from lib.types import Generator
 from lib.types import Boolish
-from lib.types import Generator
 from lib.types import OSPath
 from lib.types import P
 
@@ -31,23 +32,32 @@ def get_file(path: OSPath) -> str:
     return path.read_text().strip()
 
 
-def ensmallen(lines: Lines, size_limit: int) -> Generator[Line]:
-    """Skip the middle portion of several lines if above the size size_limit."""
-    from itertools import chain
+def totalled(generator: Callable[P, Lines]) -> Callable[P, tuple[Log, int]]:
+    def wrapped(*args: P.args, **kwargs: P.kwargs) -> tuple[Log, int]:
+        total = 0
+        result: list[Line] = []
+        for line in generator(*args, **kwargs):
+            result.append(line)
+            total += len(line) + 1
+        return result, total
 
+    return wrapped
+
+
+@totalled
+def ensmallen(lines: Lines, size_limit: int) -> Lines:
+    """Skip the middle portion of several lines if above the size size_limit."""
     bufsize = 0
     lines = iter(lines)
 
     for line in lines:
         linelen = len(line) + 1
         if bufsize + linelen > size_limit * 1 / 3:
-            lines = chain(reversed(tuple(lines)), [line])
+            lines = reversed([line, *lines])
             break
 
         yield line
         bufsize += linelen
-    else:
-        lines = []
 
     end_buffer: list[Line] = []
     for line in lines:
@@ -58,8 +68,6 @@ def ensmallen(lines: Lines, size_limit: int) -> Generator[Line]:
 
         end_buffer.append(line)
         bufsize += linelen
-    else:
-        lines = []
 
     middle_buffer = list(lines)
     middle_size = sum(len(line) + 1 for line in middle_buffer)
@@ -78,14 +86,15 @@ def ensmallen(lines: Lines, size_limit: int) -> Generator[Line]:
     yield from reversed(end_buffer)
 
 
+@totalled
 def gha_summary_and_details(
-    summary: str, details: Iterable[str], rollup: Boolish = True
-) -> Generator[str]:
+    summary: Line, details: Lines, rollup: Boolish = True
+) -> Lines:
     if rollup:
         yield "<details>"
-        yield f"  <summary>{summary}</summary>"
+        yield f"<summary>{summary}</summary>"
     else:
-        yield f"  {summary}"
+        yield f"{summary}"
 
     yield from details
 
@@ -119,7 +128,7 @@ class SliceSummary(NamedTuple):
         )
 
     @classmethod
-    def from_matrix_fan_in(cls, path: OSPath) -> Generator[Self]:
+    def from_matrix_fan_in(cls, path: OSPath) -> Iterable[Self]:
         for matrix in (path / "matrix.list").open():
             matrix = matrix.strip()
 
@@ -168,47 +177,47 @@ class SliceSummary(NamedTuple):
         _, summary = self.summarize_exit()
         return summary
 
-    def markdown(
-        self, size_budget: float, rollup: Boolish = True
-    ) -> Generator[Line]:
+    @totalled
+    def markdown(self, size_budget: int, rollup: Boolish = True) -> Lines:
+        section_budget = size_budget - (
+            int(len(self.explanation) + len(self.tag) + 100)
+        )
+        details, size = self.markdown_details(
+            rollup=rollup, size_budget=section_budget
+        )
+        del size  # maybe we should do something with this?
+        lines, _ = gha_summary_and_details(
+            summary=self.summary(), details=details, rollup=rollup
+        )
+
         yield ""
-        yield f"### {self.name}"
+        yield f"### {self.tag}"
         if self.explanation:
             yield self.explanation
         yield ""
-
-        yield from gha_summary_and_details(
-            summary=self.summary(),
-            details=self.markdown_details(
-                rollup=rollup, size_budget=size_budget / 2
-            ),
-            rollup=rollup,
-        )
-
-        yield self.tag
+        yield from lines
         yield ""
 
     @property
     def tag(self) -> str:
-        return f'<!-- getsentry/tacos-gha "{self.tacos_verb}({self.name})" -->'
+        return f"{self.name} <!--🌮:{self.tacos_verb}-->"
 
-    def markdown_details(
-        self, size_budget: float, rollup: Boolish
-    ) -> Generator[Line]:
+    @totalled
+    def markdown_details(self, size_budget: int, rollup: Boolish) -> Lines:
+        log, size = ensmallen(
+            self.console_log, size_limit=int(size_budget / 2) - 200
+        )
+        size_budget -= size
+
         success, summary = self.summarize_exit()
 
-        size_budget -= 1000
-
-        yield from gha_summary_and_details(
+        lines, size = gha_summary_and_details(
             summary=f"Commands: ({summary})",
-            details=(
-                "",
-                "```console",
-                *ensmallen(self.console_log, size_limit=int(size_budget / 2)),
-                "```",
-            ),
+            details=("", "```console", *log, "```"),
             rollup=rollup or self.tf_log or success,
         )
+        size_budget -= size
+        yield from lines
 
         if not self.tf_log and not success:
             return
@@ -217,32 +226,21 @@ class SliceSummary(NamedTuple):
         if self.tf_log:
             yield ""
             yield "```hcl"
-            yield from ensmallen(self.tf_log, size_limit=int(size_budget / 2))
+            log, size = ensmallen(self.tf_log, size_limit=int(size_budget / 2))
+            size_budget -= size
+            yield from log
             yield "```"
         else:
             yield "(no output)"
 
+        # assert size_budget > 0
+
     def __str__(self) -> str:
-        return self.name
+        return self.tag
 
 
 def lines_length(lines: Collection[Line]) -> int:
     return sum(len(line) + 1 for line in lines)
-
-
-def totalled(
-    generator: Callable[P, Iterable[Sized]],
-) -> Callable[P, typing.Generator[Sized, None, int]]:
-    def wrapped(
-        *args: P.args, **kwargs: P.kwargs
-    ) -> typing.Generator[Sized, None, int]:
-        total = 0
-        for x in generator(*args, **kwargs):
-            yield x
-            total += len(x)
-        return total
-
-    return wrapped
 
 
 @totalled
@@ -250,75 +248,132 @@ def header(
     error: Collection[SliceSummary],
     dirty: Collection[SliceSummary],
     clean: Collection[SliceSummary],
-) -> Lines:
+) -> Log:
     slices = len(error) + len(dirty) + len(clean)
-    yield f"# Terraform Plan"
-    yield f"TACOS generated a terraform plan for {slices} slices:"
-    yield f""
+
+    result = [
+        f"# Terraform Plan",
+        f"TACOS generated a terraform plan for {slices} slices:",
+        f"",
+    ]
 
     if error:
-        yield f"  * {len(error)} slices failed to plan"
+        result.append(f"  * {len(error)} slices failed to plan")
     if dirty:
-        yield f"  * {len(dirty)} slices have pending changes to apply"
+        result.append(f"  * {len(dirty)} slices have pending changes to apply")
     if clean:
-        yield f"  * {len(clean)} slices are unaffected"
+        result.append(f"  * {len(clean)} slices are unaffected")
+
+    return result
 
 
 @totalled
-def footer(clean: Collection[SliceSummary]) -> Lines:
-    if not clean:
+def clean_section(slices: Collection[SliceSummary], size_budget: int) -> Lines:
+    if not slices:
         return
 
+    size_budget -= 300  # account for static output
     yield ""
     yield "## Clean"
     yield "These slices are in scope of your PR, but Terraform"
     yield "found no infra changes are currently necessary:"
-    for slice in clean:
-        yield f"  * {slice.name}"
-    for slice in clean:
-        yield slice.tag
+    for i, slice in enumerate(slices):
+        size_budget -= len(slice.tag) + 3
+        if size_budget > 0:
+            yield f"  * {slice}"
+        else:
+            yield f"  * ({len(slices) - i} slices skipped, due to comment size)"
+            break
 
 
 @totalled
-def error_sections(
-    error: Collection[SliceSummary], size_budget: int, section_count: int
-) -> Lines:
-    if not error:
+def error_sections(slices: Sequence[SliceSummary], size_budget: int) -> Lines:
+    if not slices:
         return
 
-    # FIXME: write to a file
+    size_budget -= 150  # account for static output
     yield ""
     yield "## Errors"
 
-    first = True
-    for slice in error:
-        # present the first error (only) expanded
-        for line in slice.markdown(
-            rollup=not first,
-            size_budget=(
-                size_budget if first else size_budget / section_count
-            ),
-        ):
-            yield line
-            size_budget -= len(line)
-        section_count -= 1
+    section_count = len(slices)
+    further: list[SliceSummary | str] = []
+    results: list[Log] = []
+    # for i, slice in reversed(tuple(enumerate(slices))):
+    for i, slice in enumerate(slices):
+        # present (only) the first error expanded
+        first = i == 0
+        section_budget = size_budget // section_count
+        lines, size = slice.markdown(section_budget, rollup=not first)
         first = False
+        section_count -= 1
+
+        if size < section_budget:
+            results.append(lines)
+            size_budget -= size
+            continue
+
+        size_budget -= len(slice.tag) + 10
+        if size_budget > 0:
+            further.append(slice)
+        else:
+            further.append(f"({len(slices) - i} slices skipped due to size)")
+            break
+
+    # for lines in reversed(results):
+    for lines in results:
+        yield from lines
+
+    if further:
+        yield "### Further Errors"
+        yield "These slices' logs could not be shown due to size constraints."
+        # for line in reversed(further):
+        for line in further:
+            yield f" * {line}"
 
 
 @totalled
-def dirty_sections(dirty: Collection[SliceSummary], size_budget: int) -> Lines:
-    if not dirty:
+def dirty_sections(slices: Sequence[SliceSummary], size_budget: int) -> Lines:
+    if not slices:
         return
 
+    size_budget -= 150  # account for static output
     yield ""
     yield "## Changes"
 
-    section_count = len(dirty)
-    for slice in dirty:
-        for line in slice.markdown(size_budget=size_budget / section_count):
-            yield line
-            size_budget -= len(line)
+    section_count = len(slices)
+    further: list[SliceSummary | str] = []
+    results: list[Log] = []
+    # for i, slice in reversed(tuple(enumerate(slices))):
+    for i, slice in enumerate(slices):
+        section_budget = size_budget // section_count
+        lines, size = slice.markdown(section_budget)
         section_count -= 1
+
+        if size < section_budget:
+            results.append(lines)
+            size_budget -= size
+            continue
+
+        size_budget -= len(slice.tag) + 10
+        if size_budget > 0:
+            further.append(slice)
+        else:
+            # further.insert(
+            #    0, f"({len(slices) - i} slices skipped due to size)"
+            # )
+            further.append(f"({len(slices) - i} slices skipped due to size)")
+            break
+
+    # for lines in reversed(results):
+    for lines in results:
+        yield from lines
+
+    if further:
+        yield "### Further Plans"
+        yield "These slices' logs could not be shown due to size constraints."
+        # for line in reversed(further):
+        for line in further:
+            yield f" * {line}"
 
 
 class ValuedGenerator(typing.Generic[T, U, V]):
@@ -332,31 +387,48 @@ class ValuedGenerator(typing.Generic[T, U, V]):
         self.value = yield from self.generator
 
 
+def thunk(generator: typing.Generator[T, U, V]) -> tuple[list[T], V]:
+    gen = ValuedGenerator(generator)
+    xs = list(gen)
+    assert gen.value is not None
+    return xs, gen.value
+
+
 def tacos_plan_summary(
     slices: Collection[SliceSummary], size_budget: int
-) -> Generator[Line]:
+) -> Lines:
+
     error = tuple(slice for slice in slices if slice.error)
     dirty = tuple(slice for slice in slices if slice.dirty)
     clean = tuple(slice for slice in slices if slice.clean)
 
-    footer_lines = list(gen := ValuedGenerator(footer(clean)))
-    assert gen.value is not None
+    lines, size = header(error, dirty, clean)
+    size_budget -= size
+    yield from lines
 
-    size_budget -= gen.value
+    section_budget = int(size_budget / 3)
+    clean_lines, size = clean_section(clean, section_budget)
+    if size > section_budget:
+        raise AssertionError(size, section_budget)
+    size_budget -= size
+
+    section_budget = int(size_budget / 2)
+    dirty_lines, size = dirty_sections(dirty, size_budget=section_budget)
+    if size > section_budget:
+        raise AssertionError(size, section_budget)
+    size_budget -= size
+
+    section_budget = size_budget  # use all the remainder to show errors
+    error_lines, size = error_sections(error, size_budget=section_budget)
+    if size > section_budget:
+        raise AssertionError(size, section_budget)
+    size_budget -= size
+
     assert size_budget >= 0, size_budget
 
-    size_budget -= yield from header(error, dirty, clean)
-    assert size_budget >= 0, size_budget
-
-    size_budget -= yield from error_sections(
-        error, size_budget, section_count=len(error) + len(dirty)
-    )
-    # assert size_budget >= 0, size_budget
-
-    size_budget -= yield from dirty_sections(dirty, size_budget)
-    # assert size_budget >= 0, size_budget
-
-    yield from footer_lines
+    yield from error_lines
+    yield from dirty_lines
+    yield from clean_lines
 
 
 def main() -> ExitCode:
