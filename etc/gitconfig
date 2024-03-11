@@ -14,4 +14,3 @@
     useForceIfIncludes = true
 [pull]
     ff = only
-

@@ -55,7 +55,7 @@ class PR:
         draft: bool = False,
         **attrs: object,
     ) -> Self:
-        sh.run(("git", "checkout", "-b", branch))
+        sh.run(("git", "checkout", "-b", branch, "--track", "origin/main"))
         since = mknow()
         commit_and_push(branch, message)
         url = sh.stdout(
@@ -140,9 +140,11 @@ class PR:
         sh.run(("gh", "pr", "edit", self.url, "--add-label", label))
         return since
 
-    def merge(self) -> str:
+    def merge(self) -> datetime:
         sh.banner("merging PR")
-        return sh.stdout(("gh", "pr", "merge", self.url, "--squash"))
+        since = mknow()
+        sh.run(("gh", "pr", "merge", self.url, "--squash"))
+        return since
 
     def labels(self) -> Sequence[Label]:
         result: list[Label] = []
@@ -185,7 +187,9 @@ class PR:
         return tuple(result)
 
     def check(
-        self, workflow: WorkflowName, check_name: CheckName | None = None
+        self,
+        workflow: WorkflowName | None = None,
+        check_name: CheckName | None = None,
     ) -> CheckFilter:
         from .check import CheckFilter
 

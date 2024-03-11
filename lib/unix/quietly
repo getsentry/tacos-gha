@@ -1,5 +1,6 @@
 #!/bin/bash
 set -euo pipefail
+# Run a command, and shorten its output if it succeeds.
 
 tmp="$(mktemp)"
 trap 'rm "$tmp"' EXIT
@@ -11,7 +12,7 @@ if ( set -x; "$@" >"$tmp" 2>&1 ); then
     cat "$tmp"
   else
     head "$tmp"
-    echo "... $((length - 20)) lines elided -- command succeeded"
+    echo "... $((length - 20)) lines snipped -- command succeeded"
     tail "$tmp"
   fi
 else

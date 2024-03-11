@@ -3,6 +3,7 @@
 # This is the "inner" half, which runs after we switch user via `sudo`
 set -euo pipefail
 HERE="$(dirname "$(readlink -f "$0")")"
+umask 002  # stuff is group-writable by default
 
 if [[ "${DEBUG}" ]]; then
   gha-printenv post-sudo

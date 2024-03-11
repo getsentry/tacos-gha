@@ -6,21 +6,22 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime
 from functools import cache
+from typing import Iterable
 from typing import Self
 
 from lib.constants import NOW
 from lib.constants import USER
-from lib.functions import one
 from lib.parse import Parse
 from lib.sh import sh
 from lib.types import Generator
 from lib.types import OSPath
+from lib.types import Path
 from spec.lib.gh import gh
 from spec.lib.slice import Slice
 from spec.lib.slice import Slices
 
-COMMENT_TAG = '<!-- thollander/actions-comment-pull-request "'
-COMMENT_TAG_END = '" -->'
+COMMENT_TAG = '\n<!-- getsentry/tacos-gha "'
+COMMENT_TAG_END = '" -->\n'
 APP_INSTALLATION_REVIEWER = (
     "op://Team Tacos gha"
     " dev/gh-app--tacos-gha-reviewer/app-installation/sentryio-org"
@@ -61,6 +62,9 @@ class PR(gh.PR):
             message = "Draft " + message
         sh.banner(message, self.url)
 
+        # this is useful for manual short-circuiting to the middle of the test
+        sh.debug(repr(self))
+
         return self
 
     def close(
@@ -92,40 +96,31 @@ class PR(gh.PR):
                 pr.close()
 
     def get_comments_by_job(
-        self, since: datetime | None = None, job: str | None = None
+        self, since: datetime | None = None, job_filter: str | None = None
     ) -> dict[gh.CheckName, dict[Slice, gh.Comment]]:
         """Map Slices to the text of PR comments containing their tf-plan."""
         if since is None:
             since = self.since
 
-        comments: dict[gh.CheckName, dict[Slice, gh.Comment]] = {}
-        for comment in self.comments(since):
-            lastline = Parse(comment).after.last("\n")
-            if not lastline.startswith(COMMENT_TAG):
-                continue
+        if job_filter is None:
+            job = ""
+        else:
+            job = f" '{job_filter}'"
 
-            tag = Parse(lastline).after.between(COMMENT_TAG, COMMENT_TAG_END)
-            job2 = tag.before.first("(")  # )
-            if job is not None and job2 != job:
-                continue
-
-            job_comments = comments.setdefault(job2, {})
-
-            if tag.endswith("()"):
-                slice = Slice(".")
-            else:
-                slice = Slice(tag.between("(", ")"))
-                slice = slice.relative_to(self.slices.subpath)
-
-            job_comments[slice] = comment
-        return comments
+        sh.debug(f"ensure the{job} comments are already posted...")
+        self.check().wait(since)
+        return parse_comments(
+            job_filter, self.slices.subpath, self.comments(since)
+        )
 
     def get_comments_for_job(
         self, job: str, since: datetime | None = None
     ) -> dict[Slice, gh.Comment]:
-        comments = self.get_comments_by_job(since, job)
-        assert one(comments) == job
-        return comments[job]
+        comments = self.get_comments_by_job(since, job_filter=job)
+        if comments:
+            return comments[job]
+        else:
+            return {}
 
     def get_plans(
         self, since: datetime | None = None
@@ -198,3 +193,45 @@ def edit_slices(
 
     slices.edit()
     return branch, message
+
+
+def parse_comments(
+    job_filter: str | None,
+    slices_subpath: Path,
+    comments: Iterable[gh.Comment],
+) -> dict[gh.CheckName, dict[Slice, gh.Comment]]:
+    result: dict[gh.CheckName, dict[Slice, gh.Comment]] = {}
+    for comment in comments:
+        for job, slice, comment in parse_comment(
+            job_filter, slices_subpath, comment
+        ):
+            job_comments = result.setdefault(job, {})
+            job_comments[slice] = comment
+    return result
+
+
+def parse_comment(
+    job_filter: str | None, slices_subpath: Path, comment: str
+) -> Generator[tuple[str, Slice, str]]:
+    remainder = comment
+    while True:
+        comment, tag_start, remainder = remainder.partition(COMMENT_TAG)
+        if not tag_start:
+            return
+
+        tag, tag_end, remainder = remainder.partition(COMMENT_TAG_END)
+
+        tag = Parse(tag)
+        job = tag.before.first("(")  # )
+        if job_filter is not None and job != job_filter:
+            continue  # this is not the job_filter you're looking for
+
+        comment = "".join((comment, tag_start, tag, tag_end))
+
+        parsed = tag.between("(", ")")
+        if parsed == tag:
+            slice = Slice(".")
+        else:
+            slice = Slice(parsed)
+            slice = slice.relative_to(slices_subpath)
+        yield job, slice, comment

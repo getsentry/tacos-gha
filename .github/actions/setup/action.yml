@@ -32,9 +32,9 @@ runs:
 
         # These fix most ownership, permission issues, but the .ssh config files
         # still get the wrong ownership, fixed in the next step.
-        ssh-agent-cmd: |
+        ssh-agent-cmd: |-
           ./tacos-gha/lib/ci/bin/sudo-ssh-agent
-        ssh-add-cmd: |
+        ssh-add-cmd: |-
           ./tacos-gha/lib/ci/bin/sudo-ssh-add
 
     - name: Fix .ssh permissions

@@ -3,7 +3,7 @@ from __future__ import annotations
 from lib import json as JSON
 
 from . import io
-from .constant import US_ASCII
+from .constant import UTF8
 from .core import lines
 from .core import stdout
 from .types import Command
@@ -28,7 +28,7 @@ def json(cmd: Command) -> JSON.Value:
     return result
 
 
-def jq(cmd: Command, *, encoding: str = US_ASCII) -> Generator[JSON.Value]:
+def jq(cmd: Command, *, encoding: str = UTF8) -> Generator[JSON.Value]:
     """Yield each object from newline-delimited json on a subprocess' stdout.
 
     >>> tuple(jq(("seq", 3)))

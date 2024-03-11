@@ -1,17 +1,20 @@
 #!/usr/bin/env py.test
 from __future__ import annotations
 
+from pytest import fixture
+
+from lib.functions import one
 from lib.sh import sh
 from spec.lib import tacos_demo
 from spec.lib.gh import gh
 from spec.lib.slice import Slices
+from spec.lib.testing import assert_there_can_be_only_one
 
-MESSAGE = """
-$ sudo-gcp tf-lock-acquire
-You are authenticated for the next hour as: tacos-gha-tf-state-admin@sac-dev-sa.iam.gserviceaccount.com
 
-$ tf-lock-info .
-tf-lock-acquire: Lock failed. User """
+@fixture
+def slices(slices: Slices) -> Slices:
+    # maximize interleaving/racy weirdness, so we know it works out fine
+    return slices.all
 
 
 def test(
@@ -28,39 +31,26 @@ def test(
             slices, test_name, demo, tacos_branch, branch=2
         ) as pr2,
     ):
-        winner = loser = None
-        for pr in (pr1, pr2):
-            conclusion = pr.check("Terraform Plan").wait().conclusion
-            if conclusion == "SUCCESS":
-                winner = pr
-                sh.banner("Winner acquires the lock")
-                print(winner)
-            elif conclusion == "FAILURE":
-                loser = pr
-                sh.banner("Loser does not acquire the lock")
-                print(loser)
-            else:
-                raise AssertionError(f"Unexpected conclusion: {conclusion}")
+        # pick one slice arbitrarily to care about more than the rest
+        focus = one(slices.random(count=1))
+        sh.banner(f"focus on slice: {focus}")
 
-        assert winner is not None, winner
-        assert winner.check("Terraform Plan").wait().success
-
-        sh.banner("Loser recieves a comment about the locking failure")
-        assert loser is not None
-        comments = loser.get_comments_for_job("plan")
-        for slice in loser.slices:
-            assert MESSAGE in comments[slice]
-
-        sh.banner("Winner doesn't")
-        comments = winner.get_comments_for_job("plan")
-        for slice in winner.slices:
-            assert MESSAGE not in comments[slice]
+        winner, loser = assert_there_can_be_only_one(focus, pr1, pr2)
 
         sh.banner("Winner closes their PR")
         since = winner.close()
-        assert winner.check("Terraform Unlock").wait().success
+        # this won't necessarily succeed, due to other slices
+        winner.check("Terraform Unlock").wait()
 
-        # TODO: add a :taco::lock label
         sh.banner("Loser gets the lock, using :taco::lock label")
-        since = loser.add_label(":taco::plan")
+        since = loser.add_label(
+            ":taco::plan"  # FIXME: add, use a :taco::lock label
+        )
         assert loser.check("Terraform Plan").wait(since).success
+        loser.slices.assert_locked()
+
+        sh.banner("Loser can now merge their PR (with review).")
+        loser.approve(tacos_demo.get_reviewer())
+        since = loser.merge()
+        assert loser.check("Terraform Unlock").wait(since).success
+        loser.slices.assert_unlocked()

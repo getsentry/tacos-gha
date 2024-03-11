@@ -4,10 +4,13 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from lib.functions import LessThanOneError as LessThanOneError
+from lib.functions import MoreThanOneError as MoreThanOneError
+from lib.functions import one
 from lib.types import Environ
 from lib.types import OSPath
 
-from .constant import US_ASCII
+from .constant import UTF8
 from .io import xtrace
 from .types import Command
 from .types import Generator
@@ -55,7 +58,7 @@ def stdout(cmd: Command) -> str:
     return _wait(_popen(cmd, capture_output=True)).stdout.rstrip("\n")
 
 
-def lines(cmd: Command, *, encoding: str = US_ASCII) -> Generator[Line]:
+def lines(cmd: Command, *, encoding: str = UTF8) -> Generator[Line]:
     """Yield each object from newline-delimited json on a subprocess' stdout.
 
     >>> list(lines(("seq", 3, -1, 1)))
@@ -70,6 +73,17 @@ def lines(cmd: Command, *, encoding: str = US_ASCII) -> Generator[Line]:
 
         yield line
 
+    # handle termination and error codes
+    _wait(process)
+
+
+def line(cmd: Command, *, encoding: str = UTF8) -> Line:
+    """
+    >>> line(('echo', 'ok'))
+    'ok'
+    """
+    return one(lines(cmd, encoding=encoding))
+
 
 def returncode(cmd: Command) -> int:
     """Run a command and report its exit code.
@@ -79,7 +93,6 @@ def returncode(cmd: Command) -> int:
     >>> returncode(('sh', '-c', 'exit 33'))
     33
     """
-    # any non-ascii bytes are ambiguous, here:
     result = _wait(_popen(cmd), check=False)
     return result.returncode
 
@@ -103,9 +116,9 @@ def success(cmd: Command, returncode: int = 0) -> bool:
     return _returncode(cmd) == returncode
 
 
-def _stringify(o: object) -> str:
+def _stringify(o: object, encoding: str) -> str:
     if isinstance(o, bytes):
-        return o.decode("US-ASCII")  # other bytes are ambiguous
+        return o.decode(encoding)
     else:
         return str(o)
 
@@ -113,7 +126,7 @@ def _stringify(o: object) -> str:
 def _popen(
     cmd: Command,
     capture_output: bool = False,
-    encoding: str = US_ASCII,
+    encoding: str = UTF8,
     env: Environ | None = None,
     input: str | None = None,
 ) -> Popen[str]:
@@ -144,7 +157,7 @@ def _popen(
     del tmp
 
     return subprocess.Popen(
-        tuple(_stringify(arg) for arg in cmd),
+        tuple(_stringify(arg, encoding) for arg in cmd),
         text=True,
         encoding=encoding,
         stdin=stdin,

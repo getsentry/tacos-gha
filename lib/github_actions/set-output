@@ -1,7 +1,6 @@
 #!/bin/bash
 set -euo pipefail
 var="$1"
-shift 1
 trap 'echo "ERROR($?)"' ERR
 
 

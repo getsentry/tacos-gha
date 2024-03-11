@@ -1,0 +1,25 @@
+#!/bin/bash
+set -euo pipefail
+
+esc='\x1b'  # the ASCII escape character
+csi="$esc\\["  # the "Control Sequence Introducer"
+
+# optionally match one ansi color-code
+color="(${csi}[0-9;]*m)?"
+grey="${csi}37m"
+reset="${csi}m"
+
+sed -r '
+    # clarify noop ":" commands as comments
+    s/^\++ '"$color"'\$'"$color"' : (.*)/\n'"$grey"'# \3'"$reset"'/
+
+    # match `console` syntax highlighting by removing "+ " from xtrace lines
+    s/^\++ '"$color"'\$'"$color"' /\n\1$\2 /
+
+    # symbolize some absolute paths
+    # note: relative paths are too ambiguous, here, becase we chdir some
+    s@~/@'"$HOME"'/@g
+    s@'"$GITHUB_WORKSPACE/$TF_ROOT_MODULE"'@$slice@g
+    s@'"$GITHUB_WORKSPACE"'@$repo@g
+    s@'"$HOME"'/@~/@g
+'

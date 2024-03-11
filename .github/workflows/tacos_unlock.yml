@@ -33,18 +33,18 @@ env:
 
 jobs:
   determine-tf-root-modules:
+    name: List Slices
     if: |
       false
       || github.event.action != 'labeled'
       || github.event.label.name == ':taco::unlock'
+    outputs:
+      slices: ${{ steps.list-slices.outputs.slices }}
+
     runs-on: ubuntu-latest
     permissions:
       contents: read
       pull-requests: write
-
-    name: list slices
-    outputs:
-      slices: ${{ steps.list-slices.outputs.slices }}
 
     steps:
       - name: Checkout IAC
@@ -61,22 +61,24 @@ jobs:
         uses: ./tacos-gha/.github/actions/list-slices
 
   tacos_unlock:
+    name: TACOS Unlock
     needs: [determine-tf-root-modules]
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      pull-requests: write
-      id-token: write
-
+    if: |
+      needs.determine-tf-root-modules.outputs.slices != '[]'
     strategy:
       fail-fast: false
       matrix:
         tf-root-module:
           ${{ fromJSON(needs.determine-tf-root-modules.outputs.slices) }}
 
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      id-token: write
+
     env:
       TF_ROOT_MODULE: ${{matrix.tf-root-module}}
-
     steps:
       - name: Checkout IAC
         uses: actions/checkout@v4
@@ -90,10 +92,13 @@ jobs:
         uses: ./tacos-gha/.github/actions/setup
         with:
           ssh-private-key: ${{ secrets.ssh-private-key }}
-          # We explicitly list the low-concern actions, during which users
-          # will use the identity of the original PR author.
+          # We explicitly list the low-concern actions, during which users will
+          # recieve a higher level of access -- the identity of the original PR
+          # author. All other actions will receive lower access -- the identity
+          # of the person pushing the "Re-run" button.
+          #
           # see doc/permissions.md
-          user: |
+          user: |-
             ${{
               true
               && github.event_name == 'pull_request'
@@ -122,6 +127,8 @@ jobs:
           comment_tag: unlock(${{env.TF_ROOT_MODULE}})
 
   reset-label:
+    name: Reset Label
+
     uses: ./.github/workflows/reset-label.yml
     with:
       label: ":taco::unlock"

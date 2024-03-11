@@ -1,1 +1,0 @@
-../matrix-fan-out/artifact-name.sh
