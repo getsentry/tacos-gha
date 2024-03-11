@@ -38,7 +38,17 @@ def totalled(generator: Callable[P, Lines]) -> Callable[P, tuple[Log, int]]:
     return wrapped
 
 
-@totalled
+def lines_totalled(lines: Lines) -> tuple[Log, int]:
+    """Modify a Lines generator to also return the total character count."""
+
+    total = 0
+    result: list[Line] = []
+    for line in lines:
+        result.append(line)
+        total += len(line) + 1
+    return result, total
+
+
 def ensmallen(lines: Lines, size_limit: int) -> Lines:
     """Skip the middle portion of several lines if above the size size_limit."""
     bufsize = 0
@@ -200,8 +210,8 @@ class SliceSummary(NamedTuple):
         return f"{self.name} <!--🌮:{self.tacos_verb}-->"
 
     def markdown_details(self, size_budget: int, rollup: Boolish) -> Lines:
-        log, size = ensmallen(
-            self.console_log, size_limit=int(size_budget / 2) - 200
+        log, size = lines_totalled(
+            ensmallen(self.console_log, size_limit=int(size_budget / 2) - 200)
         )
         size_budget -= size
 
@@ -222,7 +232,9 @@ class SliceSummary(NamedTuple):
         if self.tf_log:
             yield ""
             yield "```hcl"
-            log, size = ensmallen(self.tf_log, size_limit=int(size_budget / 2))
+            log, size = lines_totalled(
+                ensmallen(self.tf_log, size_limit=int(size_budget / 2))
+            )
             size_budget -= size
             yield from log
             yield "```"

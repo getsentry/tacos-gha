@@ -62,30 +62,26 @@ def gen_clean_slice(index: int) -> SliceSummary:
 class DescribeEnsmallen:
     def it_shows_small_input(self) -> None:
         lines = list(str(i) for i in range(10))
-        result, size = ensmallen(lines=lines, size_limit=200)
+        result = ensmallen(lines=lines, size_limit=200)
 
-        assert size == 20
         assert list(result) == lines
 
     def it_shows_input_at_exact_limit(self) -> None:
         lines = list(str(i) for i in range(10))
-        result, size = ensmallen(lines=lines, size_limit=20)
+        result = ensmallen(lines=lines, size_limit=20)
 
-        assert size == 20
         assert list(result) == lines
 
     def it_wont_lengthen_over_limit(self) -> None:
         lines = list(str(i) for i in range(11))
-        result, size = ensmallen(lines=lines, size_limit=20)
+        result = ensmallen(lines=lines, size_limit=20)
 
-        assert size == 23
         assert list(result) == lines
 
     def it_shortens_huge_input(self) -> None:
         lines = list(str(i) for i in range(1000))
-        result, size = ensmallen(lines=lines, size_limit=30)
+        result = ensmallen(lines=lines, size_limit=30)
 
-        assert size == 55
         assert list(result) == [
             "0",
             "1",
@@ -104,13 +100,11 @@ class DescribeEnsmallen:
         length = 9 * 10  # nine lines of length ten
 
         # first show we don't shorten using exact length:
-        result, size = ensmallen(lines=lines, size_limit=length)
-        assert size == 90
+        result = ensmallen(lines=lines, size_limit=length)
         assert list(result) == lines
 
-        result, size = ensmallen(lines=lines, size_limit=length - 1)
+        result = ensmallen(lines=lines, size_limit=length - 1)
 
-        assert size == 85
         assert list(result) == [
             "000000000",
             "111111111",
@@ -126,9 +120,8 @@ class DescribeEnsmallen:
         lines = list(str(i) for i in range(10))
         lines[2] = lines[2] * 999
         lines[4] = lines[4] * 999
-        result, size = ensmallen(lines=lines, size_limit=30)
+        result = ensmallen(lines=lines, size_limit=30)
 
-        assert size == 49
         assert list(result) == [
             "0",
             "1",
