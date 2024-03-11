@@ -1,14 +1,12 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
-import typing
 from typing import Callable
 from typing import Collection
 from typing import Iterable
 from typing import NamedTuple
 from typing import Self
 from typing import Sequence
-from typing import TypeVar
 
 from lib.sh import sh
 
@@ -17,23 +15,18 @@ from lib.types import Boolish
 from lib.types import OSPath
 from lib.types import P
 
+COMMENT_SIZE_LIMIT = 64 * 2**10
+
 ExitCode = None | str | int
 Line = str  # these lines have no trailing newline attached
-Lines = Iterable[Line]
-Log = Sequence[Line]
-COMMENT_SIZE_LIMIT = 64 * 2**10
-Sized = typing.TypeVar("Sized", bound=typing.Sized)
+Lines = Iterable[Line]  # often a generator
+Log = Sequence[Line]  # often a list
 SectionFunction = Callable[[Sequence["SliceSummary"], int], tuple[Lines, int]]
-T = TypeVar("T")
-U = TypeVar("U")
-V = TypeVar("V")
-
-
-def get_file(path: OSPath) -> str:
-    return path.read_text().strip()
 
 
 def totalled(generator: Callable[P, Lines]) -> Callable[P, tuple[Log, int]]:
+    """Modify a Lines generator to also return the total character count."""
+
     def wrapped(*args: P.args, **kwargs: P.kwargs) -> tuple[Log, int]:
         total = 0
         result: list[Line] = []
@@ -101,6 +94,10 @@ def gha_summary_and_details(
 
     if rollup:
         yield "</details>"
+
+
+def get_file(path: OSPath) -> str:
+    return path.read_text().strip()
 
 
 def get_lines(path: OSPath) -> Log:
@@ -183,10 +180,9 @@ class SliceSummary(NamedTuple):
         section_budget = size_budget - (
             int(len(self.explanation) + len(self.tag) + 100)
         )
-        details, size = self.markdown_details(
+        details = self.markdown_details(
             rollup=rollup, size_budget=section_budget
         )
-        del size  # maybe we should do something with this?
         lines, _ = gha_summary_and_details(
             summary=self.summary(), details=details, rollup=rollup
         )
@@ -203,7 +199,6 @@ class SliceSummary(NamedTuple):
     def tag(self) -> str:
         return f"{self.name} <!--🌮:{self.tacos_verb}-->"
 
-    @totalled
     def markdown_details(self, size_budget: int, rollup: Boolish) -> Lines:
         log, size = ensmallen(
             self.console_log, size_limit=int(size_budget / 2) - 200
@@ -234,14 +229,8 @@ class SliceSummary(NamedTuple):
         else:
             yield "(no output)"
 
-        # assert size_budget > 0
-
     def __str__(self) -> str:
         return self.tag
-
-
-def lines_length(lines: Collection[Line]) -> int:
-    return sum(len(line) + 1 for line in lines)
 
 
 @totalled
@@ -268,33 +257,18 @@ def header(
     return result
 
 
-@totalled
-def clean_section(slices: Collection[SliceSummary], size_budget: int) -> Lines:
-    if not slices:
-        return
-
-    size_budget -= 300  # account for static output
-    yield ""
-    yield "## Clean"
-    yield "These slices are in scope of your PR, but Terraform"
-    yield "found no infra changes are currently necessary:"
-    for i, slice in enumerate(slices):
-        size_budget -= len(slice.tag) + 3
-        if size_budget > 0:
-            yield f"  * {slice}"
-        else:
-            yield f"  * ({len(slices) - i} slices skipped, due to comment size)"
-            break
-
-
-@totalled
-def error_section(slices: Sequence[SliceSummary], size_budget: int) -> Lines:
+def mksection(
+    slices: Collection[SliceSummary],
+    size_budget: int,
+    title: str,
+    first: bool = False,
+) -> Lines:
     if not slices:
         return
 
     size_budget -= 150  # account for static output
     yield ""
-    yield "## Errors"
+    yield f"## {title}"
 
     section_count = len(slices)
     further: list[SliceSummary | str] = []
@@ -302,7 +276,7 @@ def error_section(slices: Sequence[SliceSummary], size_budget: int) -> Lines:
     # for i, slice in reversed(tuple(enumerate(slices))):
     for i, slice in enumerate(slices):
         # present (only) the first error expanded
-        first = i == 0
+        first = first and (i == 0)
         section_budget = size_budget // section_count
         lines, size = slice.markdown(section_budget, rollup=not first)
         first = False
@@ -325,7 +299,7 @@ def error_section(slices: Sequence[SliceSummary], size_budget: int) -> Lines:
         yield from lines
 
     if further:
-        yield "### Further Errors"
+        yield f"### Further {title}"
         yield "These slices' logs could not be shown due to size constraints."
         # for line in reversed(further):
         for line in further:
@@ -333,66 +307,32 @@ def error_section(slices: Sequence[SliceSummary], size_budget: int) -> Lines:
 
 
 @totalled
-def dirty_section(slices: Sequence[SliceSummary], size_budget: int) -> Lines:
+def error_section(slices: Collection[SliceSummary], size_budget: int) -> Lines:
+    return mksection(slices, size_budget, title="Errors", first=True)
+
+
+@totalled
+def dirty_section(slices: Collection[SliceSummary], size_budget: int) -> Lines:
+    return mksection(slices, size_budget, title="Changes", first=False)
+
+
+@totalled
+def clean_section(slices: Collection[SliceSummary], size_budget: int) -> Lines:
     if not slices:
         return
 
-    size_budget -= 150  # account for static output
+    size_budget -= 300  # account for static output
     yield ""
-    yield "## Changes"
-
-    section_count = len(slices)
-    further: list[SliceSummary | str] = []
-    results: list[Log] = []
-    # for i, slice in reversed(tuple(enumerate(slices))):
+    yield "## Clean"
+    yield "These slices are in scope of your PR, but Terraform"
+    yield "found no infra changes are currently necessary:"
     for i, slice in enumerate(slices):
-        section_budget = size_budget // section_count
-        lines, size = slice.markdown(section_budget)
-        section_count -= 1
-
-        if size < section_budget:
-            results.append(lines)
-            size_budget -= size
-            continue
-
-        size_budget -= len(slice.tag) + 10
+        size_budget -= len(slice.tag) + 3
         if size_budget > 0:
-            further.append(slice)
+            yield f"  * {slice}"
         else:
-            # further.insert(
-            #    0, f"({len(slices) - i} slices skipped due to size)"
-            # )
-            further.append(f"({len(slices) - i} slices skipped due to size)")
+            yield f"  * ({len(slices) - i} slices skipped, due to comment size)"
             break
-
-    # for lines in reversed(results):
-    for lines in results:
-        yield from lines
-
-    if further:
-        yield "### Further Plans"
-        yield "These slices' logs could not be shown due to size constraints."
-        # for line in reversed(further):
-        for line in further:
-            yield f" * {line}"
-
-
-class ValuedGenerator(typing.Generic[T, U, V]):
-    value: V | None = None
-
-    def __init__(self, generator: typing.Generator[T, U, V]):
-        self.generator = generator
-        super().__init__()
-
-    def __iter__(self) -> typing.Generator[T, U, None]:
-        self.value = yield from self.generator
-
-
-def thunk(generator: typing.Generator[T, U, V]) -> tuple[list[T], V]:
-    gen = ValuedGenerator(generator)
-    xs = list(gen)
-    assert gen.value is not None
-    return xs, gen.value
 
 
 def tacos_plan_summary(

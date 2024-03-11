@@ -360,7 +360,7 @@ These slices' logs could not be shown due to size constraints.
  * (15 slices skipped due to size)
 
 ## Changes
-### Further Plans
+### Further Changes
 These slices' logs could not be shown due to size constraints.
  * dirty-slice-0 <!--🌮:plan-->
  * dirty-slice-1 <!--🌮:plan-->
