@@ -90,7 +90,6 @@ def ensmallen(lines: Lines, size_limit: int) -> Lines:
     yield from reversed(end_buffer)
 
 
-@totalled
 def gha_summary_and_details(
     summary: Line, details: Lines, rollup: Boolish = True
 ) -> Lines:
@@ -193,7 +192,7 @@ class SliceSummary(NamedTuple):
         details = self.markdown_details(
             rollup=rollup, size_budget=section_budget
         )
-        lines, _ = gha_summary_and_details(
+        lines = gha_summary_and_details(
             summary=self.summary(), details=details, rollup=rollup
         )
 
@@ -217,10 +216,12 @@ class SliceSummary(NamedTuple):
 
         success, summary = self.summarize_exit()
 
-        lines, size = gha_summary_and_details(
-            summary=f"Commands: ({summary})",
-            details=("", "```console", *log, "```"),
-            rollup=rollup or self.tf_log or success,
+        lines, size = lines_totalled(
+            gha_summary_and_details(
+                summary=f"Commands: ({summary})",
+                details=("", "```console", *log, "```"),
+                rollup=rollup or self.tf_log or success,
+            )
         )
         size_budget -= size
         yield from lines
