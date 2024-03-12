@@ -163,8 +163,8 @@ class SliceSummary(NamedTuple):
 
     def markdown(self, budget: ByteBudget, rollup: Boolish = True) -> Lines:
         budget -= 150  # account for static output
-        budget.tally([self.explanation, self.tag])
-        details = budget(self.markdown_details, rollup=rollup)
+        budget.lines([self.explanation, self.tag])
+        details = budget.generator(self.markdown_details, rollup=rollup)
         lines = gha_summary_and_details(
             summary=self.summary(), details=details, rollup=rollup
         )
@@ -182,16 +182,14 @@ class SliceSummary(NamedTuple):
         return f"{self.name} <!--🌮:{self.tacos_verb}-->"
 
     def markdown_details(self, budget: ByteBudget, rollup: Boolish) -> Lines:
-        budget -= 200  # account for static output
+        # budget -= 200  # account for static output
         success, summary = self.summarize_exit()
         show_results = self.tf_log or success
         share = 1 / 2 if show_results else 1
 
-        log = budget.tally(
-            ensmallen(self.console_log, size_limit=int(budget * share))
-        )
+        log = ensmallen(self.console_log, size_limit=int(budget * share))
 
-        yield from budget.tally(
+        yield from budget.lines(
             gha_summary_and_details(
                 summary=f"Commands: ({summary})",
                 details=("", "```console", *log, "```"),
@@ -252,11 +250,11 @@ def mksection(
         "These slices' logs could not be shown due to size limits.",
     ]
 
-    yield from budget.tally(("", f"## {title}"))
+    yield from budget.lines(("", f"## {title}"))
 
     # account for static output
-    budget.tally(further_header)
-    budget.tally([SKIPPED_MESSAGE])
+    budget.lines(further_header)
+    budget.lines([SKIPPED_MESSAGE])
 
     section_count = len(slices)
     further: list[Line] = []
@@ -265,13 +263,13 @@ def mksection(
         first = first and (i == 0)
 
         try:
-            yield from budget(
+            yield from budget.generator(
                 slice.markdown, share=1 / section_count, rollup=not first
             )
 
         except BudgetError:
             try:
-                further.extend(budget.tally([f"* {slice.tag}"]))
+                further.extend(budget.lines([f"* {slice.tag}"]))
             except BudgetError:
                 further.append(SKIPPED_MESSAGE.format(count=len(slices) - i))
                 break
@@ -304,16 +302,18 @@ def clean_section(
     if not slices:
         return
 
-    yield from budget.tally((
-        "",
-        "## Clean",
-        "These slices are in scope of your PR, but Terraform",
-        "found no infra changes are currently necessary:",
-    ))
-    budget.tally(SKIPPED_MESSAGE)
+    yield from budget.lines(
+        (
+            "",
+            "## Clean",
+            "These slices are in scope of your PR, but Terraform",
+            "found no infra changes are currently necessary:",
+        )
+    )
+    budget.lines(SKIPPED_MESSAGE)
     for i, slice in enumerate(slices):
         try:
-            yield from budget.tally([f"* {slice}"])
+            yield from budget.lines([f"* {slice}"])
         except BudgetError:
             yield SKIPPED_MESSAGE.format(count=len(slices) - i)
             return
@@ -328,10 +328,10 @@ def tacos_plan_summary(
 
     # generate the more important "error" section last, so it can use any
     # slack left by the other sections.
-    yield from budget.tally(header(error, dirty, clean))
-    clean_lines = budget(clean_section, slices=clean, share=1 / 3)
-    dirty_lines = budget(dirty_section, slices=dirty, share=1 / 2)
-    error_lines = budget(error_section, slices=error, share=1 / 1)
+    yield from budget.lines(header(error, dirty, clean))
+    clean_lines = budget.generator(clean_section, slices=clean, share=1 / 3)
+    dirty_lines = budget.generator(dirty_section, slices=dirty, share=1 / 2)
+    error_lines = budget.generator(error_section, slices=error, share=1 / 1)
     assert 0 <= budget, budget
 
     yield from error_lines

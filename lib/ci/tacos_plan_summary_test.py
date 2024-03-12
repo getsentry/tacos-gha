@@ -381,8 +381,9 @@ found no infra changes are currently necessary:
     def it_shows_first_error_preferentially(self) -> None:
         budget = ByteBudget(2000)
         remainder = ByteBudget(budget)
-        slices = [gen_error_slice(i, commands=10) for i in range(2)]
+        slices = [gen_error_slice(i, commands=19) for i in range(2)]
 
+        # breakpoint()
         result = "\n".join(tacos_plan_summary(slices, budget=remainder))
 
         # assert budget * 0.75 < len(result)
