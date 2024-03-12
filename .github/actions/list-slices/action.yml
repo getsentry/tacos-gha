@@ -2,6 +2,7 @@ name: Determine Editted TF Slices
 
 inputs:
   shell:
+    description: "private -- do not use"
     default: env ./tacos-gha/lib/ci/default-shell {0}
 
 outputs:
@@ -16,7 +17,7 @@ runs:
     - uses: ./tacos-gha/.github/actions/just-the-basics
 
     - id: files
-      uses: getsentry/paths-filter@v2.11.1
+      uses: dorny/paths-filter@v3.0.1
       with:
         filters: "all: ['**']"
         list-files: json
@@ -25,6 +26,7 @@ runs:
       id: list-slices
       shell: ${{inputs.shell}}
       run: |
-        "$TACOS_GHA_HOME/"lib/ci/list-slices <<'EOF'
+        gha-log-as-step-summary \
+          "$TACOS_GHA_HOME/"lib/ci/list-slices <<'EOF'
         ${{steps.files.outputs.all_files}}
         EOF

@@ -30,48 +30,62 @@ concurrency:
 
 jobs:
   determine-tf-root-modules:
+    name: List Slices
+    if: github.event.pull_request.draft == false
+    outputs:
+      slices: ${{ steps.list-slices.outputs.slices }}
+
     runs-on: ubuntu-latest
     permissions:
       contents: read
       pull-requests: write
 
-    name: list all slices
-    if: github.event.pull_request.draft == false
-    outputs:
-      slices: ${{ steps.slices.outputs.slices }}
-
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/checkout@v4
+      - name: Checkout IAC
+        uses: actions/checkout@v4
+      - name: Checkout tacos-gha
+        uses: actions/checkout@v4
         with:
           repository: ${{inputs.tacos_gha_repo}}
           ref: ${{inputs.tacos_gha_ref}}
           path: tacos-gha
 
-      - id: slices
+      - name: List All Slices
+        id: list-slices
         run: |
           # NB: separate subprocess substitution, to avoid masking return values
           slices="$("./tacos-gha/"lib/tacos/slices | jq -R | jq -sc)"
           tee -a "$GITHUB_OUTPUT" <<< "slices=$slices"
 
+  # TODO: should we detect drift in parallel across every slice?
   tacos_detect_drift:
+    name: TACOS Drift Detection
+    needs: [determine-tf-root-modules]
+    if: |
+      needs.determine-tf-root-modules.outputs.slices != '[]'
+
     runs-on: ubuntu-latest
     permissions:
       contents: read
       pull-requests: write
       id-token: write
 
+    env:
+      TF_ROOT_MODULES: ${{needs.determine-tf-root-modules.outputs.slices}}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/checkout@v4
+      - name: Checkout IAC
+        uses: actions/checkout@v4
+      - name: Checkout tacos-gha
+        uses: actions/checkout@v4
         with:
           repository: ${{inputs.tacos_gha_repo}}
           ref: ${{inputs.tacos_gha_ref}}
           path: tacos-gha
-      - name: setup
+      - name: Setup
         uses: ./tacos-gha/.github/actions/setup
         with:
           ssh-private-key: ${{ secrets.ssh-private-key }}
 
-      - run: |
+      - name: Detect drift
+        run: |
           gha-log-as-step-summary "$TACOS_GHA_HOME/"lib/ci/tacos-detect-drift

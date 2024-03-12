@@ -5,9 +5,13 @@ from pathlib import PosixPath
 from pathlib import PurePosixPath
 
 T = typing.TypeVar("T")
+P = typing.ParamSpec("P")
 Generator = typing.Generator[T, None, None]  # py313/PEP696 shim
 Environ = typing.MutableMapping[str, str]
 Callback = typing.Callable[[], T]
+ExitCode = str | int | None
+Line = str
+Lines = typing.Iterable[Line]
 
 
 class Path(PurePosixPath):
@@ -28,3 +32,13 @@ class OSPath(PosixPath, Path):
     def cwd(cls, environ: object = None) -> typing.Self:
         del environ
         return super().cwd()
+
+
+class URL(str):
+    __slots__ = ()
+
+    def __repr__(self) -> str:
+        return f"URL({super().__repr__()})"
+
+
+Boolish = object  # I'd like to define this more strictly

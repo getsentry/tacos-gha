@@ -24,3 +24,7 @@ It will also accept all the options pytest does.
 coverage-enabled ./lib/json.py
 make coverage-server
 ```
+
+#### Install tacos-gha
+
+[INSTALL.md](doc/INSTALL.md)

@@ -1,0 +1,16 @@
+# these settings are used during test, for reproducible results
+
+[user]
+    name = TACOS-gha Tester
+    email = nobody+tacos-gha@sentry.io
+
+[core]
+    # a trivial editor which does nothing, successfully
+    editor = "true"
+[init]
+    defaultBranch = main
+[push]
+    default = current
+    useForceIfIncludes = true
+[pull]
+    ff = only

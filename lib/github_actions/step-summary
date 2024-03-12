@@ -3,29 +3,18 @@
 # this step.
 set -euo pipefail
 
-tee >(
+exec 3>&1
+set -x
+
+tee >(cat >&3) |  # send original, unmodified input to stdout
   # step summary and PR comments can't handle ansi-color like GHA logging does =(
   uncolor |
-    sed -r '
-      # clarify noop ":" commands as comments
-      s/^\++ \$ : /\n# /
-
-      # match `console` syntax highlighting by removing "+ " from xtrace lines
-      s/^\++ \$ /\n$ /
-
-      # symbolize some absolute paths 
-      # note: relative paths are too ambiguous, here, becase we chdir some
-      s@~/@'"$HOME"'/@g
-      s@'"$GITHUB_WORKSPACE/$TF_ROOT_MODULE"'@$slice@g
-      s@'"$GITHUB_WORKSPACE"'@$repo@g
-      s@'"$HOME"'/@~/@g
-    ' |
-    tee -a "$GITHUB_STEP_SUMMARY" |
-    jq -sR |
-    gha-set-output summary |
-  if [[ "$DEBUG" ]]; then
-    cat
+  tee -a "$GITHUB_STEP_SUMMARY" |
+  jq -sR |
+  gha-set-output summary |
+  if (( DEBUG > 0 )); then
+    cat >&2
   else
     cat >/dev/null
-  fi
-)
+  fi \
+;

@@ -1,0 +1,102 @@
+name: Selftest Matrix IO
+
+on:
+  pull_request:
+    paths:
+      - ".github/actions/matrix-fan-out/**"
+      - ".github/actions/matrix-fan-in/**"
+      - ".github/workflows/selftest-matrix-io.yml"
+
+defaults:
+  run:
+    shell: bash -euxo pipefail {0}
+
+# Cancel in progress workflows on pull_requests.
+# https://docs.github.com/en/actions/using-jobs/using-concurrency#example-using-a-fallback-value
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  keys-job:
+    name: Generate Input
+    outputs:
+      keys: ${{ steps.keys-step.outputs.keys }}
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Generate matrix-jobs' keys
+        id: keys-step
+        run: |
+          exec >&2  # our only output is logging
+          printf "keys=[10, 27]" >> "$GITHUB_OUTPUT"
+          # for scale testing:
+          ###seq 30 | shuf | jq -R | jq -cs | tee -a "$GITHUB_OUTPUT"
+
+  fan-out:
+    name: Compute Squares
+    needs:
+      - keys-job
+    strategy:
+      matrix:
+        key: ${{ fromJSON(needs.keys-job.outputs.keys) }}
+
+    runs-on: ubuntu-latest
+
+    env:
+      KEY: ${{ matrix.key }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          path: tacos-gha
+          sparse-checkout: ".github/actions/matrix-fan-out"
+          sparse-checkout-cone-mode: false
+
+      - name: Add content to fan-out
+        id: content
+        run: |
+          "./tacos-gha/".github/actions/matrix-fan-out/selftest.sh "$KEY"
+
+      - name: Run matrix-fan-out
+        uses: ./tacos-gha/.github/actions/matrix-fan-out
+        with:
+          path: ./a/b/c
+          retention-days: 1
+
+  fan-in:
+    name: Summary
+    needs: fan-out
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          path: tacos-gha
+          sparse-checkout: |
+            .github/actions/matrix-fan-out
+            .github/actions/matrix-fan-in
+          sparse-checkout-cone-mode: false
+
+      - name: Run matrix-fan-in
+        uses: ./tacos-gha/.github/actions/matrix-fan-in
+        with:
+          path: a/b/c
+
+      - name: Check matrix-fan-in.json
+        id: main
+        run: |
+          "./tacos-gha/".github/actions/matrix-fan-in/selftest.sh
+
+      - name: Update PR
+        # we want to report failures, too
+        if: always()
+
+        uses: thollander/actions-comment-pull-request@v2.4.3
+        with:
+          message: ${{ fromJSON(steps.main.outputs.summary) }}
+          comment_tag: selftest-matrix-io
+          mode: recreate

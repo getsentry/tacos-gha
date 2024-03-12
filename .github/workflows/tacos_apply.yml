@@ -33,20 +33,20 @@ env:
 
 jobs:
   determine-tf-root-modules:
+    name: List Slices
     # note: we want to noop if they converted to draft first
     if: |
       true
       && github.event.action == 'labeled'
       && github.event.label.name == ':taco::apply'
       && github.event.pull_request.draft == false
+    outputs:
+      slices: ${{ steps.list-slices.outputs.slices }}
+
     runs-on: ubuntu-latest
     permissions:
       contents: read
       pull-requests: write
-
-    name: list slices
-    outputs:
-      slices: ${{ steps.list-slices.outputs.slices }}
 
     steps:
       - name: Checkout IAC
@@ -63,22 +63,24 @@ jobs:
         uses: ./tacos-gha/.github/actions/list-slices
 
   tacos_apply:
+    name: TACOS Apply
     needs: [determine-tf-root-modules]
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      pull-requests: write
-      id-token: write
-
+    if: |
+      needs.determine-tf-root-modules.outputs.slices != '[]'
     strategy:
       fail-fast: false
       matrix:
         tf-root-module:
           ${{ fromJSON(needs.determine-tf-root-modules.outputs.slices) }}
 
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      id-token: write
+
     env:
       TF_ROOT_MODULE: ${{matrix.tf-root-module}}
-
     steps:
       - name: Checkout IAC
         uses: actions/checkout@v4
@@ -95,7 +97,8 @@ jobs:
 
       # TODO: fetch and apply the tfplan artifact from plan workflow
       # so that apply matches the plan reviewed by construction
-      ### - uses: actions/download-artifact@v4
+      ### - name: fetch tfplan: ${{which}}
+      ###   uses: actions/download-artifact@v4
       ###   with:
       ###     name: tfplan
       ###     # TODO: github-script to fetch run-id of the most recent tfplan
@@ -106,6 +109,7 @@ jobs:
           "$TACOS_GHA_HOME/"lib/ci/github-pr-setenv "${{ github.event.pull_request.html_url }}"
         env:
           GH_TOKEN: ${{ github.token }}
+
       - name: Apply
         id: main
         run: |

@@ -13,6 +13,14 @@ on:
       tacos_gha_ref:
         type: string
         default: refs/heads/stable
+  workflow_dispatch:
+    inputs:
+      tacos_gha_repo:
+        type: string
+        default: getsentry/tacos-gha
+      tacos_gha_ref:
+        type: string
+        default: refs/heads/stable
 
 defaults:
   run:
@@ -26,25 +34,28 @@ concurrency:
 
 jobs:
   tacos_scratch:
+    name: Scratch
+
     runs-on: ubuntu-latest
     permissions:
       contents: read
       pull-requests: write
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout tacos-gha
+        uses: actions/checkout@v4
         with:
           repository: ${{inputs.tacos_gha_repo}}
           ref: ${{inputs.tacos_gha_ref}}
           path: tacos-gha
 
-      - name: basic info (main job)
+      - name: Basic info (main job)
         run: |
           echo "$USER@$HOSTNAME"
           id
           hostname -f
 
-      - name: show env (orig)
+      - name: Show env (orig)
         shell: bash
         run: |
           sort -z /proc/self/environ |
@@ -53,7 +64,7 @@ jobs:
 
       - name: Scratch
         uses: ./.github/actions/scratch
-      - name: basic info (main job)
+      - name: Basic info (main job)
         run: |
           echo "$USER@$HOSTNAME"
           id

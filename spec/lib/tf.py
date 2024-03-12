@@ -32,9 +32,8 @@ def plan_is_clean(tf_root_modules: Iterable[Path]) -> bool:
 
 def init(tf_root_modules: Iterable[Path]) -> None:
     sh.run(
-        # FIXME: a lower-privilege way to authorize tf-init
-        # we need "apply" permissions to create the tfstate gcs objects
-        ("env", "GETSENTRY_SAC_VERB=apply", "sudo-gcp", "terragrunt")
+        # "state-admin" permission needed to create the initial gcs objects
+        ("env", "GETSENTRY_SAC_VERB=state-admin", "sudo-gcp", "terragrunt")
         + tuple(
             f"--terragrunt-include-dir={tf_root_module}"
             for tf_root_module in tf_root_modules

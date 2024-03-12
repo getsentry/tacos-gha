@@ -34,18 +34,18 @@ env:
 
 jobs:
   determine-tf-root-modules:
+    name: List Slices
     if: |
       false
       || github.event.action != 'labeled'
       || github.event.label.name == ':taco::plan'
+    outputs:
+      slices: ${{ steps.list-slices.outputs.slices }}
+
     runs-on: ubuntu-latest
     permissions:
       contents: read
       pull-requests: write
-
-    name: list slices
-    outputs:
-      slices: ${{ steps.list-slices.outputs.slices }}
 
     steps:
       - name: Checkout IAC
@@ -62,22 +62,24 @@ jobs:
         uses: ./tacos-gha/.github/actions/list-slices
 
   tacos_plan:
+    name: TACOS Plan
     needs: [determine-tf-root-modules]
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      pull-requests: write
-      id-token: write
-
+    if: |
+      needs.determine-tf-root-modules.outputs.slices != '[]'
     strategy:
       fail-fast: false
       matrix:
         tf-root-module:
           ${{ fromJSON(needs.determine-tf-root-modules.outputs.slices) }}
 
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      id-token: write
+
     env:
       TF_ROOT_MODULE: ${{matrix.tf-root-module}}
-
     steps:
       - name: Checkout IAC
         uses: actions/checkout@v4
@@ -91,10 +93,13 @@ jobs:
         uses: ./tacos-gha/.github/actions/setup
         with:
           ssh-private-key: ${{ secrets.ssh-private-key }}
-          # We explicitly list the low-concern actions, during which users
-          # will use the identity of the original PR author.
+          # We explicitly list the low-concern actions, during which users will
+          # recieve a higher level of access -- the identity of the original PR
+          # author. All other actions will receive lower access -- the identity
+          # of the person pushing the "Re-run" button.
+          #
           # see doc/permissions.md
-          user: |
+          user: |-
             ${{
               true
               && github.event_name == 'pull_request'
@@ -120,24 +125,45 @@ jobs:
         run: |
           "$TACOS_GHA_HOME/"lib/ci/tacos-plan
 
+      - name: Save matrix result
+        # we need to show any errors to end-users
+        if: always()
+        uses: ./tacos-gha/.github/actions/matrix-fan-out
+
+  summary:
+    needs: tacos_plan
+    # we need to report failures, too
+    if: always() && needs.tacos_plan.result != 'skipped'
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout tacos-gha
+        uses: actions/checkout@v4
+        with:
+          repository: ${{inputs.tacos_gha_repo}}
+          ref: ${{inputs.tacos_gha_ref}}
+          path: tacos-gha
+
+      - name: Setup
+        uses: ./tacos-gha/.github/actions/just-the-basics
+      - name: Run matrix-fan-in
+        uses: ./tacos-gha/.github/actions/matrix-fan-in
+      - name: Summarize
+        id: summary
+        run: |
+          ./tacos-gha/lib/ci/tacos-plan-summary |
+            gha-step-summary
+
       - name: Update PR
         # we want to report failures, too
         if: always()
+
         uses: thollander/actions-comment-pull-request@v2.4.3
         with:
-          message: ${{ fromJSON(steps.main.outputs.summary) }}
-          comment_tag: plan(${{env.TF_ROOT_MODULE}})
-
-      - name: Store `tfplan`
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{steps.main.outputs.artifact_name}}
-          path: ${{steps.main.outputs.artifact_path}}
-          if-no-files-found: error
-          overwrite: true # we only want the latest plan
-
-  # FIXME: we need a fan-in summary
-  # summary:
+          message: ${{ fromJSON(steps.summary.outputs.summary) }}
+          comment_tag: plan
+          mode: recreate
 
   reset-label:
     uses: ./.github/workflows/reset-label.yml

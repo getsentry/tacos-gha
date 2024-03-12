@@ -4,16 +4,28 @@ from __future__ import annotations
 
 import contextlib
 from io import FileIO
+from typing import IO
 from typing import Generator
+from typing import Literal
+from typing import TypeAlias
+from typing import TypeVar
 
 from _pytest.capture import CaptureBase
 from _pytest.capture import CaptureFixture
 from _pytest.capture import CaptureManager
+from _pytest.capture import MultiCapture
 from _pytest.capture import NoCapture
+from _pytest.capture import (
+    _CaptureMethod,  # pyright: ignore[reportPrivateUsage]; isort:skip
+)
 from _pytest.fixtures import SubRequest
 from _pytest.fixtures import fixture
 
+from lib.constants import UNSET as UNSET
+from lib.constants import Unset as Unset
 from lib.sh import sh
+
+T = TypeVar("T")
 
 FD = int
 STDIN: FD = 0
@@ -31,6 +43,7 @@ class FDCapture(CaptureBase[str]):
         self.targetfd = targetfd
 
         self.tmpfile: FileIO = TemporaryFile(buffering=0)
+        self.dest: IO[bytes] = self.tmpfile
         self.targetfd_save: FD = dup(targetfd)
         self.exitstack: contextlib.ExitStack = contextlib.ExitStack()
 
@@ -46,7 +59,7 @@ class FDCapture(CaptureBase[str]):
 
     def resume(self) -> None:
         self.exitstack.enter_context(
-            sh.redirect(self.targetfd, self.tmpfile.fileno())
+            sh.redirect(self.targetfd, self.dest.fileno())
         )
 
     def writeorg(self, data: str) -> None:
@@ -73,42 +86,100 @@ class CombinedCapture(FDCapture):
             self.exitstack.enter_context(sh.redirect(other_fd, self.targetfd))
 
 
-class NoopCapture(FDCapture):
+class CombinedTeeCapture(CombinedCapture):
     def resume(self) -> None:
-        pass
+
+        from subprocess import PIPE
+        from subprocess import Popen
+
+        # TODO: you'll probably want to rewrite this as a python thread someday
+        tee = Popen(
+            ("tee", "/dev/stderr"),
+            stdin=PIPE,
+            stdout=self.tmpfile,
+            encoding=None,
+            stderr=self.targetfd_save,
+        )
+        assert tee.stdin is not None
+
+        self.dest: IO[bytes] = tee.stdin
+
+        # TODO: apparently pytest calls resume() once per test during discovery?
+        ### # This extra newline adds significant readability, because pytest
+        ### # *prepends* newlines to its status lines, like an anarcho-nihilist.
+        ### self.writeorg("\n")
+
+        # FIXME: this is "right" but it causes stdio deadlock D:
+        ### # the tee should live longer than the redirect, to avoid EPIPE
+        ### self.exitstack.enter_context(tee)  # close, flush buffers, and wait
+
+        super().resume()
+
+        self.exitstack.enter_context(
+            sh.redirect(self.targetfd, tee.stdin.fileno())
+        )
+        self.exitstack.enter_context(tee.stdin)  # close tee's stdin
 
 
-class CombinedFDCapture(CaptureBase[str]):
-    EMPTY_BUFFER: str = ""
-    capture: CaptureBase[str]
+# see xdist.plugin.parse_numprocesses
+XdistNumProcesses: TypeAlias = (
+    None | int | Literal["auto"] | Literal["logical"]
+)
 
-    def __init__(  # pyright: ignore[reportMissingSuperCall]
-        self, targetfd: FD
-    ):
-        if targetfd == 1:
-            self.capture = CombinedCapture(targetfd, STDERR)
-        elif targetfd == 2:
-            self.capture = NoCapture(targetfd)
-        else:
-            raise ValueError(targetfd)
 
-    def start(self) -> None:
-        self.capture.start()
+def get_captureclass(nproc: XdistNumProcesses) -> type[CaptureBase[str]]:
 
-    def done(self) -> None:
-        self.capture.done()
+    def captureclass(fd: FD) -> CaptureBase[str]:
+        if fd == 1:
+            return NoCapture(-1)  # CombinedCapture, below, will handle stdout
+        elif fd != 2:
+            raise AssertionError("expected stdout", fd)
+        elif nproc is None or (isinstance(nproc, int) and nproc < 2):
+            # running tests in serial -- tee to orig stderr so we can watch
+            return CombinedTeeCapture(2, 1)
+        else:  # nproc in ("auto", "logical", 0) or nproc > 1
+            # running tests in parallel -- supress unusable interleaved output
+            return CombinedCapture(2, 1)
 
-    def suspend(self) -> None:
-        self.capture.suspend()
+    captureclass.EMPTY_BUFFER = ""  # type:ignore
 
-    def resume(self) -> None:
-        self.capture.resume()
+    # Callable[int, CaptureBase[str]] is *actually* fully compatible with
+    # type[CaptureBase[str]], as long as the args exactly match
+    return captureclass  # type: ignore
 
-    def writeorg(self, data: str) -> None:
-        self.capture.writeorg(data)
 
-    def snap(self) -> str:
-        return self.capture.snap()
+def get_multicapture(
+    method: _CaptureMethod, nproc: XdistNumProcesses
+) -> MultiCapture[str]:
+    if method == "no":
+        return MultiCapture(in_=None, out=None, err=None)
+
+    else:
+        captureclass = get_captureclass(nproc)
+        return MultiCapture(in_=None, out=captureclass(1), err=captureclass(2))
+
+
+class CombinedCaptureManager(CaptureManager):
+    nproc: XdistNumProcesses | Unset = UNSET
+    stdout: FD | Unset = UNSET
+
+    @classmethod
+    def set_numprocesses(cls, nproc: XdistNumProcesses) -> None:
+        cls.nproc = nproc
+
+    def start_global_capturing(self) -> None:
+        if self.stdout is UNSET:
+            from os import dup
+            from os import dup2
+
+            self.stdout = dup(1)
+            dup2(2, 1)  # our only output is logging
+
+        assert self._global_capturing is None
+        assert self.nproc is not UNSET
+
+        self._global_capturing = get_multicapture(self._method, self.nproc)
+        self._global_capturing.start_capturing()
 
 
 @fixture
@@ -137,10 +208,15 @@ def cap1fd(request: SubRequest) -> Generator[CaptureFixture[str], None, None]:
             captured = cap1fd.readouterr()
             assert captured.out == "hello\nERROR\n"
     """
-    capman = request.config.pluginmanager.getplugin("capturemanager")
-    assert isinstance(capman, CaptureManager), capman
+    config = request.config
+    nproc = config.option.numprocesses
+
+    capman = config.pluginmanager.getplugin("capturemanager")
+    assert isinstance(capman, CombinedCaptureManager), capman
+    capman.set_numprocesses(nproc)
+
     capture_fixture = CaptureFixture(
-        CombinedFDCapture, request, _ispytest=True
+        get_captureclass(nproc), request, _ispytest=True
     )
     try:
         capman.set_fixture(capture_fixture)

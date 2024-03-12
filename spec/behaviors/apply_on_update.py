@@ -22,11 +22,11 @@ def test(pr: tacos_demo.PR) -> None:
 
     # the taco-apply label causes the plan to become clean (and locked):
     assert not pr.slices.plan_is_clean()
-    pr.slices.assert_unlocked()
 
     since = pr.add_label(":taco::apply")
     assert pr.check("Terraform Apply").wait(since).success
     assert pr.slices.plan_is_clean()
+    pr.slices.assert_locked()
 
     comments = pr.get_comments_for_job("apply", since)
     assert set(comments) == pr.slices.slices

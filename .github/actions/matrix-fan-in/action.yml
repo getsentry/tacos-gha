@@ -1,0 +1,43 @@
+name: "Matrix Fan-in"
+description:
+  "Collect all JSON files from the matrix and combine them into a single file
+  (matrix-fan-in.json)."
+
+inputs:
+  path:
+    description: Must match matrix-fan-out `path`.
+    default: ./matrix-fan-out
+  pattern:
+    description: |-
+      Optionally filter which matrix results to include e.g. "color=blue"
+      syntax: @actions/glob
+    default: "*"
+  shell:
+    description: "private -- do not use"
+    default: bash -euxo pipefail {0}
+
+runs:
+  using: composite
+
+  steps:
+    - shell: ${{ inputs.shell }}
+      env:
+        MATRIX_FAN_OUT_PATH: ${{ inputs.path }}
+      run: |
+        "$GITHUB_ACTION_PATH/"set-artifact-name.sh "$MATRIX_FAN_OUT_PATH" |
+          tee -a "$GITHUB_ENV"
+
+    - name: Download artifacts
+      uses: actions/download-artifact@v4
+      with:
+        pattern: ${{ env.artifact_name }} *${{ inputs.pattern }}*
+        path: matrix-fan-in.tmp
+
+    - name: fix up archive files
+      shell: bash
+      env:
+        MATRIX_FAN_OUT_PATH: ${{ inputs.path }}
+
+      # note: "$GITHUB_ACTION_PATH" contains this action directory's path
+      run: |
+        "$GITHUB_ACTION_PATH/"rename-tmp-dirs.sh "$MATRIX_FAN_OUT_PATH"

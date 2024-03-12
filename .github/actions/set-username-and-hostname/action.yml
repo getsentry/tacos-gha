@@ -10,6 +10,7 @@ inputs:
     default: |-
       ${{github.event.pull_request.number}}.${{github.event.pull_request.base.repo.name}}.${{github.repository_owner}}.github.invalid
   shell:
+    description: "private -- do not use"
     default: env ./tacos-gha/lib/ci/default-shell {0}
 
 runs:
@@ -34,19 +35,15 @@ runs:
         olduser="$USER"
         id "$olduser"
 
-        : 'set user-group ("runner") as primary group, but without losing ' \
-            'former primary group ("docker")'
-        sudo usermod -g "$olduser" "$olduser" -aG "$(id -g)"
-
-        : remove square brackets from bot names as they are invalid for linux
-        newuser="$( tr -d '[]' <<< "${{inputs.user}}" )"
         : show defaults
         useradd -D
 
         : add the requested username
+        : remove square brackets from bot names as they are invalid for linux
+        newuser="$( tr -d '[]' <<< "${{inputs.user}}" )"
         sudo useradd \
-          --gid "$olduser" \
-          --groups "$(id -G | tr ' ' ,)" \
+          --gid="$(id -gn)" \
+          --groups="$(id -Gn | tr ' ' ,),$olduser" \
           "$newuser" \
         ;
 
@@ -66,8 +63,8 @@ runs:
 
         : for comparison
         id "$olduser"
-        sudo -lU "$olduser"
         id "$newuser"
+        sudo -lU "$olduser"
         sudo -lU "$newuser"
 
         : ensure everything is equally accessible to my user-group '("runner")'
@@ -75,7 +72,12 @@ runs:
         find "$HOME" \
             -path "$HOME/runners/*/_diag" -prune \
             -or \
-            -user "$olduser" -group "$olduser" -not -type l -print0 |
+            \( \
+              -user "$olduser" -or \
+              -group "$olduser" -or \
+              -group "$(id -gn)" \
+            \) \
+            -not -type l -print0 |
           xargs -0r chmod g=u --
 
         : set default user/home for future steps

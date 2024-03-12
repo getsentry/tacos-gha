@@ -3,6 +3,7 @@ description: used in "determine slices" and "per slice" matrix jobs
 
 inputs:
   shell:
+    description: "private -- do not use"
     default: env ./tacos-gha/lib/ci/default-shell {0}
 
 runs:

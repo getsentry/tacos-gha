@@ -8,8 +8,8 @@ from typing import TypeVar
 from lib.sh import sh
 
 # usual amount of time to complete a GHA job is 30s from push
-WAIT_LIMIT = int(getenv("WAIT_LIMIT", "90"))
-WAIT_SLEEP = int(getenv("WAIT_SLEEP", "3"))
+WAIT_LIMIT = float(getenv("WAIT_LIMIT", "90"))
+WAIT_SLEEP = float(getenv("WAIT_SLEEP", "3"))
 
 # assertion is true when it returns a non-None object (without AssertionError)
 T = TypeVar("T")
@@ -21,29 +21,34 @@ class TimeoutExpired(AssertionError):
 
 
 def for_(
-    assertion: Assertion[T], timeout: int = WAIT_LIMIT, sleep: int = WAIT_SLEEP
+    assertion: Assertion[T],
+    timeout: float = WAIT_LIMIT,
+    sleep: float = WAIT_SLEEP,
 ) -> T:
     __tracebackhide__ = True
+
+    # speed up sleeps if there's too few
+    if sleep > timeout / 10:
+        sleep = timeout / 10
+    # we're not going to get much higher resolution than 100ms
+    sleep = max(0.125, sleep)
+
+    limit = timeout
 
     with sh.uniq():  # suppress repeated messages during the loop
         result = assertion()
         if result:
             return result
 
-        if timeout / sleep < 10:
-            sleep = max(1, int(timeout / 10))
-
-        limit = timeout
-
         while True:
             do_sleep(sleep)
-            limit -= sleep
-
             result = assertion()
             if result:
                 return result
 
-            if limit <= 0:
+            # track overall time
+            limit -= sleep
+            if limit < 0:
                 raise TimeoutExpired(
                     f"never succeeded, over {timeout} seconds"
                 )

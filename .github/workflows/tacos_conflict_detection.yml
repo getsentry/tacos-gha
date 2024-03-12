@@ -1,0 +1,72 @@
+name: TACOS Conflict Detection
+
+# downstream projects should use events:
+###pull_request_target:
+###  types:
+###    - closed
+###    - converted_to_draft
+###    - labeled
+###    - opened
+###    - synchronize
+###    - reopened
+###    - ready_for_review
+
+on:
+  workflow_call:
+    inputs:
+      tacos_gha_repo:
+        type: string
+        default: getsentry/tacos-gha
+      tacos_gha_ref:
+        type: string
+        default: refs/heads/stable
+
+defaults:
+  run:
+    shell: env ./tacos-gha/lib/ci/default-shell {0}
+
+# Cancel in progress workflows on pull_requests.
+# https://docs.github.com/en/actions/using-jobs/using-concurrency#example-using-a-fallback-value
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  conflict-detection:
+    name: Detect Merge Conflicts
+
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+
+    steps:
+      - name: Checkout tacos-gha
+        uses: actions/checkout@v4
+        with:
+          repository: ${{inputs.tacos_gha_repo}}
+          ref: ${{inputs.tacos_gha_ref}}
+          path: tacos-gha
+          sparse-checkout: |
+            .github/actions/just-the-basics
+            lib
+            bin
+
+      - name: Setup
+        uses: ./tacos-gha/.github/actions/just-the-basics
+
+      - name: Detect any merge conflict
+        env:
+          GH_TOKEN: ${{ github.token }}
+          pr_url: ${{ github.event.pull_request.html_url }}
+        run: |
+          "$TACOS_GHA_HOME/"lib/ci/tacos-conflict-detection "$pr_url"
+
+  reset-label:
+    if: github.event.pull_request.mergeable_state == 'conflicting'
+
+    uses: ./.github/workflows/reset-label.yml
+    with:
+      # These 3 labels may have been applied but not run due to a conflict.
+      label: ":taco::unlock|:taco::plan|:taco::apply"
+      tacos_gha_repo: ${{inputs.tacos_gha_repo}}
+      tacos_gha_ref: ${{inputs.tacos_gha_ref}}

@@ -1,0 +1,15 @@
+#!/usr/bin/env -S sed -zrf
+# Undo `ghaencode`. For details, see `ghaencode`.
+  s.\ .\/.g
+s.\$\_.\ .g
+s \$\% \\ g
+s \$\. \n g
+s \$\, \r g
+s \$\! \? g
+s \$\& \* g
+s \$\+ \| g
+s \$\} \> g
+s \$\{ \< g
+s \$\; \: g
+s \$\^ \" g
+s \$\$ \$ g

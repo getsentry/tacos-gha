@@ -4,11 +4,11 @@
 #
 #    pip-compile --strip-extras requirements-dev.in
 #
-astroid==3.0.2
+astroid==3.1.0
     # via pylint
 black==24.1.1
     # via -r requirements-dev.in
-build==1.0.3
+build==1.1.1
     # via pip-tools
 cffi==1.16.0
     # via cryptography
@@ -20,14 +20,14 @@ click==8.1.7
     #   pip-tools
 covdefaults==2.3.0
     # via -r requirements-dev.in
-coverage==7.4.1
+coverage==7.4.3
     # via
     #   -r requirements-dev.in
     #   covdefaults
     #   coverage-enable-subprocess
 coverage-enable-subprocess==1.0
     # via -r requirements-dev.in
-cryptography==42.0.2
+cryptography==42.0.5
     # via pyjwt
 dill==0.3.8
     # via pylint
@@ -37,7 +37,7 @@ execnet==2.0.2
     # via pytest-xdist
 filelock==3.13.1
     # via virtualenv
-identify==2.5.33
+identify==2.5.35
     # via pre-commit
 iniconfig==2.0.0
     # via pytest
@@ -64,7 +64,7 @@ packaging==23.2
     #   pytest
 pathspec==0.12.1
     # via black
-pip-tools==7.3.0
+pip-tools==7.4.1
     # via -r requirements-dev.in
 platformdirs==4.2.0
     # via
@@ -73,19 +73,21 @@ platformdirs==4.2.0
     #   virtualenv
 pluggy==1.4.0
     # via pytest
-pre-commit==3.6.0
+pre-commit==3.6.2
     # via -r requirements-dev.in
 pycparser==2.21
     # via cffi
 pyjwt==2.8.0
     # via -r requirements-dev.in
-pylint==3.0.3
+pylint==3.1.0
     # via -r requirements-dev.in
 pyproject-hooks==1.0.0
-    # via build
-pyright==1.1.349
+    # via
+    #   build
+    #   pip-tools
+pyright==1.1.352
     # via -r requirements-dev.in
-pytest==8.0.0
+pytest==8.0.2
     # via
     #   -r requirements-dev.in
     #   pytest-xdist
@@ -93,11 +95,11 @@ pytest-xdist==3.5.0
     # via -r requirements-dev.in
 pyyaml==6.0.1
     # via pre-commit
-tomlkit==0.12.3
+tomlkit==0.12.4
     # via pylint
-typing-extensions==4.9.0
+typing-extensions==4.10.0
     # via mypy
-virtualenv==20.25.0
+virtualenv==20.25.1
     # via pre-commit
 wheel==0.42.0
     # via pip-tools
