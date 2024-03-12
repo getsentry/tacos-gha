@@ -21,6 +21,7 @@ from lib.types import OSPath
 
 COMMENT_SIZE_LIMIT = 64 * 2**10
 SKIPPED_MESSAGE = "* ({count} more slices not shown)"
+GHA_RUN_URL = "https://github.com/getsentry/ops/actions/runs/{}"
 
 ExitCode = None | str | int
 SectionFunction = Callable[[Sequence["SliceSummary"], int], Lines]
@@ -97,6 +98,7 @@ class SliceSummary(NamedTuple):
     tacos_verb: str
     explanation: str
     returncode: int
+    url: str
 
     @classmethod
     def from_matrix_fan_out(cls, path: OSPath) -> Self:
@@ -109,6 +111,7 @@ class SliceSummary(NamedTuple):
             tacos_verb=get_file(path / "tacos_verb"),
             explanation=get_file(path / "explanation"),
             returncode=int(get_file(path / "returncode")),
+            url=get_file(path / "url"),
         )
 
     @classmethod
@@ -166,14 +169,14 @@ class SliceSummary(NamedTuple):
 
     def markdown(self, budget: ByteBudget, rollup: Boolish = True) -> Lines:
         budget -= 150  # account for static output
-        budget.lines([self.explanation, self.tag])
+        budget.lines([self.explanation, self.tag, self.url])
         details = budget.generator(self.markdown_details, rollup=rollup)
         lines = gha_summary_and_details(
             summary=self.summary(), details=details, rollup=rollup
         )
 
         yield ""
-        yield f"### {self.tag}"
+        yield f"### [{self.tag}]({self.url})"
         if self.explanation:
             yield self.explanation
         yield ""
@@ -188,28 +191,28 @@ class SliceSummary(NamedTuple):
         # budget -= 200  # account for static output
         success, summary = self.summarize_exit()
         show_results = self.tf_log or success
-        share = 1 / 2 if show_results else 1
 
-        yield from budget.lines(
-            gha_summary_and_details(
-                summary=f"Commands: ({summary})",
-                details=(
-                    "",
-                    "```console",
-                    # NB: careful not to account these lines twice
-                    *ensmallen(
-                        self.console_log, size_limit=int(budget * share)
+        if not self.tf_log or not success:
+            share = 1 / 2 if show_results else 1
+            yield from budget.lines(
+                gha_summary_and_details(
+                    summary=f"Commands: ({summary})",
+                    details=(
+                        "",
+                        "```console",
+                        # NB: careful not to account these lines twice
+                        *ensmallen(
+                            self.console_log, size_limit=int(budget * share)
+                        ),
+                        "```",
                     ),
-                    "```",
-                ),
-                rollup=rollup or self.tf_log or success,
+                    rollup=rollup or self.tf_log or success,
+                )
             )
-        )
 
         if not self.tf_log and not success:
             return
 
-        yield "  Result:"
         if self.tf_log:
             yield ""
             yield "```hcl"
@@ -226,11 +229,12 @@ def header(
     error: Collection[SliceSummary],
     dirty: Collection[SliceSummary],
     clean: Collection[SliceSummary],
+    run_id: int,
 ) -> Log:
     slices = len(error) + len(dirty) + len(clean)
 
     result = [
-        f"# Terraform Plan",
+        f"# [Terraform Plan]({GHA_RUN_URL.format(run_id)})",
         f"TACOS generated a terraform plan for {slices} slices:",
         f"",
     ]
@@ -327,7 +331,7 @@ def clean_section(
 
 
 def tacos_plan_summary(
-    slices: Collection[SliceSummary], budget: ByteBudget
+    slices: Collection[SliceSummary], budget: ByteBudget, run_id: int
 ) -> Lines:
     error = tuple(slice for slice in slices if slice.error)
     dirty = tuple(slice for slice in slices if slice.dirty)
@@ -335,7 +339,7 @@ def tacos_plan_summary(
 
     # generate the more important "error" section last, so it can use any
     # slack left by the other sections.
-    yield from budget.lines(header(error, dirty, clean))
+    yield from budget.lines(header(error, dirty, clean, run_id))
     clean_lines = budget.generator(clean_section, slices=clean, share=1 / 3)
     dirty_lines = budget.generator(dirty_section, slices=dirty, share=1 / 2)
     error_lines = budget.generator(error_section, slices=error, share=1 / 1)
@@ -358,7 +362,11 @@ def main() -> ExitCode:
     slices = tuple(SliceSummary.from_matrix_fan_in(path))
     budget = ByteBudget(COMMENT_SIZE_LIMIT - 1000)
 
-    for line in tacos_plan_summary(slices, budget):
+    from os import environ
+
+    run_id = int(environ["GITHUB_RUN_ID"])
+
+    for line in tacos_plan_summary(slices, budget, run_id):
         print(line)
 
     return 0

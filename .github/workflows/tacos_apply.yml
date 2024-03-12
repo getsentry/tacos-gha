@@ -107,8 +107,6 @@ jobs:
       - name: set $GITHUB_PR_*
         run: |
           "$TACOS_GHA_HOME/"lib/ci/github-pr-setenv "${{ github.event.pull_request.html_url }}"
-        env:
-          GH_TOKEN: ${{ github.token }}
 
       - name: Apply
         id: main

@@ -44,6 +44,12 @@ runs:
         : its huge... expand script, above to view <<'EOF'
           github:   ${{ toJSON(github) }},
         EOF
+    - name: enable `gh` cli
+      shell: ${{inputs.shell}}
+      run: |
+        gha-set-env 'GH_TOKEN' <<< "$GH_TOKEN"
+      env:
+        GH_TOKEN: ${{ github.token }}
     - name: get python version
       shell: ${{inputs.shell}}
       run: |
