@@ -165,7 +165,7 @@ TACOS generated a terraform plan for 3 slices:
 
 ### error-slice-30 <!--🌮:apply-->
 
-error code 33
+Failure: error code 33
 Commands: (error code 33)
 
 ```console
@@ -260,9 +260,13 @@ $ echo $((2 ** 12))
 4096
 $ echo $((2 ** 13))
 8192
+$ echo $((2 ** 14))
+16384
 ...
-( 3.0KB, 160 lines skipped )
+( 2.9KB, 156 lines skipped )
 ...
+$ echo $((2 ** 93))
+9903520314283042199192993792
 $ echo $((2 ** 94))
 19807040628566084398385987584
 $ echo $((2 ** 95))
@@ -286,9 +290,27 @@ $ echo $((2 ** 99))
 ~ resource null_resource[1]
 ~   name = 1
 
+~ resource null_resource[2]
+~   name = 2
+
+~ resource null_resource[3]
+~   name = 3
+
+~ resource null_resource[4]
+~   name = 4
+
 ...
-( 45.6KB, 2989 lines skipped )
+( 45.4KB, 2971 lines skipped )
 ...
+~   name = 995
+
+~ resource null_resource[996]
+~   name = 996
+
+~ resource null_resource[997]
+~   name = 997
+
+~ resource null_resource[998]
 ~   name = 998
 
 ~ resource null_resource[999]
@@ -379,9 +401,9 @@ found no infra changes are currently necessary:
         assert slices[0].tag in result
 
     def it_shows_first_error_preferentially(self) -> None:
-        budget = ByteBudget(2000)
+        budget = ByteBudget(1500)
         remainder = ByteBudget(budget)
-        slices = [gen_error_slice(i, commands=19) for i in range(2)]
+        slices = [gen_error_slice(i, commands=20) for i in range(2)]
 
         # breakpoint()
         result = "\n".join(tacos_plan_summary(slices, budget=remainder))
@@ -401,7 +423,7 @@ TACOS generated a terraform plan for 2 slices:
 
 ### error-slice-0 <!--🌮:apply-->
 
-error code 3
+Failure: error code 3
 Commands: (error code 3)
 
 ```console
@@ -419,19 +441,27 @@ $ echo $((2 ** 5))
 32
 $ echo $((2 ** 6))
 64
-$ echo $((2 ** 7))
-128
-$ echo $((2 ** 8))
-256
-$ echo $((2 ** 9))
-512
+...
+( 0.2KB, 15 lines skipped )
+...
+16384
+$ echo $((2 ** 15))
+32768
+$ echo $((2 ** 16))
+65536
+$ echo $((2 ** 17))
+131072
+$ echo $((2 ** 18))
+262144
+$ echo $((2 ** 19))
+524288
 ```
 
 
 ### error-slice-1 <!--🌮:apply-->
 
 <details>
-<summary>error code 4</summary>
+<summary>Failure: error code 4</summary>
 <details>
 <summary>Commands: (error code 4)</summary>
 
@@ -456,6 +486,26 @@ $ echo $((2 ** 8))
 256
 $ echo $((2 ** 9))
 512
+$ echo $((2 ** 10))
+1024
+$ echo $((2 ** 11))
+2048
+$ echo $((2 ** 12))
+4096
+$ echo $((2 ** 13))
+8192
+$ echo $((2 ** 14))
+16384
+$ echo $((2 ** 15))
+32768
+$ echo $((2 ** 16))
+65536
+$ echo $((2 ** 17))
+131072
+$ echo $((2 ** 18))
+262144
+$ echo $((2 ** 19))
+524288
 ```
 </details>
 </details>

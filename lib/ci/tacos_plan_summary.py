@@ -74,7 +74,7 @@ def gha_summary_and_details(
         yield "<details>"
         yield f"<summary>{summary}</summary>"
     else:
-        yield f"{summary}"
+        yield summary
 
     yield from details
 
@@ -158,8 +158,11 @@ class SliceSummary(NamedTuple):
                 return line  # D:
 
         # we didn't find anything significant-looking at all
-        _, summary = self.summarize_exit()
-        return summary
+        is_success, summary = self.summarize_exit()
+        if is_success:
+            return f"Success: {summary}"
+        else:
+            return f"Failure: {summary}"
 
     def markdown(self, budget: ByteBudget, rollup: Boolish = True) -> Lines:
         budget -= 150  # account for static output
@@ -187,12 +190,18 @@ class SliceSummary(NamedTuple):
         show_results = self.tf_log or success
         share = 1 / 2 if show_results else 1
 
-        log = ensmallen(self.console_log, size_limit=int(budget * share))
-
         yield from budget.lines(
             gha_summary_and_details(
                 summary=f"Commands: ({summary})",
-                details=("", "```console", *log, "```"),
+                details=(
+                    "",
+                    "```console",
+                    # NB: careful not to account these lines twice
+                    *ensmallen(
+                        self.console_log, size_limit=int(budget * share)
+                    ),
+                    "```",
+                ),
                 rollup=rollup or self.tf_log or success,
             )
         )
@@ -302,14 +311,12 @@ def clean_section(
     if not slices:
         return
 
-    yield from budget.lines(
-        (
-            "",
-            "## Clean",
-            "These slices are in scope of your PR, but Terraform",
-            "found no infra changes are currently necessary:",
-        )
-    )
+    yield from budget.lines((
+        "",
+        "## Clean",
+        "These slices are in scope of your PR, but Terraform",
+        "found no infra changes are currently necessary:",
+    ))
     budget.lines(SKIPPED_MESSAGE)
     for i, slice in enumerate(slices):
         try:
