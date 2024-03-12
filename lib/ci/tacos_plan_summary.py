@@ -191,28 +191,28 @@ class SliceSummary(NamedTuple):
         # budget -= 200  # account for static output
         success, summary = self.summarize_exit()
         show_results = self.tf_log or success
-        share = 1 / 2 if show_results else 1
 
-        yield from budget.lines(
-            gha_summary_and_details(
-                summary=f"Commands: ({summary})",
-                details=(
-                    "",
-                    "```console",
-                    # NB: careful not to account these lines twice
-                    *ensmallen(
-                        self.console_log, size_limit=int(budget * share)
+        if not self.tf_log or not success:
+            share = 1 / 2 if show_results else 1
+            yield from budget.lines(
+                gha_summary_and_details(
+                    summary=f"Commands: ({summary})",
+                    details=(
+                        "",
+                        "```console",
+                        # NB: careful not to account these lines twice
+                        *ensmallen(
+                            self.console_log, size_limit=int(budget * share)
+                        ),
+                        "```",
                     ),
-                    "```",
-                ),
-                rollup=rollup or self.tf_log or success,
+                    rollup=rollup or self.tf_log or success,
+                )
             )
-        )
 
         if not self.tf_log and not success:
             return
 
-        yield "  Result:"
         if self.tf_log:
             yield ""
             yield "```hcl"
