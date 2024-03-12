@@ -13,7 +13,6 @@ from lib import wait
 from lib.functions import now as mknow
 from lib.sh import sh
 from lib.types import Generator
-from spec.lib.gh import gh
 
 from . import app
 from .types import URL
@@ -22,6 +21,7 @@ from .types import CheckName
 from .types import Label
 from .types import Message
 from .types import WorkflowName
+from .up_to_date import up_to_date
 
 APP_INSTALLATION_REVIEWER = (
     "op://Team Tacos gha dev/tacos-gha-reviewer/installation.json"
@@ -246,7 +246,7 @@ class PR:
 def commit_and_push(branch: Branch, message: object = None) -> datetime:
     since = mknow()
     sh.run(("git", "commit", "-qam", message))
-    with gh.up_to_date():
+    with up_to_date():
         sh.run(("git", "show", "--stat"))
         sh.run(("git", "push", "origin", f"HEAD:{branch}"))
     return since

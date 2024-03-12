@@ -6,11 +6,11 @@ from __future__ import annotations
 import asyncio
 
 from lib.sh import sh
+from lib.types import ExitCode
 from lib.types import OSPath
 from lib.types import Path
 
 from .lib.acquire import DEBUG
-from .lib.acquire import ExitCode
 from .lib.acquire import acquire
 from .lib.env import HOST
 from .lib.env import TF_LOCK_EHELD

@@ -6,7 +6,7 @@
 #
 astroid==3.1.0
     # via pylint
-black==24.2.0
+black==24.1.1
     # via -r requirements-dev.in
 build==1.1.1
     # via pip-tools
@@ -64,7 +64,7 @@ packaging==23.2
     #   pytest
 pathspec==0.12.1
     # via black
-pip-tools==7.4.0
+pip-tools==7.4.1
     # via -r requirements-dev.in
 platformdirs==4.2.0
     # via
