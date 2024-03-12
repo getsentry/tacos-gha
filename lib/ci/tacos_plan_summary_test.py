@@ -1,7 +1,9 @@
 #!/usr/bin/env py.test
 from __future__ import annotations
 
-from .tacos_plan_summary import Log
+from lib.byte_budget import ByteBudget
+from lib.byte_budget import Log
+
 from .tacos_plan_summary import SliceSummary
 from .tacos_plan_summary import ensmallen
 from .tacos_plan_summary import tacos_plan_summary
@@ -145,7 +147,7 @@ class DescribeTacosPlanSummary:
                     gen_dirty_slice(1, resources=1, commands=1),
                     gen_error_slice(30),
                 ],
-                size_budget=2000,
+                budget=ByteBudget(2000),
             )
         )
 
@@ -155,9 +157,9 @@ class DescribeTacosPlanSummary:
 # Terraform Plan
 TACOS generated a terraform plan for 3 slices:
 
-  * 1 slices failed to plan
-  * 1 slices have pending changes to apply
-  * 1 slices are unaffected
+* 1 slices failed to plan
+* 1 slices have pending changes to apply
+* 1 slices are unaffected
 
 ## Errors
 
@@ -201,14 +203,14 @@ Plan: 100 to apply
 ## Clean
 These slices are in scope of your PR, but Terraform
 found no infra changes are currently necessary:
-  * clean-slice-22 <!--🌮:clean-->"""
+* clean-slice-22 <!--🌮:clean-->"""
         )
 
     def it_shortens_long_output(self) -> None:
         result = "\n".join(
             tacos_plan_summary(
                 slices=[gen_dirty_slice(0, resources=1000, commands=100)],
-                size_budget=5_000,
+                budget=ByteBudget(5_000),
             )
         )
         assert (
@@ -217,7 +219,7 @@ found no infra changes are currently necessary:
 # Terraform Plan
 TACOS generated a terraform plan for 1 slices:
 
-  * 1 slices have pending changes to apply
+* 1 slices have pending changes to apply
 
 ## Changes
 
@@ -255,9 +257,13 @@ $ echo $((2 ** 10))
 $ echo $((2 ** 11))
 2048
 $ echo $((2 ** 12))
+4096
+$ echo $((2 ** 13))
+8192
 ...
-( 3.1KB, 164 lines skipped )
+( 3.0KB, 160 lines skipped )
 ...
+$ echo $((2 ** 94))
 19807040628566084398385987584
 $ echo $((2 ** 95))
 39614081257132168796771975168
@@ -280,17 +286,9 @@ $ echo $((2 ** 99))
 ~ resource null_resource[1]
 ~   name = 1
 
-~ resource null_resource[2]
-~   name = 2
-
 ...
-( 45.5KB, 2981 lines skipped )
+( 45.6KB, 2989 lines skipped )
 ...
-
-~ resource null_resource[997]
-~   name = 997
-
-~ resource null_resource[998]
 ~   name = 998
 
 ~ resource null_resource[999]
@@ -304,74 +302,161 @@ Plan: 100 to apply
 
     def it_can_handle_a_huge_number_slices(self) -> None:
         """Show a large number of slices without any truncation."""
-        size_budget = 64000
-        n = 500
+        budget = ByteBudget(64000)
+        remainder = ByteBudget(budget)
+        n = 600
         slices = (
             [gen_error_slice(i) for i in range(n)]
             + [gen_dirty_slice(i) for i in range(n)]
             + [gen_clean_slice(i) for i in range(n)]
         )
 
-        result = "\n".join(tacos_plan_summary(slices, size_budget=size_budget))
+        result = "\n".join(tacos_plan_summary(slices, budget=remainder))
 
-        assert size_budget * 0.8 < len(result) < size_budget
+        # assert (budget * 0.8) < len(result)
+        assert len(result) < budget
+        assert 0 <= remainder <= budget * 0.25
 
         for slice in slices:
             assert slice.tag in result
 
-    def it_truncates_too_many_slices(self) -> None:
-        size_budget = 1000
-        n = 20
+    def it_truncates_way_too_many_slices(self) -> None:
+        budget = ByteBudget(1000)
+        remainder = ByteBudget(budget)
+        n = 999
         slices = (
             [gen_error_slice(i) for i in range(n + 1)]
             + [gen_dirty_slice(i) for i in range(n + 2)]
             + [gen_clean_slice(i) for i in range(n + 3)]
         )
 
-        result = "\n".join(tacos_plan_summary(slices, size_budget=size_budget))
+        result = "\n".join(tacos_plan_summary(slices, budget=remainder))
 
-        assert size_budget * 0.75 < len(result) < size_budget
+        # assert budget * 0.75 < len(result)
+        assert len(result) < budget
+        assert 0 <= remainder <= budget * 0.25
+
         assert (
             result
             == """\
 # Terraform Plan
-TACOS generated a terraform plan for 66 slices:
+TACOS generated a terraform plan for 3003 slices:
 
-  * 21 slices failed to plan
-  * 22 slices have pending changes to apply
-  * 23 slices are unaffected
+* 1000 slices failed to plan
+* 1001 slices have pending changes to apply
+* 1002 slices are unaffected
 
 ## Errors
 ### Further Errors
 These slices' logs could not be shown due to size constraints.
- * error-slice-0 <!--🌮:apply-->
- * error-slice-1 <!--🌮:apply-->
- * error-slice-2 <!--🌮:apply-->
- * error-slice-3 <!--🌮:apply-->
- * error-slice-4 <!--🌮:apply-->
- * error-slice-5 <!--🌮:apply-->
- * (15 slices skipped due to size)
+* error-slice-0 <!--🌮:apply-->
+* error-slice-1 <!--🌮:apply-->
+* error-slice-2 <!--🌮:apply-->
+* error-slice-3 <!--🌮:apply-->
+* error-slice-4 <!--🌮:apply-->
+* error-slice-5 <!--🌮:apply-->
+* (994 more slices not shown)
 
 ## Changes
 ### Further Changes
 These slices' logs could not be shown due to size constraints.
- * dirty-slice-0 <!--🌮:plan-->
- * dirty-slice-1 <!--🌮:plan-->
- * dirty-slice-2 <!--🌮:plan-->
- * dirty-slice-3 <!--🌮:plan-->
- * dirty-slice-4 <!--🌮:plan-->
- * (17 slices skipped due to size)
+* dirty-slice-0 <!--🌮:plan-->
+* dirty-slice-1 <!--🌮:plan-->
+* dirty-slice-2 <!--🌮:plan-->
+* dirty-slice-3 <!--🌮:plan-->
+* dirty-slice-4 <!--🌮:plan-->
+* (996 more slices not shown)
 
 ## Clean
 These slices are in scope of your PR, but Terraform
 found no infra changes are currently necessary:
-  * (23 slices skipped, due to comment size)"""
+* clean-slice-0 <!--🌮:clean-->
+* clean-slice-1 <!--🌮:clean-->
+* clean-slice-2 <!--🌮:clean-->
+* (999 more slices not shown)"""
         )
 
         assert slices[0].tag in result
 
-    def it_handles_long_footer(self) -> None:
-        del self
-
     def it_shows_first_error_preferentially(self) -> None:
-        del self
+        budget = ByteBudget(2000)
+        remainder = ByteBudget(budget)
+        slices = [gen_error_slice(i, commands=10) for i in range(2)]
+
+        result = "\n".join(tacos_plan_summary(slices, budget=remainder))
+
+        # assert budget * 0.75 < len(result)
+        assert len(result) < budget
+        assert 0 <= remainder
+        assert (
+            result
+            == """\
+# Terraform Plan
+TACOS generated a terraform plan for 2 slices:
+
+* 2 slices failed to plan
+
+## Errors
+
+### error-slice-0 <!--🌮:apply-->
+
+error code 3
+Commands: (error code 3)
+
+```console
+$ echo $((2 ** 0))
+1
+$ echo $((2 ** 1))
+2
+$ echo $((2 ** 2))
+4
+$ echo $((2 ** 3))
+8
+$ echo $((2 ** 4))
+16
+$ echo $((2 ** 5))
+32
+$ echo $((2 ** 6))
+64
+$ echo $((2 ** 7))
+128
+$ echo $((2 ** 8))
+256
+$ echo $((2 ** 9))
+512
+```
+
+
+### error-slice-1 <!--🌮:apply-->
+
+<details>
+<summary>error code 4</summary>
+<details>
+<summary>Commands: (error code 4)</summary>
+
+```console
+$ echo $((2 ** 0))
+1
+$ echo $((2 ** 1))
+2
+$ echo $((2 ** 2))
+4
+$ echo $((2 ** 3))
+8
+$ echo $((2 ** 4))
+16
+$ echo $((2 ** 5))
+32
+$ echo $((2 ** 6))
+64
+$ echo $((2 ** 7))
+128
+$ echo $((2 ** 8))
+256
+$ echo $((2 ** 9))
+512
+```
+</details>
+</details>
+"""
+        )
