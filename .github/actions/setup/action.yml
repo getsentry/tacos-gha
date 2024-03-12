@@ -108,5 +108,3 @@ runs:
             --jq .isDraft |
           gha-set-env 'GITHUB_PR_DRAFT' \
         ;
-      env:
-        GH_TOKEN: ${{ github.token }}
