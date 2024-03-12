@@ -13,6 +13,14 @@ on:
       tacos_gha_ref:
         type: string
         default: refs/heads/stable
+  workflow_dispatch:
+    inputs:
+      tacos_gha_repo:
+        type: string
+        default: getsentry/tacos-gha
+      tacos_gha_ref:
+        type: string
+        default: refs/heads/stable
 
 defaults:
   run:
