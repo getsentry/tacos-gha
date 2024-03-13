@@ -148,6 +148,16 @@ jobs:
           ./tacos-gha/lib/ci/tacos-plan-summary |
             gha-step-summary
 
+      - name: Update PR
+        # we want to report failures, too
+        if: always()
+
+        uses: thollander/actions-comment-pull-request@v2.4.3
+        with:
+          message: ${{ fromJSON(steps.summary.outputs.summary) }}
+          comment_tag: unlock
+          mode: recreate
+
   reset-label:
     name: Reset Label
 
