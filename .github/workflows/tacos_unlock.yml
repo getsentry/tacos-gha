@@ -145,7 +145,7 @@ jobs:
       - name: Summarize
         id: summary
         run: |
-          ./tacos-gha/lib/ci/tacos-plan-summary |
+          ./tacos-gha/lib/ci/tacos-unlock-summary |
             gha-step-summary
 
       - name: Update PR
