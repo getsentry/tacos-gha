@@ -1,1 +1,4 @@
-tacos_unlock_summary.py
+#!/bin/bash
+set -euo pipefail
+
+python3.12 -m lib.ci.tacos_unlock_summary
