@@ -118,13 +118,45 @@ jobs:
         run: |
           tf-step-summary "TACOS Unlock" "$TACOS_GHA_HOME/"lib/tacos/unlock
 
+      - name: Save matrix result
+        # we need to show any errors to end-users
+        if: always()
+        uses: ./tacos-gha/.github/actions/matrix-fan-out
+
+  summary:
+    needs: tacos_unlock
+    # we need to report failures, too
+    if: always() && needs.tacos_unlock.result != 'skipped'
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout tacos-gha
+        uses: actions/checkout@v4
+        with:
+          repository: ${{inputs.tacos_gha_repo}}
+          ref: ${{inputs.tacos_gha_ref}}
+          path: tacos-gha
+
+      - name: Setup
+        uses: ./tacos-gha/.github/actions/just-the-basics
+      - name: Run matrix-fan-in
+        uses: ./tacos-gha/.github/actions/matrix-fan-in
+      - name: Summarize
+        id: summary
+        run: |
+          ./tacos-gha/lib/ci/tacos-unlock-summary |
+            gha-step-summary
+
       - name: Update PR
         # we want to report failures, too
         if: always()
+
         uses: thollander/actions-comment-pull-request@v2.4.3
         with:
-          message: ${{ fromJSON(steps.main.outputs.summary) }}
-          comment_tag: unlock(${{env.TF_ROOT_MODULE}})
+          message: ${{ fromJSON(steps.summary.outputs.summary) }}
+          comment_tag: unlock
+          mode: recreate
 
   reset-label:
     name: Reset Label
