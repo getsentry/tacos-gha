@@ -21,7 +21,7 @@ from lib.types import OSPath
 
 COMMENT_SIZE_LIMIT = 64 * 2**10
 SKIPPED_MESSAGE = "* ({count} more slices not shown)"
-GHA_RUN_URL = "https://github.com/getsentry/ops/actions/runs/{}"
+GHA_RUN_URL = "https://github.com/{}/actions/runs/{}"
 
 ExitCode = None | str | int
 SectionFunction = Callable[[Sequence["SliceSummary"], int], Lines]
@@ -228,12 +228,13 @@ class SliceSummary(NamedTuple):
 def header(
     error: Collection[SliceSummary],
     success: Collection[SliceSummary],
+    repository: str,
     run_id: int,
 ) -> Log:
     slices = len(error) + len(success)
 
     result = [
-        f"# [Terraform Unlock]({GHA_RUN_URL.format(run_id)})",
+        f"# [Terraform Unlock]({GHA_RUN_URL.format(repository, run_id)})",
         f"TACOS unlocked {slices} terraform slices:",
         f"",
     ]
@@ -317,14 +318,17 @@ def clean_section(
 
 
 def tacos_unlock_summary(
-    slices: Collection[SliceSummary], budget: ByteBudget, run_id: int
+    slices: Collection[SliceSummary],
+    budget: ByteBudget,
+    repository: str,
+    run_id: int,
 ) -> Lines:
     error = tuple(slice for slice in slices if slice.error)
     success = tuple(slice for slice in slices if slice.clean)
 
     # generate the more important "error" section last, so it can use any
     # slack left by the other sections.
-    yield from budget.lines(header(error, success, run_id))
+    yield from budget.lines(header(error, success, repository, run_id))
     clean_lines = budget.generator(clean_section, slices=success, share=1 / 2)
     error_lines = budget.generator(error_section, slices=error, share=1 / 1)
     assert 0 <= budget, budget
@@ -348,8 +352,9 @@ def main() -> ExitCode:
     from os import environ
 
     run_id = int(environ["GITHUB_RUN_ID"])
+    repository = environ["GITHUB_REPOSITORY"]
 
-    for line in tacos_unlock_summary(slices, budget, run_id):
+    for line in tacos_unlock_summary(slices, budget, repository, run_id):
         print(line)
 
     return 0
