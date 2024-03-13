@@ -7,14 +7,13 @@ from lib.byte_budget import BudgetError
 from lib.byte_budget import ByteBudget
 from lib.byte_budget import Lines
 from lib.byte_budget import Log
+from lib.ci.tacos_summary import GHA_RUN_URL
+from lib.ci.tacos_summary import SKIPPED_MESSAGE
+from lib.ci.tacos_summary import SliceSummary
+from lib.ci.tacos_summary import error_section
+from lib.ci.tacos_summary import main_helper
+from lib.ci.tacos_summary import mksection
 from lib.types import ExitCode
-
-from .tacos_summary import GHA_RUN_URL
-from .tacos_summary import SKIPPED_MESSAGE
-from .tacos_summary import SliceSummary
-from .tacos_summary import error_section
-from .tacos_summary import main_helper
-from .tacos_summary import mksection
 
 
 def header(
