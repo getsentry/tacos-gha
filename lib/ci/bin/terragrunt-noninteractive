@@ -43,7 +43,6 @@ fi
 # sed: shorten the absurdly long "module prefix", but don't combine stdout/err
 "$(super "$0")" "$@" \
   0</dev/null \
-  1> >( sed "s#$PWD/##g" >&1 ) \
-  2> >( sed "s#$PWD/##g" >&2 ) \
+  1> >( sed "s#$PWD/##g; s#$PWD\>#.#; s#^\[\.\] ##" >&1 ) \
+  2> >( sed "s#$PWD/##g; s#$PWD\>#.#; s#^\[\.\] ##" >&2 ) \
 ;
-
