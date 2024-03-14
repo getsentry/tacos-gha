@@ -1,4 +1,22 @@
-#!/bin/bash
-set -euo pipefail
+#!/usr/bin/env python3
+"""
+This implements the Tacos Unlock GHA job.
+"""
+from __future__ import annotations
 
-tf-lock-release
+from lib.sh import sh
+from lib.tf_lock.release import TF_LOCK_EHELD
+
+
+def main() -> int:
+    returncode = sh.returncode(("tf-lock-release",))
+
+    if returncode == TF_LOCK_EHELD:
+        sh.info((f"Success. This PR does not hold the lock."))
+        return 0
+    else:  # success or unexpected error
+        return returncode
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

@@ -107,24 +107,51 @@ jobs:
       - name: set $GITHUB_PR_*
         run: |
           "$TACOS_GHA_HOME/"lib/ci/github-pr-setenv "${{ github.event.pull_request.html_url }}"
-        env:
-          GH_TOKEN: ${{ github.token }}
 
       - name: Apply
         id: main
         run: |
           "$TACOS_GHA_HOME/"lib/ci/tacos-apply
 
+      - name: Save matrix result
+        # we need to show any errors to end-users
+        if: always()
+        uses: ./tacos-gha/.github/actions/matrix-fan-out
+
+  summary:
+    needs: tacos_apply
+    # we need to report failures, too
+    if: always() && needs.tacos_apply.result != 'skipped'
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout tacos-gha
+        uses: actions/checkout@v4
+        with:
+          repository: ${{inputs.tacos_gha_repo}}
+          ref: ${{inputs.tacos_gha_ref}}
+          path: tacos-gha
+
+      - name: Setup
+        uses: ./tacos-gha/.github/actions/just-the-basics
+      - name: Run matrix-fan-in
+        uses: ./tacos-gha/.github/actions/matrix-fan-in
+      - name: Summarize
+        id: summary
+        run: |
+          ./tacos-gha/lib/ci/tacos-apply-summary |
+            gha-step-summary
+
       - name: Update PR
         # we want to report failures, too
         if: always()
+
         uses: thollander/actions-comment-pull-request@v2.4.3
         with:
-          message: ${{ fromJSON(steps.main.outputs.summary) }}
-          comment_tag: apply(${{env.TF_ROOT_MODULE}})
-
-  # FIXME: we need a fan-in summary
-  # summary:
+          message: ${{ fromJSON(steps.summary.outputs.summary) }}
+          comment_tag: apply
+          mode: recreate
 
   reset-label:
     uses: ./.github/workflows/reset-label.yml

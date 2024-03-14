@@ -36,6 +36,7 @@ def gen_dirty_slice(
         tacos_verb="plan",
         explanation="I'm dirty" + "!" * int(index / 4 + 1),
         returncode=2,
+        url="about:dirty",
     )
 
 
@@ -47,6 +48,7 @@ def gen_error_slice(index: int, commands: int = 1) -> SliceSummary:
         tacos_verb="apply",
         explanation="",
         returncode=3 + index,
+        url=f"about:error#{index}",
     )
 
 
@@ -58,6 +60,7 @@ def gen_clean_slice(index: int) -> SliceSummary:
         tacos_verb="clean",
         explanation="All's swell!",
         returncode=0,
+        url=f"slice://clean/{index}",
     )
 
 
@@ -148,13 +151,14 @@ class DescribeTacosPlanSummary:
                     gen_error_slice(30),
                 ],
                 budget=ByteBudget(2000),
+                run_id=2,
             )
         )
 
         assert (
             result
             == """\
-# Terraform Plan
+# [Terraform Plan](https://github.com/getsentry/ops/actions/runs/2)
 TACOS generated a terraform plan for 3 slices:
 
 * 1 slices failed to plan
@@ -163,7 +167,7 @@ TACOS generated a terraform plan for 3 slices:
 
 ## Errors
 
-### error-slice-30 <!--🌮:apply-->
+### [error-slice-30 <!--🌮:apply-->](about:error#30)
 
 Failure: error code 33
 Commands: (error code 33)
@@ -176,20 +180,11 @@ $ echo $((2 ** 0))
 
 ## Changes
 
-### dirty-slice-1 <!--🌮:plan-->
+### [dirty-slice-1 <!--🌮:plan-->](about:dirty)
 I'm dirty!
 
 <details>
 <summary>Plan: 100 to apply</summary>
-<details>
-<summary>Commands: (success, tfplan todo)</summary>
-
-```console
-$ echo $((2 ** 0))
-1
-```
-</details>
-  Result:
 
 ```hcl
 ~ resource null_resource[0]
@@ -211,77 +206,24 @@ found no infra changes are currently necessary:
             tacos_plan_summary(
                 slices=[gen_dirty_slice(0, resources=1000, commands=100)],
                 budget=ByteBudget(5_000),
+                run_id=8888,
             )
         )
         assert (
             result
             == """\
-# Terraform Plan
+# [Terraform Plan](https://github.com/getsentry/ops/actions/runs/8888)
 TACOS generated a terraform plan for 1 slices:
 
 * 1 slices have pending changes to apply
 
 ## Changes
 
-### dirty-slice-0 <!--🌮:plan-->
+### [dirty-slice-0 <!--🌮:plan-->](about:dirty)
 I'm dirty!
 
 <details>
 <summary>Plan: 100 to apply</summary>
-<details>
-<summary>Commands: (success, tfplan todo)</summary>
-
-```console
-$ echo $((2 ** 0))
-1
-$ echo $((2 ** 1))
-2
-$ echo $((2 ** 2))
-4
-$ echo $((2 ** 3))
-8
-$ echo $((2 ** 4))
-16
-$ echo $((2 ** 5))
-32
-$ echo $((2 ** 6))
-64
-$ echo $((2 ** 7))
-128
-$ echo $((2 ** 8))
-256
-$ echo $((2 ** 9))
-512
-$ echo $((2 ** 10))
-1024
-$ echo $((2 ** 11))
-2048
-$ echo $((2 ** 12))
-4096
-$ echo $((2 ** 13))
-8192
-$ echo $((2 ** 14))
-16384
-...
-( 2.9KB, 156 lines skipped )
-...
-$ echo $((2 ** 93))
-9903520314283042199192993792
-$ echo $((2 ** 94))
-19807040628566084398385987584
-$ echo $((2 ** 95))
-39614081257132168796771975168
-$ echo $((2 ** 96))
-79228162514264337593543950336
-$ echo $((2 ** 97))
-158456325028528675187087900672
-$ echo $((2 ** 98))
-316912650057057350374175801344
-$ echo $((2 ** 99))
-633825300114114700748351602688
-```
-</details>
-  Result:
 
 ```hcl
 ~ resource null_resource[0]
@@ -299,9 +241,27 @@ $ echo $((2 ** 99))
 ~ resource null_resource[4]
 ~   name = 4
 
+~ resource null_resource[5]
+~   name = 5
+
+~ resource null_resource[6]
+~   name = 6
+
+~ resource null_resource[7]
+~   name = 7
+
 ...
-( 45.4KB, 2971 lines skipped )
+( 45.1KB, 2953 lines skipped )
 ...
+~   name = 992
+
+~ resource null_resource[993]
+~   name = 993
+
+~ resource null_resource[994]
+~   name = 994
+
+~ resource null_resource[995]
 ~   name = 995
 
 ~ resource null_resource[996]
@@ -333,7 +293,9 @@ Plan: 100 to apply
             + [gen_clean_slice(i) for i in range(n)]
         )
 
-        result = "\n".join(tacos_plan_summary(slices, budget=remainder))
+        result = "\n".join(
+            tacos_plan_summary(slices, budget=remainder, run_id=111)
+        )
 
         # assert (budget * 0.8) < len(result)
         assert len(result) < budget
@@ -352,7 +314,9 @@ Plan: 100 to apply
             + [gen_clean_slice(i) for i in range(n + 3)]
         )
 
-        result = "\n".join(tacos_plan_summary(slices, budget=remainder))
+        result = "\n".join(
+            tacos_plan_summary(slices, budget=remainder, run_id=77)
+        )
 
         # assert budget * 0.75 < len(result)
         assert len(result) < budget
@@ -361,7 +325,7 @@ Plan: 100 to apply
         assert (
             result
             == """\
-# Terraform Plan
+# [Terraform Plan](https://github.com/getsentry/ops/actions/runs/77)
 TACOS generated a terraform plan for 3003 slices:
 
 * 1000 slices failed to plan
@@ -376,8 +340,7 @@ These slices' logs could not be shown due to size constraints.
 * error-slice-2 <!--🌮:apply-->
 * error-slice-3 <!--🌮:apply-->
 * error-slice-4 <!--🌮:apply-->
-* error-slice-5 <!--🌮:apply-->
-* (994 more slices not shown)
+* (995 more slices not shown)
 
 ## Changes
 ### Further Changes
@@ -394,8 +357,7 @@ These slices are in scope of your PR, but Terraform
 found no infra changes are currently necessary:
 * clean-slice-0 <!--🌮:clean-->
 * clean-slice-1 <!--🌮:clean-->
-* clean-slice-2 <!--🌮:clean-->
-* (999 more slices not shown)"""
+* (1000 more slices not shown)"""
         )
 
         assert slices[0].tag in result
@@ -406,7 +368,9 @@ found no infra changes are currently necessary:
         slices = [gen_error_slice(i, commands=20) for i in range(2)]
 
         # breakpoint()
-        result = "\n".join(tacos_plan_summary(slices, budget=remainder))
+        result = "\n".join(
+            tacos_plan_summary(slices, budget=remainder, run_id=3)
+        )
 
         # assert budget * 0.75 < len(result)
         assert len(result) < budget
@@ -414,14 +378,14 @@ found no infra changes are currently necessary:
         assert (
             result
             == """\
-# Terraform Plan
+# [Terraform Plan](https://github.com/getsentry/ops/actions/runs/3)
 TACOS generated a terraform plan for 2 slices:
 
 * 2 slices failed to plan
 
 ## Errors
 
-### error-slice-0 <!--🌮:apply-->
+### [error-slice-0 <!--🌮:apply-->](about:error#0)
 
 Failure: error code 3
 Commands: (error code 3)
@@ -439,10 +403,8 @@ $ echo $((2 ** 4))
 16
 $ echo $((2 ** 5))
 32
-$ echo $((2 ** 6))
-64
 ...
-( 0.2KB, 15 lines skipped )
+( 0.2KB, 17 lines skipped )
 ...
 16384
 $ echo $((2 ** 15))
@@ -458,7 +420,7 @@ $ echo $((2 ** 19))
 ```
 
 
-### error-slice-1 <!--🌮:apply-->
+### [error-slice-1 <!--🌮:apply-->](about:error#1)
 
 <details>
 <summary>Failure: error code 4</summary>

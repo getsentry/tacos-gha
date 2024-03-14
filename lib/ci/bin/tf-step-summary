@@ -26,6 +26,11 @@ save_matrix_fan_out() {
     save_var "$outdir" "$var"
   done
 
+  gh run --repo "$GITHUB_REPOSITORY" view "$GITHUB_RUN_ID" --json jobs \
+    --jq '.jobs[] | select(.name | endswith("'" ($TF_ROOT_MODULE)"'"))' \
+  > "$outdir/gha-job.json"
+  jq .url "$outdir/gha-job.json" -r > "$outdir/url"
+
   # copy any files we want to keep
   cp "$tf_log" "$console_log" "$outdir"
 

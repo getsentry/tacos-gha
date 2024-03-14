@@ -19,33 +19,33 @@ from .tacos_summary import mksection
 
 def header(
     error: Collection[SliceSummary],
-    dirty: Collection[SliceSummary],
     clean: Collection[SliceSummary],
+    applied: Collection[SliceSummary],
     repository: str,
     run_id: int,
 ) -> Log:
-    slices = len(error) + len(dirty) + len(clean)
+    slices = len(error) + len(clean) + len(applied)
 
     result = [
-        f"# [Terraform Plan]({GHA_RUN_URL.format(repository, run_id)})",
-        f"TACOS generated a terraform plan for {slices} slices:",
+        f"# [Terraform Apply]({GHA_RUN_URL.format(repository, run_id)})",
+        f"TACOS ran terraform apply for {slices} slices:",
         f"",
     ]
 
     if error:
-        result.append(f"* {len(error)} slices failed to plan")
-    if dirty:
-        result.append(f"* {len(dirty)} slices have pending changes to apply")
+        result.append(f"* {len(error)} slices failed to apply")
+    if applied:
+        result.append(f"* {len(applied)} slices have been applied")
     if clean:
-        result.append(f"* {len(clean)} slices are unaffected")
+        result.append(f"* {len(clean)} slices are clean")
 
     return result
 
 
-def dirty_section(
+def applied_section(
     budget: ByteBudget, slices: Collection[SliceSummary]
 ) -> Lines:
-    return mksection(budget, slices, title="Changes", first=False)
+    return mksection(budget, slices, title="Applied", first=True)
 
 
 def clean_section(
@@ -58,8 +58,8 @@ def clean_section(
         (
             "",
             "## Clean",
-            "These slices are in scope of your PR, but Terraform",
-            "found no infra changes are currently necessary:",
+            "Hurray! These slices already match the infrastructure.",
+            "Good job on keeping it clean. :cookie: ",
         )
     )
     budget.lines(SKIPPED_MESSAGE)
@@ -71,31 +71,32 @@ def clean_section(
             return
 
 
-def tacos_plan_summary(
+def tacos_apply_summary(
     slices: Collection[SliceSummary],
     budget: ByteBudget,
     repository: str,
     run_id: int,
 ) -> Lines:
     error = tuple(slice for slice in slices if slice.error)
-    dirty = tuple(slice for slice in slices if slice.dirty)
     clean = tuple(slice for slice in slices if slice.clean)
-
+    applied = tuple(slice for slice in slices if slice.applied)
     # generate the more important "error" section last, so it can use any
     # slack left by the other sections.
-    yield from budget.lines(header(error, dirty, clean, repository, run_id))
+    yield from budget.lines(header(error, clean, applied, repository, run_id))
     clean_lines = budget.generator(clean_section, slices=clean, share=1 / 3)
-    dirty_lines = budget.generator(dirty_section, slices=dirty, share=1 / 2)
+    applied_lines = budget.generator(
+        applied_section, slices=applied, share=1 / 2
+    )
     error_lines = budget.generator(error_section, slices=error, share=1 / 1)
     assert 0 <= budget, budget
 
     yield from error_lines
-    yield from dirty_lines
+    yield from applied_lines
     yield from clean_lines
 
 
 def main() -> ExitCode:
-    return main_helper(tacos_plan_summary)
+    return main_helper(tacos_apply_summary)
 
 
 if __name__ == "__main__":
