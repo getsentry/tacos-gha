@@ -40,8 +40,13 @@ elif (( DEBUG <= 0 )); then
   export TERRAGRUNT_LOG_LEVEL=error
 fi
 
+TERRAGRUNT="$(which terragrunt)"
+while [[ "$TERRAGRUNT" -ef "$0" ]]; do
+  TERRAGRUNT="$(super "$TERRAGRUNT")"
+done
+
 # sed: shorten the absurdly long "module prefix", but don't combine stdout/err
-"$(super "$0")" "$@" \
+"$TERRAGRUNT" "$@" \
   0</dev/null \
   1> >( sed "s#$PWD/##g; s#$PWD\>#.#; s#^\[\.\] ##" >&1 ) \
   2> >( sed "s#$PWD/##g; s#$PWD\>#.#; s#^\[\.\] ##" >&2 ) \
