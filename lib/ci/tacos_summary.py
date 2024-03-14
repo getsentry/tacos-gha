@@ -128,7 +128,27 @@ class SliceSummary(NamedTuple):
     @property
     def clean(self) -> bool:
         """The job succeeded."""
-        return self.returncode == 0
+        if self.tacos_verb == "apply":
+            if (
+                "No changes. Your infrastructure matches the configuration."
+                in self.tf_log
+            ):
+                return self.returncode == 0
+            else:
+                return False
+        else:
+            return self.returncode == 0
+
+    @property
+    def applied(self) -> bool:
+        """The job succeeded and made changes."""
+        if (
+            self.tacos_verb == "apply"
+            and "Terraform will perform the following actions:" in self.tf_log
+        ):
+            return self.returncode == 0
+        else:
+            return False
 
     @property
     def error(self) -> bool:
@@ -234,6 +254,7 @@ def mksection(
     slices: Collection[SliceSummary],
     title: str,
     first: bool = False,
+    explanation: Log = (),
 ) -> Lines:
     if not slices:
         return
@@ -244,6 +265,7 @@ def mksection(
     ]
 
     yield from budget.lines(("", f"## {title}"))
+    yield from budget.lines(explanation)
 
     # account for static output
     budget.lines(further_header)
