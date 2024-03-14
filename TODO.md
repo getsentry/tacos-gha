@@ -1,5 +1,21 @@
 # TODO
 
+## 2014-03-13
+
+- ending phase 1
+
+  - combined messages, like plan
+    - @neo unlock
+    - @neo apply
+  - @ellison fix test suite -- update to new tag style, used in combined plan
+    summary
+  - @buck datadog ops events
+    - remove the `if-not-ci` wrapper and it _may_ just work?
+      `git grep if-not-ci`
+  - run test suite in CI
+    - put op github-app secrets into gha secrets
+    - may need some security-as-code stuff to authorize gcloud?
+
 ## Misc. Action Items
 
 This is the inbox during standup and weeklies.
