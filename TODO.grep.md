@@ -11,7 +11,6 @@ FIXME: this check shouldn't be disabled, but it's bugged currently,
 FIXME: this is "right" but it causes stdio deadlock D:
 FIXME: this really should be done in a fan-in summary job
 FIXME: use a more specific type than str
-FIXME: we need a fan-in summary
 FIXME: we need pip packaging
 TODO(P3): refactor to an object that takes token in constructor
 TODO(P3): sh.show_json(): use jq to highlight
@@ -35,6 +34,7 @@ TODO: let the user know plan may not be fully accurate, if they dont have the lo
 TODO: let the user know who has the lock
 TODO: make "apply" a required check -- must pass for irrelevant PRs
 TODO: make use of lib.patch, to replace ad-hoc monkeypatching
+TODO: should we detect drift in parallel across every slice?
 TODO: update actions for minimal slice names
 TODO: upstream feature request on google-github-actions/auth -- this
 TODO: workflow to automatically add taco:abandoned label as appropriate

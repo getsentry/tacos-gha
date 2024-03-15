@@ -4,9 +4,9 @@ from __future__ import annotations
 from lib.byte_budget import ByteBudget
 from lib.byte_budget import Log
 
-from .tacos_plan_summary import SliceSummary
-from .tacos_plan_summary import ensmallen
 from .tacos_plan_summary import tacos_plan_summary
+from .tacos_summary import SliceSummary
+from .tacos_summary import ensmallen
 
 
 def gen_console_log(commands: int) -> Log:
@@ -152,13 +152,14 @@ class DescribeTacosPlanSummary:
                 ],
                 budget=ByteBudget(2000),
                 run_id=2,
+                repository="my_cool_repo",
             )
         )
 
         assert (
             result
             == """\
-# [Terraform Plan](https://github.com/getsentry/ops/actions/runs/2)
+# [Terraform Plan](https://github.com/my_cool_repo/actions/runs/2)
 TACOS generated a terraform plan for 3 slices:
 
 * 1 slices failed to plan
@@ -207,12 +208,13 @@ found no infra changes are currently necessary:
                 slices=[gen_dirty_slice(0, resources=1000, commands=100)],
                 budget=ByteBudget(5_000),
                 run_id=8888,
+                repository="my_cool_repo",
             )
         )
         assert (
             result
             == """\
-# [Terraform Plan](https://github.com/getsentry/ops/actions/runs/8888)
+# [Terraform Plan](https://github.com/my_cool_repo/actions/runs/8888)
 TACOS generated a terraform plan for 1 slices:
 
 * 1 slices have pending changes to apply
@@ -294,7 +296,9 @@ Plan: 100 to apply
         )
 
         result = "\n".join(
-            tacos_plan_summary(slices, budget=remainder, run_id=111)
+            tacos_plan_summary(
+                slices, budget=remainder, run_id=111, repository="my_cool_repo"
+            )
         )
 
         # assert (budget * 0.8) < len(result)
@@ -315,7 +319,9 @@ Plan: 100 to apply
         )
 
         result = "\n".join(
-            tacos_plan_summary(slices, budget=remainder, run_id=77)
+            tacos_plan_summary(
+                slices, budget=remainder, run_id=77, repository="my_cool_repo"
+            )
         )
 
         # assert budget * 0.75 < len(result)
@@ -325,7 +331,7 @@ Plan: 100 to apply
         assert (
             result
             == """\
-# [Terraform Plan](https://github.com/getsentry/ops/actions/runs/77)
+# [Terraform Plan](https://github.com/my_cool_repo/actions/runs/77)
 TACOS generated a terraform plan for 3003 slices:
 
 * 1000 slices failed to plan
@@ -369,7 +375,9 @@ found no infra changes are currently necessary:
 
         # breakpoint()
         result = "\n".join(
-            tacos_plan_summary(slices, budget=remainder, run_id=3)
+            tacos_plan_summary(
+                slices, budget=remainder, run_id=3, repository="my_cool_repo"
+            )
         )
 
         # assert budget * 0.75 < len(result)
@@ -378,7 +386,7 @@ found no infra changes are currently necessary:
         assert (
             result
             == """\
-# [Terraform Plan](https://github.com/getsentry/ops/actions/runs/3)
+# [Terraform Plan](https://github.com/my_cool_repo/actions/runs/3)
 TACOS generated a terraform plan for 2 slices:
 
 * 2 slices failed to plan
