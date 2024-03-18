@@ -26,10 +26,16 @@ save_matrix_fan_out() {
     save_var "$outdir" "$var"
   done
 
-  gh run --repo "$GITHUB_REPOSITORY" view "$GITHUB_RUN_ID" --json jobs \
-    --jq '.jobs[] | select(.name | endswith("'" ($TF_ROOT_MODULE)"'"))' \
-  > "$outdir/gha-job.json"
-  jq .url "$outdir/gha-job.json" -r > "$outdir/url"
+  # TODO: why would this fail though?
+  # > failed to get run: HTTP 403: Resource not accessible by integration 
+  # > (https://api.github.com/repos/getsentry/ops/actions/runs/8327109032?exclude_pull_requests=true)
+  ( gh run --repo "$GITHUB_REPOSITORY" view "$GITHUB_RUN_ID" --json jobs \
+      --jq '.jobs[] | select(.name | endswith("'" ($TF_ROOT_MODULE)"'"))' \
+    || echo >&2 failed with exit code $?
+  ) > "$outdir/gha-job.json"
+  ( jq .url "$outdir/gha-job.json" -r \
+    || echo >&2 failed with exit code $?
+  ) > "$outdir/url"
 
   # copy any files we want to keep
   cp "$tf_log" "$console_log" "$outdir"
@@ -127,6 +133,9 @@ with-user-env "$TF_ROOT_MODULE" \
 cat "$tf_log"
 explanation="$(cat)"  # put any extended explanation on stdin
 
+if (( DEBUG > 0 )); then
+  set -x
+fi
 save_matrix_fan_out "$explanation"
 save_legacy_summary "$explanation"
 
