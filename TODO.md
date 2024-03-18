@@ -5,16 +5,22 @@
 - ending phase 1
 
   - combined messages, like plan
-    - @neo unlock
-    - @neo apply
-  - @ellison fix test suite -- update to new tag style, used in combined plan
-    summary
-  - @buck datadog ops events
+    - [x] @neo unlock
+    - [~] @neo apply
+  - [~] @ellison fix test suite -- update to new tag style, used in combined
+    plan summary
+  - [~] @buck datadog ops events
     - remove the `if-not-ci` wrapper and it _may_ just work?
       `git grep if-not-ci`
-  - run test suite in CI
+  - [ ] run test suite in CI
     - put op github-app secrets into gha secrets
     - may need some security-as-code stuff to authorize gcloud?
+  - [ ] @ellison new permissions issues
+    - ability to look at machine images for spinning up new instances
+    - need to grant something to the team-sre terraformer
+  - [ ] @neo bug: unlock after removing changes can result in orphaned locks
+    - fix: Restore the old, old implementation of unlock: no matrix, unlock all
+      slices. Just be sure to succeed if lock is held by not-me.
 
 ## Misc. Action Items
 

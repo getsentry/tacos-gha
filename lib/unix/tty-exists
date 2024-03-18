@@ -1,0 +1,3 @@
+#!/bin/sh
+# NOTE: a simple readabilty check (i.e. [ -r) gives false positives
+: < /dev/tty 2>/dev/null

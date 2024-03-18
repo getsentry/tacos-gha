@@ -7,7 +7,7 @@ if (( ${DEBUG:-0} >= 2 )); then
 fi
 
 # NOTE: a simple readabilty check (i.e. [ -r) gives false positives
-if ( : < /dev/tty ) 2>/dev/null; then
+if tty-exists; then
   exec 0</dev/tty 2>/dev/tty
   flock /dev/tty "$@"
 else
