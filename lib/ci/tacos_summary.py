@@ -200,7 +200,10 @@ class SliceSummary(NamedTuple):
         )
 
         yield ""
-        yield f"### [{self.tag}]({self.url})"
+        header = self.tag
+        if self.url:
+            header = f"[header]({self.url})"
+        yield f"### {header}"
         if self.explanation:
             yield self.explanation
         yield ""
