@@ -1,6 +1,9 @@
 #!/bin/bash
 set -euo pipefail
 HERE="$(dirname "$(readlink -f "$0")")"
+if ! [[ "${TACOS_GHA_HOME:-}" ]]; then
+  source "$HERE/"../../activate.sh
+fi
 
 if [[ "${DEBUG:-}" ]]; then
   set -x
