@@ -22,6 +22,7 @@ from lib.types import OSPath
 COMMENT_SIZE_LIMIT = 64 * 2**10
 SKIPPED_MESSAGE = "* ({count} more slices not shown)"
 GHA_RUN_URL = "https://github.com/{}/actions/runs/{}"
+FILE_NOT_FOUND = "(file not found: {!r}"
 
 SectionFunction = Callable[[Sequence["SliceSummary"], int], Lines]
 
@@ -82,12 +83,21 @@ def gha_summary_and_details(
         yield "</details>"
 
 
-def get_file(path: OSPath) -> str:
-    return path.read_text().strip()
+def get_file(path: OSPath, default: str = FILE_NOT_FOUND) -> str:
+    try:
+        return path.read_text().strip()
+    except FileNotFoundError:
+        return default.format(path.name)
 
 
 def get_lines(path: OSPath) -> Log:
-    return tuple(sh.stdout(("uncolor", path)).strip().splitlines())
+    try:
+        return tuple(sh.stdout(("uncolor", path)).strip().splitlines())
+    except Exception as error:
+        if not path.exists():
+            return [FILE_NOT_FOUND.format(path.name)]
+        else:
+            return [str(error)]
 
 
 class SliceSummary(NamedTuple):
@@ -109,8 +119,8 @@ class SliceSummary(NamedTuple):
             console_log=get_lines(path / "console.log"),
             tacos_verb=get_file(path / "tacos_verb"),
             explanation=get_file(path / "explanation"),
-            returncode=int(get_file(path / "returncode")),
-            url=get_file(path / "url"),
+            returncode=int(get_file(path / "returncode", default="-1")),
+            url=get_file(path / "url", default=""),
         )
 
     @classmethod
@@ -200,7 +210,10 @@ class SliceSummary(NamedTuple):
         )
 
         yield ""
-        yield f"### [{self.tag}]({self.url})"
+        header = self.tag
+        if self.url:
+            header = f"[{header}]({self.url})"
+        yield f"### {header}"
         if self.explanation:
             yield self.explanation
         yield ""
