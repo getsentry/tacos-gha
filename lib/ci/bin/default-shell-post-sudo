@@ -24,7 +24,11 @@ eval "$eval"
 # give direnv amnesia, to prevent settings from being undone
 unset DIRENV_DIFF DIRENV_WATCHES DIRENV_FILE DIRENV_DIR
 
+if [[ "${DEBUG}" ]]; then
+  gha-printenv final
+fi
+
 # the default shell (under github actions) is:
 # bash --noprofile --norc -eo pipefail {0}
-# added: stop on undefined variables, show all commands
+# added -ux: stop on undefined variables, show all commands
 exec bash --noprofile --norc -eo pipefail -ux "$@"
