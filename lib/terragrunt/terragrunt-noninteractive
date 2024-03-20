@@ -20,20 +20,20 @@ sed_norm_log() {
 }
 
 ## Terragrunt
-if ! tty-exists; then
-  export TERRAGRUNT_NON_INTERACTIVE=true
-  # configured in tacos-gha.demo/terraform/terragrunt-base.hcl
-  # TODO: auto-configure terragrunt retry patterns in tacos-gha
-  export TERRAGRUNT_NO_AUTO_RETRY=false
-fi
-# this is necessary for recursive init
-export TERRAGRUNT_NO_AUTO_INIT=false
+#if ! tty-exists; then
+export TERRAGRUNT_NON_INTERACTIVE=true
+# configured in tacos-gha.demo/terraform/terragrunt-base.hcl
+# TODO: auto-configure terragrunt retry patterns in tacos-gha
+export TERRAGRUNT_NO_AUTO_RETRY=false
+#fi
+### # this is necessary for recursive init
+### export TERRAGRUNT_NO_AUTO_INIT=false
 # these should *all* be IAC'd
 export TERRAGRUNT_FAIL_ON_STATE_BUCKET_CREATION=true
 # shown by default, but overrideable
 export TERRAGRUNT_INCLUDE_MODULE_PREFIX=${TERRAGRUNT_INCLUDE_MODULE_PREFIX:-true}
-# we'll be explicit
-export TERRAGRUNT_NO_AUTO_APPROVE=true
+# we'll be implicit
+export TERRAGRUNT_NO_AUTO_APPROVE=false
 
 # Don't try this at home, kids!
 # * we use tf-lock-acquire to take the lock, before terragrunt starts
@@ -41,19 +41,20 @@ export TERRAGRUNT_NO_AUTO_APPROVE=true
 export TF_CLI_ARGS=""
 export TF_CLI_ARGS_init="-lock=false"
 export TF_CLI_ARGS_refresh="-lock=false -refresh=false"
-export TF_CLI_ARGS_plan="-lock=false -refresh=false -detailed-exitcode"
+export TF_CLI_ARGS_plan="-lock=false -refresh=false"
 export TF_CLI_ARGS_apply="-lock=false -refresh=false"
 
 DEBUG="${DEBUG:-0}"
 if (( DEBUG >= 1 )); then
-  export TF_LOG=debug
-  export TERRAGRUNT_LOG_LEVEL=info
+  export TERRAGRUNT_LOG_LEVEL=debug
   set -x
+else
+  # NOTE: log level "error" doesn't show the terraform error =.=
+  export TERRAGRUNT_LOG_LEVEL=info
 fi
 if (( DEBUG >= 3 )); then
-  export TERRAGRUNT_LOG_LEVEL=debug
-elif (( DEBUG <= 0 )); then
-  export TERRAGRUNT_LOG_LEVEL=error
+  # very noisy!
+  export TF_LOG=debug
 fi
 
 TERRAGRUNT="$(which terragrunt)"
@@ -63,7 +64,6 @@ done
 
 # sed: shorten the absurdly long "module prefix", but don't combine stdout/err
 "$TERRAGRUNT" "$@" \
-  0</dev/null \
   1> >( sed_norm_log >&1 ) \
   2> >( sed_norm_log >&2 ) \
 ;
