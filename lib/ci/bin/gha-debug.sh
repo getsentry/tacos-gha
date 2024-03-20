@@ -1,6 +1,9 @@
 #!/sourceme/bash
 # handle debugging concerns in GHA
 
+set -x
+: gha-debug.sh START
+
 export DEBUG GH_DEBUG
 DEBUG="${DEBUG:-}"
 if ! [[ "$DEBUG" ]]; then
@@ -27,3 +30,5 @@ if ! [[ "$DEBUG" ]]; then
     gha-set-env ACTIONS_STEP_DEBUG <<< ""
   fi
 fi
+
+: gha-debug.sh END
