@@ -3,15 +3,12 @@
 set -euo pipefail
 HERE="$(dirname "$(readlink -f "$0")")"
 
-# minimal bootstrapping: no envrc is loaded till post-sudo
+: minimal bootstrapping: no envrc is loaded till post-sudo
 export TACOS_GHA_HOME PATH DEBUG GH_DEBUG
 TACOS_GHA_HOME="${TACOS_GHA_HOME:-"$(cd "$HERE"/../..; pwd)"}"
 PATH="$TACOS_GHA_HOME/bin:$TACOS_GHA_HOME/lib/ci/bin:$PATH"
-DEBUG="${DEBUG:-"${RUNNER_DEBUG:-}"}"
-if (( DEBUG > 0 )); then
-  # ask gh cli to show what's going on at api level
-  GH_DEBUG="${GH_DEBUG:-api}"
-fi
+
+source "$HERE/"bin/gha-debug.sh
 
 : combine stdout to stderr, to prevent out-of-order interleaving
 exec >&2
