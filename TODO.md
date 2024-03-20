@@ -3,6 +3,7 @@
 ## 2014-03-13
 
 - ending phase 1
+  - [~] @ellison schedule a friday burn-down working meeting
   - [ ] run test suite in CI
     - put op github-app secrets into gha secrets
     - may need some security-as-code stuff to authorize gcloud?
@@ -15,7 +16,7 @@
       not-me.
   - [~] @ellison fix test suite -- update to new tag style, used in combined
     plan summary
-  - [~] @ellison new permissions issues
+  - [x] @ellison new permissions issues
     - in review: https://github.com/getsentry/ops/pull/9733
     - ability to look at machine images for spinning up new instances
     - need to grant something to the team-sre terraformer
