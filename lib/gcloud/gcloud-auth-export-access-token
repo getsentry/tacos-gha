@@ -91,6 +91,21 @@ set -x CLOUDSDK_CORE_ACCOUNT "$target_identity"
 set -x GOOGLE_OAUTH_ACCESS_TOKEN '$token'
 set -x CLOUDSDK_AUTH_ACCESS_TOKEN "\$GOOGLE_OAUTH_ACCESS_TOKEN"
 EOF
+elif [[ "$SHELL" =~ (^|/)json$ ]]; then
+  cat <<EOF
+{"CLOUDSDK_CORE_ACCOUNT": "$target_identity"
+,"GOOGLE_OAUTH_ACCESS_TOKEN": "$token"
+,"CLOUDSDK_AUTH_ACCESS_TOKEN": "$token"
+}
+EOF
+  exit 0
+elif [[ "$SHELL" =~ (^|/)environ$ ]]; then
+  tr '\n' '\0' <<EOF
+CLOUDSDK_CORE_ACCOUNT=$target_identity
+GOOGLE_OAUTH_ACCESS_TOKEN=$token
+CLOUDSDK_AUTH_ACCESS_TOKEN=$token
+EOF
+  exit 0
 else
   cat <<EOF
 export CLOUDSDK_CORE_ACCOUNT="$target_identity"
@@ -98,6 +113,7 @@ export GOOGLE_OAUTH_ACCESS_TOKEN='$token'
 export CLOUDSDK_AUTH_ACCESS_TOKEN="\$GOOGLE_OAUTH_ACCESS_TOKEN"
 EOF
 fi
+
 
 info "You are authenticated for the next hour as: $target_identity"
 
