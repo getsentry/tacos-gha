@@ -6,7 +6,7 @@ export PYTHONPATH="$TACOS_GHA_HOME"
 
 set -x
 
-python -m lib.tacos.dependent_slices <(
+python3.12 -Pm lib.tacos.dependent_slices <(
     git diff  "$SHA1" "$SHA2" \
         --name-only \
         --diff-filter=ACMRT \

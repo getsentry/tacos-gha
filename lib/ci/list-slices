@@ -3,7 +3,7 @@
 set -euo pipefail
 
 jq '.[]' --raw-output |
-  python3 -m lib.tacos.dependent_slices |
+  python3.12 -Pm lib.tacos.dependent_slices |
   # transform newline-delimited list into json:
   jq -R |
   jq -cs |
