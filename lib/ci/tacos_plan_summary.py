@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env -S python3.12 -P
 from __future__ import annotations
 
 from typing import Collection
@@ -54,14 +54,12 @@ def clean_section(
     if not slices:
         return
 
-    yield from budget.lines(
-        (
-            "",
-            "## Clean",
-            "These slices are in scope of your PR, but Terraform",
-            "found no infra changes are currently necessary:",
-        )
-    )
+    yield from budget.lines((
+        "",
+        "## Clean",
+        "These slices are in scope of your PR, but Terraform",
+        "found no infra changes are currently necessary:",
+    ))
     budget.lines(SKIPPED_MESSAGE)
     for i, slice in enumerate(slices):
         try:
