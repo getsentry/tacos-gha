@@ -82,9 +82,12 @@ runs:
         #   should be a default behavior
         cat <<< "::add-mask::$(gcloud auth print-access-token)"
 
-    # this should really be default behavior:
+    # TODO: upstream bugs: this should really be default behavior:
     - shell: ${{inputs.shell}}
       run: |
+        if [[ "$TF_ROOT_MODULE" ]]; then
+          cd "$TF_ROOT_MODULE"
+        fi
         gha-set-env 'TF_VERSION' < "$(nearest-config-file .terraform-version)"
         gha-set-env 'TERRAGRUNT_VERSION' < "$(nearest-config-file .terragrunt-version)"
 
