@@ -43,6 +43,7 @@ def path_prepend(env_name: str, env_val: str) -> None:
 
 
 path_prepend("PYTHONPATH", TACOS_GHA_HOME)
+environ["PYTHONSAFEPATH"] = "1"
 path_prepend("PATH", TACOS_GHA_HOME + "/bin")
 
 

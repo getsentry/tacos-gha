@@ -3,6 +3,7 @@ set -euo pipefail
 SHA1="${1:-HEAD^}"
 SHA2="${2:-HEAD}"
 export PYTHONPATH="$TACOS_GHA_HOME"
+export PYTHONSAFEPATH=1
 
 set -x
 
