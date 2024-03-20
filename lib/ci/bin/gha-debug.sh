@@ -5,9 +5,8 @@ set -x
 : gha-debug.sh START
 
 export DEBUG GH_DEBUG
-DEBUG="${DEBUG:-}"
-if ! [[ "$DEBUG" ]]; then
-  DEBUG="${RUNNER_DEBUG:-0}"
+if ! [[ "${DEBUG+set}" ]]; then
+  DEBUG="${RUNNER_DEBUG:-}"
   gha-set-env DEBUG <<< "$DEBUG"
 
   if (( DEBUG >= 2 )); then

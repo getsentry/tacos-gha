@@ -4,7 +4,7 @@ set -euo pipefail
 HERE="$(dirname "$(readlink -f "$0")")"
 
 : minimal bootstrapping: no envrc is loaded till post-sudo
-export TACOS_GHA_HOME PATH DEBUG GH_DEBUG
+export TACOS_GHA_HOME PATH
 TACOS_GHA_HOME="${TACOS_GHA_HOME:-"$(cd "$HERE"/../..; pwd)"}"
 PATH="$TACOS_GHA_HOME/bin:$TACOS_GHA_HOME/lib/ci/bin:$PATH"
 
