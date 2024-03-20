@@ -5,7 +5,7 @@ if ! [[ "${TACOS_GHA_HOME:-}" ]]; then
   source "$HERE/"../../activate.sh
 fi
 
-if [[ "${DEBUG:-}" ]]; then
+if (( DEBUG >= 1 )); then
   set -x
 fi
 

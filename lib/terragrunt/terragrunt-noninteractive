@@ -44,7 +44,7 @@ export TF_CLI_ARGS_refresh="-lock=false -refresh=false"
 export TF_CLI_ARGS_plan="-lock=false -refresh=false"
 export TF_CLI_ARGS_apply="-lock=false -refresh=false"
 
-DEBUG="${DEBUG:-0}"
+export DEBUG="${DEBUG:-}"
 if (( DEBUG >= 1 )); then
   export TERRAGRUNT_LOG_LEVEL=debug
   set -x

@@ -29,6 +29,7 @@ tf_working_dir() {
   fi
 }
 
-if [[ "${DEBUG:-}" ]]; then
+export DEBUG="${DEBUG:-}"
+if (( DEBUG >= 0 )); then
   set -x
 fi
