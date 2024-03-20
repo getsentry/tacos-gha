@@ -3,24 +3,25 @@
 ## 2014-03-13
 
 - ending phase 1
-
-  - combined messages, like plan
-    - [x] @neo unlock
-    - [~] @neo apply
-  - [~] @ellison fix test suite -- update to new tag style, used in combined
-    plan summary
-  - [~] @buck datadog ops events
-    - remove the `if-not-ci` wrapper and it _may_ just work?
-      `git grep if-not-ci`
   - [ ] run test suite in CI
     - put op github-app secrets into gha secrets
     - may need some security-as-code stuff to authorize gcloud?
-  - [ ] @ellison new permissions issues
+  - [~] @neo datadog ops events
+    - remove the `if-not-ci` wrapper and it _may_ just work?
+      `git grep if-not-ci`
+  - [~] @neo bug: unlock after removing changes can result in orphaned locks
+    - fix: Restore the old, old implementation of unlock: no matrix, unlock all
+      slices. Just be sure to do nothing, successfully if lock is held by
+      not-me.
+  - [~] @ellison fix test suite -- update to new tag style, used in combined
+    plan summary
+  - [~] @ellison new permissions issues
+    - in review: https://github.com/getsentry/ops/pull/9733
     - ability to look at machine images for spinning up new instances
     - need to grant something to the team-sre terraformer
-  - [ ] @neo bug: unlock after removing changes can result in orphaned locks
-    - fix: Restore the old, old implementation of unlock: no matrix, unlock all
-      slices. Just be sure to succeed if lock is held by not-me.
+  - [x] combined messages, like plan
+    - [x] @neo unlock
+    - [x] @neo apply
 
 ## Misc. Action Items
 
@@ -233,6 +234,8 @@ P2
 
 These may never happen, but that's okay.
 
+- [ ] add a github app with `repo` permission so that we can enable deep-link
+      per-slice in PR comments
 - [ ] TODO: fetch and apply the `--out tfplan` file from plan workflow
 - [ ] TODO: github-script to fetch run-id of the most recent tfplan
 - [ ] TODO: convert from matrix job to unlock slices "all at once"
