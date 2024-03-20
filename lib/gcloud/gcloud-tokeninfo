@@ -1,0 +1,5 @@
+#!/bin/bash
+token="${GOOGLE_OAUTH_ACCESS_TOKEN:-"$(gcloud auth print-access-token)"}"
+curl --oauth2-bearer "$token" https://openidconnect.googleapis.com/v1/userinfo
+echo  # they don't provide a newline ¯\_(ツ)_/¯
+curl --oauth2-bearer "$token" https://www.googleapis.com/oauth2/v3/tokeninfo
