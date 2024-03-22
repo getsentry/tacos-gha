@@ -116,7 +116,8 @@ jobs:
       - name: Unlock
         id: main
         run: |
-          tf-step-summary "TACOS Unlock" "$TACOS_GHA_HOME/"lib/tacos/unlock
+          # release all tfstate locsk currently held 
+          terragrunt-slices | "$TACOS_GHA_HOME/"lib/tacos/unlock
 
       - name: Save matrix result
         # we need to show any errors to end-users
