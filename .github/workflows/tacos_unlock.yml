@@ -32,18 +32,50 @@ env:
   GETSENTRY_SAC_VERB: state-admin
 
 jobs:
+  determine-tf-root-modules:
+    name: List Slices
+    if: |
+      false
+      || github.event.action != 'labeled'
+      || github.event.label.name == ':taco::unlock'
+    outputs:
+      slices: ${{ steps.list-slices.outputs.slices }}
+
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - name: Checkout IAC
+        uses: actions/checkout@v4
+      - name: Checkout tacos-gha
+        uses: actions/checkout@v4
+        with:
+          repository: ${{inputs.tacos_gha_repo}}
+          ref: ${{inputs.tacos_gha_ref}}
+          path: tacos-gha
+
+      - name: List Slices
+        id: list-slices
+        uses: ./tacos-gha/.github/actions/list-slices
   tacos_unlock:
+    name: TACOS Unlock
+    needs: [determine-tf-root-modules]
+    if: |
+      needs.determine-tf-root-modules.outputs.slices != '[]'
+    strategy:
+      fail-fast: false
+      matrix:
+        tf-root-module:
+          ${{ fromJSON(needs.determine-tf-root-modules.outputs.slices) }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
       pull-requests: write
       id-token: write
-
-    # note: we want to let people unlock even if they converted to draft first
-    if: |
-      false
-      || github.event.action != 'labeled'
-      || github.event.label.name == ':taco::unlock'
+    env:
+      TF_ROOT_MODULE: ${{matrix.tf-root-module}}
     steps:
       - name: Checkout IAC
         uses: actions/checkout@v4
