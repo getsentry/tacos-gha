@@ -1,9 +1,11 @@
 #!/bin/bash
 set -euo pipefail
+set -ex
 exec 1>&2  # stdout is reserved for tf plan/apply results
-log=plan-log.hcl
-sudo-gcp sh -c '
-tf-lock-release | tee plan-log.hcl
-'
-summary="$(cat $log)"
-gha-step-summary "$summary"
+(
+    echo "### TACOS Unlock: $TF_ROOT_MODULE"
+    cat  # pass deeper explanation via stdin
+    echo
+    xargs -r -P10 -n10 GETSENTRY_SAC_VERB=state-admin sudo-gcp tf-lock-release
+) | gha-step-summary;
+
