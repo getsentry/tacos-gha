@@ -2,10 +2,30 @@
 set -euo pipefail
 set -ex
 exec 1>&2  # stdout is reserved for tf plan/apply results
+terragrunt-slices |
 (
-    echo "### TACOS Unlock: $TF_ROOT_MODULE"
-    cat  # pass deeper explanation via stdin
+    echo "### TACOS Unlock"
     echo
-    xargs -r -P10 -n10 GETSENTRY_SAC_VERB=state-admin sudo-gcp tf-lock-release
+    if results=$(xargs -r -P10 -n10 tf-lock-release); then
+    cat <<EOF
+<details>
+<summary>
+Success! all slices have been unlocked.
+</summary>
+
+\`\`\`console
+$results
+\`\`\`
+</details>
+EOF
+    else
+    cat <<EOF 
+Some slices failed to unlock.
+
+\`\`\`console
+$results
+\`\`\`
+EOF
+    fi
 ) | gha-step-summary;
 
