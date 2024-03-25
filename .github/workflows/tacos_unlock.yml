@@ -58,7 +58,7 @@ jobs:
 
       - name: List Slices
         id: list-slices
-        uses: ./tacos-gha/.github/actions/list-slices
+        run: terragrunt-slices
 
   tacos_unlock:
     name: TACOS Unlock
@@ -117,7 +117,7 @@ jobs:
         id: main
         run: |
           # release all tfstate locks currently held 
-          terragrunt-slices | ./tacos-gha/lib/ci/unlock
+          ./tacos-gha/lib/ci/unlock
 
       - name: Update PR
         # we want to report failures, too
