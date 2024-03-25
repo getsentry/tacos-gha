@@ -116,13 +116,8 @@ jobs:
       - name: Unlock
         id: main
         run: |
-          # release all tfstate locsk currently held 
+          # release all tfstate locks currently held 
           terragrunt-slices | ./tacos-gha/lib/ci/unlock
-
-      - name: Save matrix result
-        # we need to show any errors to end-users
-        if: always()
-        uses: ./tacos-gha/.github/actions/matrix-fan-out
 
       - name: Update PR
         # we want to report failures, too
