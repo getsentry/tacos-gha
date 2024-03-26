@@ -1,13 +1,13 @@
 #!/bin/bash
 set -euo pipefail
 
-if [ -z "${TF_ROOT_MODULE}" ]; then
+if [ -z ${TF_ROOT_MODULE+x} ]; then
   "$TACOS_GHA_HOME/"lib/getsentry-sac/oidc-provider "$@" |
     gha-set-env GETSENTRY_SAC_OIDC \
   ;
 else
-with-user-env "$TF_ROOT_MODULE" \
-    "$TACOS_GHA_HOME/"lib/getsentry-sac/oidc-provider "$@" |
-  gha-set-env GETSENTRY_SAC_OIDC \
-;
+  with-user-env "$TF_ROOT_MODULE" \
+      "$TACOS_GHA_HOME/"lib/getsentry-sac/oidc-provider "$@" |
+    gha-set-env GETSENTRY_SAC_OIDC \
+  ;
 fi
