@@ -52,6 +52,7 @@ runs:
 
     - name: set workload identity provider
       id: set-workload-identity-provider
+      if: env.TF_ROOT_MODULE != ''
       shell: ${{inputs.shell}}
       run: |
         "$TACOS_GHA_HOME/"lib/ci/set-workload-identity-provider
