@@ -6,7 +6,7 @@ terragrunt-slices |
 (
     echo "### TACOS Unlock"
     echo
-    if results=$(xargs -r -P10 -n10 tf-lock-release); then
+    if results=$(xargs -r -P10 -n10 tf-lock-release 2>&1); then
     cat <<EOF
 <details>
 <summary>
