@@ -5,13 +5,23 @@
 # change between CI and local commands.
 set -euo pipefail
 
+REPO_ROOT=${REPO_ROOT:-'$^'}  # default: a regex that can't match
+TF_PLUGIN_CACHE_DIR=${TF_PLUGIN_CACHE_DIR:-'$^'}
+TERRAGRUNT_DOWNLOAD=${TERRAGRUNT_DOWNLOAD:-'$^'}
+
 sed_norm_log() {
   # remove distracting output from terragrunt logs
   sed "
   # shorten $PWD to .
   s#$PWD\>#.#
-  s#$HOME\>#\$HOME#
-  s#$HOME\>#\$HOME#
+
+  # make long paths more symbolic
+  s#~/#$HOME#g
+  s#$TERRAGRUNT_DOWNLOAD\>#\$TERRAGRUNT_DOWNLOAD#g
+  s#$TF_PLUGIN_CACHE_DIR\>#\$TF_PLUGIN_CACHE_DIR#g
+  s#$REPO_ROOT\>#\$REPO_ROOT#g
+  s#$HOME\>#\$HOME#g
+
   # remove ./ from 'terragrunt module prefix'
   s#^\[\./#[#
   # remove unecessary '.' terragrunt module prefix
@@ -63,7 +73,7 @@ while [[ "$TERRAGRUNT" -ef "$0" ]]; do
 done
 
 # sed: shorten the absurdly long "module prefix", but don't combine stdout/err
-"$TERRAGRUNT" "$@" \
+script -q /dev/null "$TERRAGRUNT" "$@" \
   1> >( sed_norm_log >&1 ) \
   2> >( sed_norm_log >&2 ) \
 ;

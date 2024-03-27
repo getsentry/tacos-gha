@@ -1,14 +1,11 @@
 #!/bin/bash
 set -euo pipefail
 HERE="$(dirname "$(readlink -f "$0")")"
-if ! [[ "${TACOS_GHA_HOME:-}" ]]; then
-  source "$HERE/"../../activate.sh
-fi
+source "$HERE/"../../activate.sh
 
 if (( DEBUG >= 1 )); then
   set -x
 fi
-
 
 # FIXME: support `-u $USER` and/or `-u $EMAIL` to request an end-user access token
 if [[ "${1:-}" = "-u" ]]; then
