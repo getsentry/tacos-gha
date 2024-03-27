@@ -70,8 +70,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        tf-root-module:
+        tf-root-module: |
           ${{ fromJSON(needs.determine-tf-root-modules.outputs.slices) }}
+          [
+            "./slice/b",
+            "./slice/a",
+          ]
 
     runs-on: ubuntu-latest
     permissions:

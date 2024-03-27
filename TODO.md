@@ -46,6 +46,7 @@ Definition: All ops slices are subject to TACOS lock-on-PR.
 
   - [ ] set an "unlock in progress" message in the PR (use the mode:delete
         option) #good-first-pr
+        https://github.com/thollander/actions-comment-pull-request?tab=readme-ov-file#delete-a-comment
     - [ ] similarly, for plan
     - [ ] similarly, for apply
   - [ ] :tacos::unlock should not cancel convert-to-draft

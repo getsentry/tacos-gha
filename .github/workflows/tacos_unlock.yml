@@ -32,7 +32,7 @@ env:
   GETSENTRY_SAC_VERB: state-admin
 
 jobs:
-  determine-tf-root-modules:
+  determine-terraformers:
     name: List Slices
     if: |
       false
@@ -56,20 +56,38 @@ jobs:
           ref: ${{inputs.tacos_gha_ref}}
           path: tacos-gha
 
-      - name: List Slices
-        id: list-slices
-        uses: ./tacos-gha/.github/actions/list-slices
+      - name: Setup
+        uses: ./tacos-gha/.github/actions/just-the-basics
+
+      - name: List Terraformers
+        id: list-terraformers
+        shell: ${{inputs.shell}}
+        run: |
+          gha-log-as-step-summary \
+            "$TACOS_GHA_HOME/"lib/ci/list-terraformers
 
   tacos_unlock:
     name: TACOS Unlock
-    needs: [determine-tf-root-modules]
+    needs: [determine-terraformers]
     if: |
-      needs.determine-tf-root-modules.outputs.slices != '[]'
+      needs.determine-terraformers.outputs.slices != '[]'
     strategy:
       fail-fast: false
       matrix:
-        tf-root-module:
-          ${{ fromJSON(needs.determine-tf-root-modules.outputs.slices) }}
+        terraformer: |
+          ${{ fromJSON(needs.determine-terraformers.outputs.slices) }}
+          [
+            {
+              SUDO_GCP_SERVICE_ACCOUNT: "xyz@iam.google.com",
+              slices: ["./slice/b"]},
+              GETSENTRY_SAC_OIDC: "xyxyxyx",
+            },
+            {
+              SUDO_GCP_SERVICE_ACCOUNT: "abc@iam.google.com",
+              GETSENTRY_SAC_OIDC: "xyxyxyx",
+              slices: ["./slice/a"]
+            },
+          ]
 
     runs-on: ubuntu-latest
     permissions:
@@ -78,7 +96,8 @@ jobs:
       id-token: write
 
     env:
-      TF_ROOT_MODULE: ${{matrix.tf-root-module}}
+      SUDO_GCP_SERVICE_ACCOUNT: ${{matrix.terraformer.SUDO_GCP_SERVICE_ACCOUNT}}
+      GETSENTRY_SAC_OIDC: ${{matrix.terraformer.GETSENTRY_SAC_OIDC}}
     steps:
       - name: Checkout IAC
         uses: actions/checkout@v4
@@ -109,7 +128,6 @@ jobs:
               )
 
               && github.event.pull_request.user.login
-
               || github.triggering_actor
             }}
 
@@ -117,46 +135,6 @@ jobs:
         id: main
         run: |
           tf-step-summary "TACOS Unlock" "$TACOS_GHA_HOME/"lib/tacos/unlock
-
-      - name: Save matrix result
-        # we need to show any errors to end-users
-        if: always()
-        uses: ./tacos-gha/.github/actions/matrix-fan-out
-
-  summary:
-    needs: tacos_unlock
-    # we need to report failures, too
-    if: always() && needs.tacos_unlock.result != 'skipped'
-
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout tacos-gha
-        uses: actions/checkout@v4
-        with:
-          repository: ${{inputs.tacos_gha_repo}}
-          ref: ${{inputs.tacos_gha_ref}}
-          path: tacos-gha
-
-      - name: Setup
-        uses: ./tacos-gha/.github/actions/just-the-basics
-      - name: Run matrix-fan-in
-        uses: ./tacos-gha/.github/actions/matrix-fan-in
-      - name: Summarize
-        id: summary
-        run: |
-          ./tacos-gha/lib/ci/tacos-unlock-summary |
-            gha-step-summary
-
-      - name: Update PR
-        # we want to report failures, too
-        if: always()
-
-        uses: thollander/actions-comment-pull-request@v2.4.3
-        with:
-          message: ${{ fromJSON(steps.summary.outputs.summary) }}
-          comment_tag: unlock
-          mode: recreate
 
   reset-label:
     name: Reset Label
