@@ -1,7 +1,9 @@
 #!/bin/bash
 set -euo pipefail
 
-with-user-env "$TF_ROOT_MODULE" \
-    sudo-gcp-service-account |
-  gha-set-env SUDO_GCP_SERVICE_ACCOUNT \
-;
+if ! [[ "${SUDO_GCP_SERVICE_ACCOUNT:-}" ]]; then
+  with-user-env "$TF_ROOT_MODULE" \
+      sudo-gcp-service-account |
+    gha-set-env SUDO_GCP_SERVICE_ACCOUNT \
+  ;
+fi

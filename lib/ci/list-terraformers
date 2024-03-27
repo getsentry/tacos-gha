@@ -1,0 +1,11 @@
+#!/bin/bash
+set -euo pipefail
+
+"$TACOS_GHA_HOME/"lib/terragrunt/slices |
+  python3 -m lib.tacos.terraformers
+  jq -R |
+  jq -cs |
+  gha-set-output terraformers |
+  # prettify
+  jq . \
+;
