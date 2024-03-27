@@ -116,15 +116,15 @@ jobs:
         run: |
           # release all tfstate locks currently held 
           ./tacos-gha/lib/ci/unlock
-      # - name: Update PR
-      #   # we want to report failures, too
-      #   if: always()
-      #   uses: thollander/actions-comment-pull-request@v2.4.3
-      #   with:
-      #     message: ${{ fromJSON(steps.main.outputs.summary) }}
-      #     comment_tag: unlock
+      - name: Update PR
+        # we want to report failures, too
+        # we can't use matrix fan in, there are too many slices
+        if: always()
+        uses: thollander/actions-comment-pull-request@v2.4.3
+        with:
+          message: ${{ fromJSON(steps.main.outputs.summary) }}
+          comment_tag: unlock
 
-      # we can't use matrix fan in, there are too many slices
   reset-label:
     name: Reset Label
     uses: ./.github/workflows/reset-label.yml
