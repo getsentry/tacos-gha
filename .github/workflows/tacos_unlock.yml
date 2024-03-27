@@ -32,15 +32,52 @@ env:
   GETSENTRY_SAC_VERB: state-admin
 
 jobs:
+  determine-terraformers:
+    name: list terraformers
+    if: |
+      false
+      || github.event.action != 'labeled'
+      || github.event.label.name == ':taco::unlock'
+    outputs:
+      terraformers: ${{ steps.list-terraformers.outputs }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Checkout IAC
+        uses: actions/checkout@v4
+      - name: Checkout tacos-gha
+        uses: actions/checkout@v4
+        with:
+          repository: ${{inputs.tacos_gha_repo}}
+          ref: ${{inputs.tacos_gha_ref}}
+          path: tacos-gha
+      - name: Setup
+        uses: ./tacos-gha/.github/actions/just-the-basics
+      - name: List Terraformers
+        id: list-terraformers
+        run: |
+          gha-log-as-step-summary \
+            "$TACOS_GHA_HOME/"lib/ci/list-terraformers
   tacos_unlock:
     name: TACOS Unlock
+    needs: [determine-terraformers]
+    if: |
+      needs.determine-terraformers.outputs != '[]'
     strategy:
       fail-fast: false
+      matrix:
+        terraformer: |
+          ${{ fromJSON(needs.determine-terraformers.outputs.slices) }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
       pull-requests: write
       id-token: write
+    env:
+      SUDO_GCP_SERVICE_ACCOUNT: ${{matrix.terraformer.SUDO_GCP_SERVICE_ACCOUNT}}
+      GETSENTRY_SAC_OIDC: ${{matrix.terraformer.GETSENTRY_SAC_OIDC}}
     steps:
       - name: Checkout IAC
         uses: actions/checkout@v4
@@ -79,14 +116,15 @@ jobs:
         run: |
           # release all tfstate locks currently held 
           ./tacos-gha/lib/ci/unlock
-      - name: Update PR
-        # we want to report failures, too
-        if: always()
-        uses: thollander/actions-comment-pull-request@v2.4.3
-        with:
-          message: ${{ fromJSON(steps.main.outputs.summary) }}
-          comment_tag: unlock
+      # - name: Update PR
+      #   # we want to report failures, too
+      #   if: always()
+      #   uses: thollander/actions-comment-pull-request@v2.4.3
+      #   with:
+      #     message: ${{ fromJSON(steps.main.outputs.summary) }}
+      #     comment_tag: unlock
 
+      # we can't use matrix fan in, there are too many slices
   reset-label:
     name: Reset Label
     uses: ./.github/workflows/reset-label.yml
