@@ -17,7 +17,7 @@ from lib.types import OSPath
 class TerraformerResult:
     GETSENTRY_SAC_OIDC: str
     SUDO_GCP_SERVICE_ACCOUNT: str
-    slices: set[OSPath]
+    slices: list[OSPath]
 
 
 def list_terraformers(
@@ -43,15 +43,15 @@ def list_terraformers(
             ### ;
             terraformer = sh.stdout(("sudo-gcp-service-account",))
 
-            yield TerraformerResult(oidc_provider, terraformer, set([slice]))
+            yield TerraformerResult(oidc_provider, terraformer, list([slice]))
 
 
 def terraformers(slices: Iterable[OSPath]) -> Generator[TerraformerResult]:
     """Which slices need to be unlocked?"""
     from collections import defaultdict
 
-    by_terraformer: defaultdict[tuple[str, str], set[OSPath]] = defaultdict(
-        set
+    by_terraformer: defaultdict[tuple[str, str], list[OSPath]] = defaultdict(
+        list
     )
 
     for tf_result in list_terraformers(slices):
@@ -60,7 +60,7 @@ def terraformers(slices: Iterable[OSPath]) -> Generator[TerraformerResult]:
             tf_result.SUDO_GCP_SERVICE_ACCOUNT,
         )
         for slice in tf_result.slices:
-            by_terraformer[key].add(slice)
+            by_terraformer[key].append(slice)
 
     for key in by_terraformer:
         oidc_provider, terraformer = key
