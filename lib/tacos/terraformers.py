@@ -5,17 +5,12 @@ import dataclasses
 
 # import typing
 from dataclasses import dataclass
-
-# from typing import Callable
 from typing import Iterable
 
-# from lib.types import Path
+from lib.constants import TACOS_GHA_HOME
 from lib.sh import sh
 from lib.types import Generator
 from lib.types import OSPath
-
-# from typing import NewType
-# from typing import Self
 
 
 @dataclass(frozen=True)
@@ -39,7 +34,7 @@ def list_terraformers(
             # ;
 
             oidc_provider = sh.stdout(
-                ('"$TACOS_GHA_HOME/"lib/getsentry-sac/oidc-provider',)
+                (TACOS_GHA_HOME / "lib/getsentry-sac/oidc-provider",)
             )
 
             ### with-user-env "$TF_ROOT_MODULE" \
