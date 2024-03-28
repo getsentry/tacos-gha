@@ -52,7 +52,7 @@ def list_terraformers(
 
 
 def terraformers(slices: Iterable[OSPath]) -> Generator[TerraformerResult]:
-    """Which slices need to be planned?"""
+    """Which slices need to be unlocked?"""
     from collections import defaultdict
 
     by_terraformer: defaultdict[tuple[str, str], set[OSPath]] = defaultdict(
