@@ -82,7 +82,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        terraformer: |
+        terraformer:
           ${{ fromJSON(needs.determine-terraformers.outputs.terraformers) }}
     runs-on: ubuntu-latest
     permissions:
