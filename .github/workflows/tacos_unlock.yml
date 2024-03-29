@@ -71,7 +71,7 @@ jobs:
       - name: List Terraformers
         id: list-terraformers
         run: |
-          gha-log-as-step-summary "$TACOS_GHA_HOME/"lib/ci/list-terraformers
+          "$TACOS_GHA_HOME/"lib/ci/list-terraformers
   tacos_unlock:
     name: TACOS Unlock
     needs: [determine-terraformers]
@@ -90,6 +90,7 @@ jobs:
     env:
       SUDO_GCP_SERVICE_ACCOUNT: ${{matrix.terraformer.SUDO_GCP_SERVICE_ACCOUNT}}
       GETSENTRY_SAC_OIDC: ${{matrix.terraformer.GETSENTRY_SAC_OIDC}}
+      SLICES: ${{matrix.terraformer.slices}}
     steps:
       - name: Checkout IAC
         uses: actions/checkout@v4
@@ -127,16 +128,14 @@ jobs:
         id: main
         run: |
           # release all tfstate locks currently held 
-          ./tacos-gha/lib/ci/unlock
-      - name: Update PR
-        # we want to report failures, too
-        # we can't use matrix fan in, there are too many slices
+          "$SLICES" | jq -r '.[]' | ./tacos-gha/lib/ci/unlock
+      - name: update PR
         if: always()
         uses: thollander/actions-comment-pull-request@v2.4.3
         with:
           message: ${{ fromJSON(steps.main.outputs.summary) }}
           comment_tag: unlock
-
+          mode: recreate
   reset-label:
     name: Reset Label
     uses: ./.github/workflows/reset-label.yml

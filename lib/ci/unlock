@@ -2,7 +2,6 @@
 set -euo pipefail
 set -ex
 exec 1>&2  # stdout is reserved for tf plan/apply results
-terragrunt-slices |
 (
     echo "### TACOS Unlock"
     echo
