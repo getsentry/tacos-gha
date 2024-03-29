@@ -72,6 +72,8 @@ jobs:
         id: list-terraformers
         run: |
           "$TACOS_GHA_HOME/"lib/ci/list-terraformers
+      - name: Debug output
+        run: echo "${{ steps.list-terraformers.outputs.terraformers }}"
   tacos_unlock:
     name: TACOS Unlock
     needs: [determine-terraformers]
