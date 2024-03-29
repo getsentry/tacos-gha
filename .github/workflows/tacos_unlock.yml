@@ -39,7 +39,7 @@ jobs:
       || github.event.action != 'labeled'
       || github.event.label.name == ':taco::unlock'
     outputs:
-      terraformers: ${{ steps.list-terraformers.outputs }}
+      terraformers: ${{ steps.list-terraformers.outputs.terraformers }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -81,7 +81,7 @@ jobs:
       fail-fast: false
       matrix:
         terraformer: |
-          ${{ fromJSON(needs.determine-terraformers.outputs.slices) }}
+          ${{ fromJSON(needs.determine-terraformers.outputs.terraformers) }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
