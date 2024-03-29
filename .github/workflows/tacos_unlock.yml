@@ -76,7 +76,7 @@ jobs:
     name: TACOS Unlock
     needs: [determine-terraformers]
     if: |
-      needs.determine-terraformers.outputs != '[]'
+      needs.determine-terraformers.outputs.terraformers != '[]'
     strategy:
       fail-fast: false
       matrix:

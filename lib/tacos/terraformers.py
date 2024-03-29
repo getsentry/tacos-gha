@@ -26,21 +26,9 @@ def list_terraformers(
     """List all slices and the oidc provider and terraformer of that slice"""
     for slice in slices:
         with sh.cd(slice):
-
-            ### from set-workload-identity-provider:
-            # with-user-env "$TF_ROOT_MODULE" \
-            #     "$TACOS_GHA_HOME/"lib/getsentry-sac/oidc-provider "$@" |
-            #   gha-set-env GETSENTRY_SAC_OIDC \
-            # ;
-
             oidc_provider = sh.stdout(
                 (TACOS_GHA_HOME / "lib/getsentry-sac/oidc-provider",)
             )
-
-            ### with-user-env "$TF_ROOT_MODULE" \
-            ###     sudo-gcp-service-account |
-            ###     gha-set-env SUDO_GCP_SERVICE_ACCOUNT \
-            ### ;
             terraformer = sh.stdout(("sudo-gcp-service-account",))
 
             yield TerraformerResult(oidc_provider, terraformer, set([slice]))
