@@ -72,8 +72,6 @@ jobs:
         id: list-terraformers
         run: |
           "$TACOS_GHA_HOME/"lib/ci/list-terraformers
-      - name: Debug output
-        run: echo "${{ steps.list-terraformers.outputs.terraformers }}"
   tacos_unlock:
     name: TACOS Unlock
     needs: [determine-terraformers]
@@ -90,9 +88,9 @@ jobs:
       pull-requests: write
       id-token: write
     env:
-      SUDO_GCP_SERVICE_ACCOUNT: ${{matrix.terraformer.SUDO_GCP_SERVICE_ACCOUNT}}
-      GETSENTRY_SAC_OIDC: ${{matrix.terraformer.GETSENTRY_SAC_OIDC}}
-      SLICES: ${{matrix.terraformer.slices}}
+      SUDO_GCP_SERVICE_ACCOUNT: ${{fromJSON(matrix.terraformer).SUDO_GCP_SERVICE_ACCOUNT}}
+      GETSENTRY_SAC_OIDC: ${{fromJSON(matrix.terraformer).GETSENTRY_SAC_OIDC}}
+      SLICES: ${{toJSON(fromJSON(matrix.terraformer).slices)}}
     steps:
       - name: Checkout IAC
         uses: actions/checkout@v4
@@ -121,7 +119,8 @@ jobs:
         id: main
         run: |
           # release all tfstate locks currently held 
-          "$SLICES" | jq -r '.[]' | ./tacos-gha/lib/ci/unlock
+          quietly \
+          echo "$SLICES" | jq -r '.[]' | ./tacos-gha/lib/ci/unlock
       - name: update PR
         if: always()
         uses: thollander/actions-comment-pull-request@v2.4.3

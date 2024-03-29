@@ -2,6 +2,7 @@
 set -euo pipefail
 
 "$TACOS_GHA_HOME/"lib/terragrunt/slices |
+"$TACOS_GHA_HOME/"lib/ci/list-slices |
   python3 -m lib.tacos.terraformers |
   jq -R |
   jq -cs |
