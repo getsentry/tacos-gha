@@ -102,30 +102,17 @@ jobs:
           repository: ${{inputs.tacos_gha_repo}}
           ref: ${{inputs.tacos_gha_ref}}
           path: tacos-gha
-      - name: Setup
-        uses: ./tacos-gha/.github/actions/setup
+      - name: Setup gcp auth
+        id: auth
+        uses: google-github-actions/auth@v2.1.1
         with:
-          ssh-private-key: ${{ secrets.ssh-private-key }}
-          # We explicitly list the low-concern actions, during which users will
-          # recieve a higher level of access -- the identity of the original PR
-          # author. All other actions will receive lower access -- the identity
-          # of the person pushing the "Re-run" button.
-          #
-          # see doc/permissions.md
-          user: |-
-            ${{
-              true
-              && github.event_name == 'pull_request'
-              && (
-                  false
-                  || github.event.action == 'closed'
-                  || github.event.action == 'converted_to_draft'
-              )
-
-              && github.event.pull_request.user.login
-
-              || github.triggering_actor
-            }}
+          workload_identity_provider: ${{env.GETSENTRY_SAC_OIDC}}
+          service_account: ${{env.SUDO_GCP_SERVICE_ACCOUNT}}
+      - name: set gcloud identity
+        run: |
+          gcloud config get account || : code $?
+          gcloud config set account "$SUDO_GCP_SERVICE_ACCOUNT"
+          cat <<< "::add-mask::$(gcloud auth print-access-token)"
       - name: Unlock
         id: main
         run: |
