@@ -12,19 +12,20 @@ from lib.sh import sh
 from lib.types import Generator
 from lib.types import OSPath
 
+from .dependent_slices import TFCategorized
+from .dependent_slices import TopLevelTFModule
+
 
 @dataclass(frozen=True)
 class TerraformerResult:
     GETSENTRY_SAC_OIDC: str
     SUDO_GCP_SERVICE_ACCOUNT: str
-    slices: set[OSPath]
+    slices: set[TopLevelTFModule]
 
 
-def list_terraformers(
-    slices: Iterable[OSPath],
-) -> Generator[TerraformerResult]:
+def list_terraformers() -> Generator[TerraformerResult]:
     """List all slices and the oidc provider and terraformer of that slice"""
-    for slice in slices:
+    for slice in sorted(TFCategorized.from_git().slices):
         with sh.cd(slice):
             oidc_provider = sh.stdout(
                 (TACOS_GHA_HOME / "lib/getsentry-sac/oidc-provider",)
@@ -34,15 +35,15 @@ def list_terraformers(
             yield TerraformerResult(oidc_provider, terraformer, set([slice]))
 
 
-def terraformers(slices: Iterable[OSPath]) -> Generator[TerraformerResult]:
+def terraformers() -> Generator[TerraformerResult]:
     """Which slices need to be unlocked?"""
     from collections import defaultdict
 
-    by_terraformer: defaultdict[tuple[str, str], set[OSPath]] = defaultdict(
-        set
+    by_terraformer: defaultdict[tuple[str, str], set[TopLevelTFModule]] = (
+        defaultdict(set)
     )
 
-    for tf_result in list_terraformers(slices):
+    for tf_result in list_terraformers():
         key = (
             tf_result.GETSENTRY_SAC_OIDC,
             tf_result.SUDO_GCP_SERVICE_ACCOUNT,
@@ -78,12 +79,9 @@ def convert_terraform_result(
 
 
 def main() -> int:
-    import fileinput
     import json
 
-    slices = lines_to_paths(fileinput.input(encoding="utf-8"))
-
-    for result in terraformers(slices):
+    for result in terraformers():
         # use custom conversion here, because json doesn't like sets or OSPaths
         print(json.dumps(convert_terraform_result(result)))
 
