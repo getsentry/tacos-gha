@@ -89,6 +89,10 @@ jobs:
           path: tacos-gha
       - name: basic-setup
         uses: ./tacos-gha/.github/actions/basic-setup
+        with:
+          SUDO_GCP_SERVICE_ACCOUNT: ${{ env.SUDO_GCP_SERVICE_ACCOUNT }}
+          GETSENTRY_SAC_OIDC: ${{ env.GETSENTRY_SAC_OIDC }}
+
       - name: Unlock
         id: main
         run: |
