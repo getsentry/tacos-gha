@@ -51,18 +51,6 @@ runs:
 
         : ... hashes too
         ssh-add -l
-    - name: set gcloud identity
-      shell: ${{inputs.shell}}
-      run: |
-        # TODO: upstream feature request on google-github-actions/auth -- this
-        #   should be a default behavior
-        gcloud config get account || : code $?
-        gcloud config set account "$SUDO_GCP_SERVICE_ACCOUNT"
-
-        # also: mask the access token (NOTE: use cat to avoid xtrace'ing the token)
-        # TODO: upstream feature request on google-github-actions/auth -- this
-        #   should be a default behavior
-        cat <<< "::add-mask::$(gcloud auth print-access-token)"
 
     # this should really be default behavior:
     - shell: ${{inputs.shell}}
