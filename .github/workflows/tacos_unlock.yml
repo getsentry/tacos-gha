@@ -119,7 +119,6 @@ jobs:
         id: main
         run: |
           # release all tfstate locks currently held 
-          quietly \
           echo "$SLICES" | jq -r '.[]' | ./tacos-gha/lib/ci/unlock
       - name: update PR
         if: always()

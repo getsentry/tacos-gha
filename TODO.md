@@ -4,9 +4,6 @@
 
 - ending phase 1
 
-  - combined messages, like plan
-    - @neo unlock
-    - @neo apply
   - @ellison fix test suite -- update to new tag style, used in combined plan
     summary
   - @buck datadog ops events
@@ -184,6 +181,8 @@ P2
 - [x] explain declined apply due to missing review
 - [x] @buck TODO: roll up "commands" in PR comments when exit code is 0
 - [x] @buck TODO: roll up init / refresh phases from tf log
+- [ ] Unlock label deprecation -> on label trigger, reply that only draft PR can
+      be unlocked
 
 ## Testing
 

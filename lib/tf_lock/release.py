@@ -121,11 +121,11 @@ def get_lock_info(root_module: Path) -> Tuple[bool, dict[str, str]]:
     return lock, assert_dict_of_strings(result)
 
 
-def tf_lock_release(root_module: Path, env: Environ) -> UserError | None:
+def tf_lock_release(root_module: Path, env: Environ) -> bool:
     lock, lock_info = get_lock_info(root_module)
     if not lock:
         info(f"tf-lock-release: success: {root_module}")
-        return None
+        return True
 
     tf_user = f"{get_current_user(env)}@{get_current_host(env)}"
     lock_user = lock_info["Who"]
@@ -141,15 +141,15 @@ def tf_lock_release(root_module: Path, env: Environ) -> UserError | None:
                         lock_info["ID"],
                     )
                 )
-        except sh.CalledProcessError as error:
+        except sh.CalledProcessError:
             # error message was already printed by subcommand
-            return UserError(code=error.returncode)
+            return False
 
         info(f"tf-lock-release: success: {root_module}({lock_user})")
-        return None
+        return True
 
     else:
-        return UserError(
+        raise UserError(
             f"""\
 tf-lock-release: failure: not {lock_user}: {root_module}({tf_user})
 {TFLockUser.from_string(lock_user).eheld_message()}
@@ -189,8 +189,7 @@ def main() -> None:
     with sh.quiet():
         successes = 0
         for path in paths:
-            if tf_lock_release(path, env=environ.copy()) is None:
-                successes += 1
+            successes += tf_lock_release(path, env=environ.copy())
         failures = len(paths) - successes
         sh.info(f"Successfully unlocked {successes} slices.")
         sh.info(f"Failed to unlock {failures} slices.")

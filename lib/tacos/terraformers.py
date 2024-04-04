@@ -3,14 +3,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Dict
-from typing import Iterable
 from typing import List
 from typing import Union
 
 from lib.constants import TACOS_GHA_HOME
 from lib.sh import sh
 from lib.types import Generator
-from lib.types import OSPath
 
 from .dependent_slices import TFCategorized
 from .dependent_slices import TopLevelTFModule
@@ -58,14 +56,6 @@ def terraformers() -> Generator[TerraformerResult]:
         )
 
 
-def lines_to_paths(lines: Iterable[str]) -> Generator[OSPath]:
-    for line in lines:
-        line = line.strip()
-        if not line or line.startswith("#"):
-            continue
-        yield OSPath(line)
-
-
 def convert_terraform_result(
     result: TerraformerResult,
 ) -> Dict[str, Union[str, List[str]]]:
@@ -73,7 +63,7 @@ def convert_terraform_result(
     return {
         "GETSENTRY_SAC_OIDC": result.GETSENTRY_SAC_OIDC,
         "SUDO_GCP_SERVICE_ACCOUNT": result.SUDO_GCP_SERVICE_ACCOUNT,
-        # Convert each OSPath in the set to a string, then convert the set to a list
+        # Convert each TopLevelTFModule in the set to a string, then convert the set to a list
         "slices": [str(path) for path in result.slices],
     }
 
