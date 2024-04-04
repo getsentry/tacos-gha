@@ -8,7 +8,9 @@ exec 1>&2  # stdout is reserved for tf plan/apply results
     if results=$(xargs -r -P10 -n10 tf-lock-release 2>&1); then
     cat <<EOF
 <details>
+<summary>
 Success! all slices have been unlocked.
+</summary>
 
 \`\`\`console
 $results
@@ -17,12 +19,17 @@ $results
 EOF
     else
     cat <<EOF 
+
+<details>
+<summary> 
 Some slices failed to unlock.
-<summary>
+</summary>
+
 \`\`\`console
 $results
 \`\`\`
-</summary>
+
+</details>
 EOF
     fi
 ) | gha-step-summary;
