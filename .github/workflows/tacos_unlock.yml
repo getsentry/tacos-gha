@@ -90,8 +90,6 @@ jobs:
       - name: basic-setup
         uses: ./tacos-gha/.github/actions/basic-setup
         with:
-          SUDO_GCP_SERVICE_ACCOUNT: ${{ env.SUDO_GCP_SERVICE_ACCOUNT }}
-          GETSENTRY_SAC_OIDC: ${{ env.GETSENTRY_SAC_OIDC }}
           ssh-private-key: ${{ secrets.ssh-private-key }}
           # We explicitly list the low-concern actions, during which users will
           # recieve a higher level of access -- the identity of the original PR
@@ -119,6 +117,12 @@ jobs:
 
               || github.triggering_actor
             }}
+      - name: gcp auth
+        id: auth
+        uses: google-github-actions/auth@v2.1.1
+        with:
+          workload_identity_provider: ${{env.GETSENTRY_SAC_OIDC}}
+          service_account: ${{env.SUDO_GCP_SERVICE_ACCOUNT}}
       - name: Unlock
         id: main
         run: |
