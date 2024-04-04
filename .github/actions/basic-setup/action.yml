@@ -14,6 +14,12 @@ inputs:
   shell:
     description: "private -- do not use"
     default: env ./tacos-gha/lib/ci/default-shell {0}
+  SUDO_GCP_SERVICE_ACCOUNT:
+    description: "GCP service account"
+    required: true
+  GETSENTRY_SAC_OIDC:
+    description: "Getsentry SAC OIDC"
+    required: true
 
 runs:
   using: composite
