@@ -53,21 +53,8 @@ jobs:
           repository: ${{inputs.tacos_gha_repo}}
           ref: ${{inputs.tacos_gha_ref}}
           path: tacos-gha
-      - name: Setup
-        uses: ./tacos-gha/.github/actions/just-the-basics
-      - name: setup terraform versions
-        run: |
-          gha-set-env 'TF_VERSION' < "$(nearest-config-file .terraform-version)"
-          gha-set-env 'TERRAGRUNT_VERSION' < "$(nearest-config-file .terragrunt-version)"
-      - name: Setup Terragrunt
-        uses: autero1/action-terragrunt@v1.3.2
-        with:
-          terragrunt_version: ${{env.TERRAGRUNT_VERSION}}
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_wrapper: false
-          terraform_version: ${{ env.TF_VERSION }}
+      - name: basic-setup
+        uses: ./tacos-gha/.github/actions/basic-setup
       - name: List Terraformers
         id: list-terraformers
         run: |
