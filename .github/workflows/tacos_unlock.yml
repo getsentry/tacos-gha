@@ -92,7 +92,33 @@ jobs:
         with:
           SUDO_GCP_SERVICE_ACCOUNT: ${{ env.SUDO_GCP_SERVICE_ACCOUNT }}
           GETSENTRY_SAC_OIDC: ${{ env.GETSENTRY_SAC_OIDC }}
+          ssh-private-key: ${{ secrets.ssh-private-key }}
+          # We explicitly list the low-concern actions, during which users will
+          # recieve a higher level of access -- the identity of the original PR
+          # author. All other actions will receive lower access -- the identity
+          # of the person pushing the "Re-run" button.
+          #
+          # see doc/permissions.md
+          user: |-
+            ${{
+              true
+              && github.event_name == 'pull_request'
+              && (
+                  false
+                  || (
+                      true
+                      && github.event.action == 'labeled'
+                      && github.event.label.name == ':taco::plan'
+                  )
+                  || github.event.action == 'ready_for_review'
+                  || github.event.action == 'synchronize'
+                  || github.event.action == 'reopened'
+              )
 
+              && github.event.pull_request.user.login
+
+              || github.triggering_actor
+            }}
       - name: Unlock
         id: main
         run: |
