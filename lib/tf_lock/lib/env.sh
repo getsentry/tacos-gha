@@ -14,15 +14,16 @@ export PATH="$TACOS_GHA_HOME/lib/tf_lock/bin:$TACOS_GHA_HOME/bin${PATH:+:$PATH}}
 
 tf_working_dir() {
   set -eEuo pipefail
-
   root_module="$1"
   if [[ -e "$root_module/terragrunt.hcl" ]]; then
     ( cd "$root_module"
       # validate-inputs makes terragrunt generate its templates
       terragrunt  --terragrunt-no-auto-init=false validate-inputs
 
-      terragrunt  --terragrunt-no-auto-init=false terragrunt-info |
-        jq -r .WorkingDir
+      working_dir=$(terragrunt  --terragrunt-no-auto-init=false terragrunt-info |
+        jq -r .WorkingDir)
+      cd "$working_dir"
+      pwd
     )
   else
     echo "$root_module"
