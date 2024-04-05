@@ -44,22 +44,27 @@ def path_prepend(env_name: str, env_val: str) -> None:
 
 path_prepend("PYTHONPATH", TACOS_GHA_HOME)
 path_prepend("PATH", TACOS_GHA_HOME + "/bin")
+path_prepend("PATH", TACOS_GHA_HOME + "/lib/tf_lock/bin")
 
 
 def tf_working_dir(root_module: OSPath) -> Path:
     if (root_module / "terragrunt.hcl").exists():
         with sh.cd(root_module):
             # validate-inputs makes terragrunt generate its templates
-            sh.run((
-                "terragrunt",
-                "--terragrunt-no-auto-init=false",
-                "validate-inputs",
-            ))
-            terragrunt_info = sh.json((
-                "terragrunt",
-                "--terragrunt-no-auto-init=false",
-                "terragrunt-info",
-            ))
+            sh.run(
+                (
+                    "terragrunt",
+                    "--terragrunt-no-auto-init=false",
+                    "validate-inputs",
+                )
+            )
+            terragrunt_info = sh.json(
+                (
+                    "terragrunt",
+                    "--terragrunt-no-auto-init=false",
+                    "terragrunt-info",
+                )
+            )
             assert isinstance(terragrunt_info, dict), terragrunt_info
             working_dir = terragrunt_info.get("WorkingDir")
             assert isinstance(working_dir, str)
