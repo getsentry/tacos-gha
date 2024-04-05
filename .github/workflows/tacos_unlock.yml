@@ -39,8 +39,9 @@ jobs:
       || github.event.action != 'labeled'
       || github.event.label.name == ':taco::unlock'
     outputs:
-      slices: ${{ steps.list-slices.outputs.slices }}
-
+      slices: ${{ steps.list-slices }}
+    env:
+      PR_NUMBER: ${{ github.event.number }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -49,6 +50,8 @@ jobs:
     steps:
       - name: Checkout IAC
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - name: Checkout tacos-gha
         uses: actions/checkout@v4
         with:
@@ -56,9 +59,27 @@ jobs:
           ref: ${{inputs.tacos_gha_ref}}
           path: tacos-gha
 
-      - name: List Slices
+      # - name: List Slices
+      #   id: list-slices
+      #   uses: ./tacos-gha/.github/actions/list-slices
+
+      # look at the PR history, get all files that were touched.
+      - name: Install GitHub CLI
+        run: |
+          sudo apt update
+          sudo apt install -y gh
+      - name: Fetch PR base branch
+        run: |
+          PR_BASE_BRANCH=$(gh pr view ${{ env.PR_NUMBER }} --json baseRefName -q .baseRefName)
+          git fetch origin $PR_BASE_BRANCH:$PR_BASE_BRANCH
+
+      - name: List all files ever touched in this PR
         id: list-slices
-        uses: ./tacos-gha/.github/actions/list-slices
+        run: |
+          PR_HEAD_SHA=$(gh pr view ${{ env.PR_NUMBER }} --json headRefName -q .headRefName | xargs git rev-parse)
+          BASE_SHA=$(git merge-base $PR_HEAD_SHA $PR_BASE_BRANCH)
+
+          git diff --name-only $BASE_SHA $PR_HEAD_SHA | sort -u
 
   tacos_unlock:
     name: TACOS Unlock
