@@ -44,6 +44,7 @@ def path_prepend(env_name: str, env_val: str) -> None:
 
 path_prepend("PYTHONPATH", TACOS_GHA_HOME)
 path_prepend("PATH", TACOS_GHA_HOME + "/bin")
+path_prepend("PATH", TACOS_GHA_HOME + "/lib/tf_lock/bin")
 
 
 def tf_working_dir(root_module: OSPath) -> Path:

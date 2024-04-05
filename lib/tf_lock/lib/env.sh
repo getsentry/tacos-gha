@@ -10,7 +10,7 @@ export TF_LOCK_EHELD=3
 
 export TACOS_GHA_HOME="${TACOS_GHA_HOME:-$(cd "$HERE"/../..; pwd)}"
 export PYTHONPATH="$TACOS_GHA_HOME${PYTHONPATH:+:$PYTHONPATH}"
-export PATH="$TACOS_GHA_HOME/bin${PATH:+:$PATH}}"
+export PATH="$TACOS_GHA_HOME/lib/tf_lock/bin:$TACOS_GHA_HOME/bin${PATH:+:$PATH}}"
 
 tf_working_dir() {
   set -eEuo pipefail
