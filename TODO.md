@@ -1,7 +1,7 @@
 # TODO
 
 ## ending phase 1
-
+- @neo unlock all touched files. 
 - @buck datadog ops events
   - remove the `if-not-ci` wrapper and it _may_ just work? `git grep if-not-ci`
 - run test suite in CI
