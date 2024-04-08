@@ -1,20 +1,12 @@
 # TODO
 
-## 2014-03-13
-
-- ending phase 1
-
-  - combined messages, like plan
-    - @neo unlock
-    - @neo apply
-  - @ellison fix test suite -- update to new tag style, used in combined plan
-    summary
-  - @buck datadog ops events
-    - remove the `if-not-ci` wrapper and it _may_ just work?
-      `git grep if-not-ci`
-  - run test suite in CI
-    - put op github-app secrets into gha secrets
-    - may need some security-as-code stuff to authorize gcloud?
+## ending phase 1
+- @neo unlock all touched files. 
+- @buck datadog ops events
+  - remove the `if-not-ci` wrapper and it _may_ just work? `git grep if-not-ci`
+- run test suite in CI
+  - put op github-app secrets into gha secrets
+  - may need some security-as-code stuff to authorize gcloud?
 
 ## Misc. Action Items
 
@@ -51,20 +43,6 @@ Definition: All ops slices are subject to TACOS lock-on-PR.
   - [ ] :tacos::unlock should not cancel convert-to-draft
     - remove :tacos::unlock in favor of convert-to-draft
     - deprecation phase: post a PR comment about "convert to draft instead"
-  - [~] @buck combined summary comments
-    - simple version: concatenate
-    - FIXME: we need a fan-in summary
-    - FIXME: this really should be done in a fan-in summary job
-    - [ ] fan-in summary for the tacos_unlock workflow
-  - [x] @jim ops fixes to project & bucket permissions
-    - https://getsentry.atlassian.net/browse/OPS-5203
-  - done:
-    - [x] @ellison Tell user that merge conflicts are preventing plan/apply
-    - [x] @ellison JIRA backlog to tf-import test-region bucket IAM
-      - gs://sentry-test-region-terraform
-      - https://getsentry.atlassian.net/browse/OPS-5244
-    - [x] @ellison clickops quickfix test-region bucket
-      - https://gist.github.com/bukzor/ee00a6f75d4a0cc7f865c37cfa67a895
 
 ### M4 Drift Remediation
 
@@ -75,17 +53,6 @@ Definition: All ops slices are subject to TACOS lock-on-drift.
 - assignees: buck ellison neo
 
 * [ ] drift remediation
-
-  - [?] @ellison phased allowlist:
-    https://github.com/getsentry/tacos-gha/pull/119
-    1.  [x] off
-    2.  ~[wontfix] plan-only~
-    3.  [ ] plan-and-lock
-    4.  [x] plan-lock-apply
-    5.  [ ] drift detection
-  - [~] @neo ensure lock conflict message links to the lock-holding PR
-    - essential for people know when there's conflicting drift
-    - i.e. Ensure there's a good, human-readable PR message for unlock failure
   - [ ] @buck raise XFailed("tacos/drift branch not created") branch?
   - [ ] @buck TODO: check for the opening of the drift remediation branch.
   - [ ] @buck TODO: anything (scenario: drift detection)
