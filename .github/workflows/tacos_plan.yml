@@ -154,6 +154,11 @@ jobs:
         run: |
           ./tacos-gha/lib/ci/tacos-plan-summary |
             gha-step-summary
+      - name: Update files
+        id: update_files
+        run: |
+          ./tacos-gha/lib/ci/tacos-plan-update-files |
+            gha-step_summary
 
       - name: Update PR
         # we want to report failures, too
@@ -164,6 +169,18 @@ jobs:
           message: ${{ fromJSON(steps.summary.outputs.summary) }}
           comment_tag: plan
           mode: recreate
+
+      - name: Update locked files
+        # For every tacos plan, we lock files.
+        # Some file changes might be lost as they are discarded in later edits.
+        # This comment tracks all files that were locked in the PR's lifetime, and
+        # the unlock job will read this comment and unlock accordingly.
+        if: always()
+        uses: thollander/actions-comment-pull-request@v2.4.3
+        with:
+          message: ${{ fromJSON(steps.update_files.outputs.summary) }}
+          comment_tag: locked-files
+          mode: upsert
 
   reset-label:
     uses: ./.github/workflows/reset-label.yml

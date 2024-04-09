@@ -58,28 +58,9 @@ jobs:
           repository: ${{inputs.tacos_gha_repo}}
           ref: ${{inputs.tacos_gha_ref}}
           path: tacos-gha
-
-      # - name: List Slices
-      #   id: list-slices
-      #   uses: ./tacos-gha/.github/actions/list-slices
-
-      # look at the PR history, get all files that were touched.
-      - name: Install GitHub CLI
-        run: |
-          sudo apt update
-          sudo apt install -y gh
-      - name: Fetch PR base branch
-        run: |
-          PR_BASE_BRANCH=$(gh pr view ${{ env.PR_NUMBER }} --json baseRefName -q .baseRefName)
-          git fetch origin $PR_BASE_BRANCH:$PR_BASE_BRANCH
-
-      - name: List all files ever touched in this PR
+      - name: List Slices
         id: list-slices
-        run: |
-          PR_HEAD_SHA=$(gh pr view ${{ env.PR_NUMBER }} --json headRefName -q .headRefName | xargs git rev-parse)
-          BASE_SHA=$(git merge-base $PR_HEAD_SHA $PR_BASE_BRANCH)
-
-          git diff --name-only $BASE_SHA $PR_HEAD_SHA | sort -u
+        uses: ./tacos-gha/.github/actions/list-slices
 
   tacos_unlock:
     name: TACOS Unlock
