@@ -157,8 +157,7 @@ jobs:
       - name: Update files
         id: update_files
         run: |
-          ./tacos-gha/lib/ci/tacos-plan-files |
-            gha-step_summary
+          ./tacos-gha/lib/ci/tacos-plan-files
 
       - name: Update PR
         # we want to report failures, too
