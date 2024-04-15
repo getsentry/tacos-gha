@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env -S python3 -P
 # a silly script to print the "square" of a number:
 #
 # $ square.py 4
