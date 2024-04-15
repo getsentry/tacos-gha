@@ -1,4 +1,4 @@
-#!/usr/bin/env -S python3 -P
+#!/usr/bin/env -S python3.12 -P
 # a silly script to print the "square" of a number:
 #
 # $ square.py 4
