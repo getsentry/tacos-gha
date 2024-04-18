@@ -1,123 +1,16 @@
 # TODO
 
-## 2024-03-13
-
-- ending phase 1
-
-  - combined messages, like plan
-    - @neo unlock
-    - @neo apply
-  - @ellison fix test suite -- update to new tag style, used in combined plan
-    summary
-  - @buck datadog ops events
-    - remove the `if-not-ci` wrapper and it _may_ just work?
-      `git grep if-not-ci`
-  - run test suite in CI
-    - put op github-app secrets into gha secrets
-    - may need some security-as-code stuff to authorize gcloud?
-
-## Misc. Action Items
-
-This is the inbox during standup and weeklies.
-
-An inbox for quick use during meetings:
-
-- [ ] P2/3 lock and plan downstream terragrunt dependencies too? needs more
-      discussion
-- UI enhancement requests:
-  - [ ] Make it much more clear that the lock was taken
-  - [ ] Make it clear why the lock was taken
-  - [ ] Leave a breadcrumb to User's Guide
-- [ ] TSC presentatino about IAM long-term
-
 ## Major Milestones
 
-P1
-
-### M3 Wide Rollout
-
-Definition: All ops slices are subject to TACOS lock-on-PR.
-
-- commitment: 2024-03-06
-- goal: 2024-02-28
-- assignees: buck ellison neo
-
-* [ ] wide rollout & comms -- use TACOS by default for all ops slices
-
-  - [ ] set an "unlock in progress" message in the PR (use the mode:delete
-        option) #good-first-pr
-    - [ ] similarly, for plan
-    - [ ] similarly, for apply
-  - [ ] :tacos::unlock should not cancel convert-to-draft
-    - remove :tacos::unlock in favor of convert-to-draft
-    - deprecation phase: post a PR comment about "convert to draft instead"
-  - [~] @buck combined summary comments
-    - simple version: concatenate
-    - FIXME: we need a fan-in summary
-    - FIXME: this really should be done in a fan-in summary job
-    - [ ] fan-in summary for the tacos_unlock workflow
-  - [x] @jim ops fixes to project & bucket permissions
-    - https://getsentry.atlassian.net/browse/OPS-5203
-  - done:
-    - [x] @ellison Tell user that merge conflicts are preventing plan/apply
-    - [x] @ellison JIRA backlog to tf-import test-region bucket IAM
-      - gs://sentry-test-region-terraform
-      - https://getsentry.atlassian.net/browse/OPS-5244
-    - [x] @ellison clickops quickfix test-region bucket
-      - https://gist.github.com/bukzor/ee00a6f75d4a0cc7f865c37cfa67a895
-
-### M4 Drift Remediation
-
-Definition: All ops slices are subject to TACOS lock-on-drift.
-
-- commitment: 2024-03-13
-- goal: 2024-03-06
-- assignees: buck ellison neo
-
-* [ ] drift remediation
-
-  - [?] @ellison phased allowlist:
-    https://github.com/getsentry/tacos-gha/pull/119
-    1.  [x] off
-    2.  ~[wontfix] plan-only~
-    3.  [ ] plan-and-lock
-    4.  [x] plan-lock-apply
-    5.  [ ] drift detection
-  - [~] @neo ensure lock conflict message links to the lock-holding PR
-    - essential for people know when there's conflicting drift
-    - i.e. Ensure there's a good, human-readable PR message for unlock failure
-  - [ ] @buck raise XFailed("tacos/drift branch not created") branch?
-  - [ ] @buck TODO: check for the opening of the drift remediation branch.
-  - [ ] @buck TODO: anything (scenario: drift detection)
-
-later, after full rollout and acceptance
-
-- [ ] @ellison down the old terraform-plan workflow
-- [x?] how will people know when there's _new_ drift?
-  - will need to reconsider once we have more user experience
-  - initial implementation: people need to notice the automatic drift pr
-  - slack notification?
-  - team-sre needs to decide
-
-## Maintainability
-
-P2
-
-### M5 into Maintenance Mode
+### Milestone 2: Maintainability Improvements
 
 Definition: All tacos-gha work beyond this milestone work is optional and can be
-done on a 20%-time basis. (To be clear, this milestone is non-optional.)
+done on a 20%-time basis. (But, to be clear, this milestone is non-optional.)
 
 - commitment: 2024-04-03
 - goal: 2024-03-20
 - assignees @50% time: buck ellison neo?
 
-- [ ] ownership/stewardship transition
-  - [ ] @ellison developer's guide
-    - HACKING.md ?
-  - [ ] onboard a new team member from SRE
-    - neo dmitrii jim richard
-    - [x] invite to standup
 - [~] @ellison user guide
   - how-to: avoid GHA notification spam
   - https://github.com/getsentry/tacos-gha/pull/168
@@ -133,45 +26,120 @@ done on a 20%-time basis. (To be clear, this milestone is non-optional.)
   - [ ] lib/unix/super
   - [ ] lib/unix/quietly
   - [ ] lib/unix/tty-attach
-- [x] @buck get the test suite passing
 
-k8s is able to manage VMs (and other non-k8s GCP objects) via "config connector"
-gcloud components install config-connector
+## Milestone 3: entering "maintenance mode"
 
-## Correctness
+These are what we believe are the minimum requirements for tacos-gha to be
+considered "maintenance mode". There are a couple bugs and some maintainability
+issues to be fixed.
 
-P1
+- [ ] ownership/stewardship transition
+  - [ ] @ellison developer's guide
+    - HACKING.md ?
+  - [ ] onboard a new team member from SRE
+    - neo dmitrii jim richard
+    - [x] invite to standup
+- [~] @neo bug: unlock after removing changes can result in orphaned locks
 
-- [x] @ellison bug: committing to another persons's pr fails locking
-- [x] refuse apply without review
-  - [x] @buck apply should ignore approval by non-codeowners
-    - i.e. check mergability instead of approvers
-- [x] @ellison refuse apply for closed PR
-  - [x] explain declined apply due to closed PR
-    - suggest re-opening the PR
-- [x] @ellison unlock even if closed by another user
-  - set username from pr author on closed event
-- [x] @buck P3: FIXME: tf-lock-info infinite regress if providers are undeclared
+  - fix: Restore the old, old implementation of unlock: no matrix, unlock all
+    slices. Just be sure to do nothing, successfully if lock is held by not-me.
 
-## Security
+- [~] @ellison schedule a friday burn-down working meeting
 
-- [x] @buck security issue
-  - [x] tf state lock auth -- @trostel has confirmed P2 priority
-    - fixed: don't use the apply terraformer for the plan workflow
-    - fixed: need a lower-privilege way to enable locking
+- [ ] run test suite in CI
+
+  - put op github-app secrets into gha secrets
+  - may need some security-as-code stuff to authorize gcloud?
+
+- [~] @maxwell datadog ops events
+
+  - remove the `if-not-ci` wrapper and it _may_ just work? `git grep if-not-ci`
+
+- [~] @ellison fix test suite -- update to new tag style, used in combined plan
+  summary
+
+- [ ] run test suite in CI
+
+  - put op github-app secrets into gha secrets
+  - may need some security-as-code stuff to authorize gcloud?
+
+- [ ] :tacos::unlock should not cancel convert-to-draft
+
+  - currently, the label can cause the unlock job (spawned by the "convert to
+    draft button") to be cancelled (and not run at all)
+  - remove :tacos::unlock in favor of convert-to-draft
+  - deprecation phase: post a PR comment about "convert to draft instead"
+
+- low-hanging and/or important UI enhancement requests:
+
+  - [ ] Make it much more clear that the lock was taken
+  - [ ] Make it clear why the lock was taken
+  - [ ] Leave a breadcrumb to User's Guide
+  - [ ] set an "unlock in progress" message in the PR (use the mode:delete
+        option) #good-first-pr
+    - [ ] similarly, for plan
+    - [ ] similarly, for apply
+  - [ ] provide a good, human-readable PR message for unlock failure
+
+- [ ] @ellison down the old terraform-plan workflow
+
+### (Future Work) Milestone 4: Drift Remediation
+
+Definition: All ops slices are subject to TACOS lock when drift is present.
+
+- [ ] drift remediation
+
+  - [?] @ellison phased allowlist:
+    https://github.com/getsentry/tacos-gha/pull/119
+
+    1.  [x] off
+    2.  ~[wontfix] plan-only~
+    3.  [ ] plan-and-lock
+    4.  [x] plan-lock-apply
+    5.  [ ] drift detection
+
+  - [x] @neo ensure lock conflict message links to the lock-holding PR
+
+    - essential for people know when there's conflicting drift
+
+  - fix TODOs found in the code:
+
+    - [ ] `raise XFailed("tacos/drift branch not created") branch?`
+    - [ ] `TODO: check for the opening of the drift remediation branch.`
+    - [ ] `TODO: anything (scenario: drift detection)`
+
+# Open Questions
+
+We still need to talk about these items more.
+
+- after full rollout and acceptance
+  - [?] how will people know when there's _new_ drift?
+    - will need to reconsider once we have more user experience
+    - initial implementation: people need to notice the automatic drift pr
+    - slack notification?
+    - team-sre needs to decide
+
+# Categories
+
+Future action items organized into broad categories. These should be done "some
+day" but currently have no firm plan of action.
 
 ## Ease of Use (UI/UX)
 
 P2
 
-- [ ] on conflict, provide a link to conflicting PR
 - [ ] speed - minimize time to plan, round-trip
+
   - [ ] optimize setup action
   - [ ] optimize list-slices action
     - can we get just the filenames of _.hcl _.tf files?
     - then we can touch empty files, simulate a clone for
       determine-relevant-slices
   - [ ] leverage "narrow" git clones, where possible
+  - [ ] commit pre-calculated data to the repo? for example:
+    - terraform backend configuration (lock location)
+    - must be automatically updated
+
 - [ ] create, show plan even for "ready" PR that can't obtain lock
 - [ ] P3 @ian Node 16 deprecation warnings
   - https://github.com/getsentry/ops/actions/runs/7849633666
@@ -180,20 +148,25 @@ P2
     https://github.com/getsentry/tacos-gha/actions/runs/7890053512/job/21531390874
     https://github.com/$org/$repo/actions/runs/$runid/job/$jobid
   - [ ] @ian research: how to get the "job id" during a job?
-- [x] explain declined apply due to draft status
-- [x] explain declined apply due to missing review
-- [x] @buck TODO: roll up "commands" in PR comments when exit code is 0
-- [x] @buck TODO: roll up init / refresh phases from tf log
+  - [x] @buck in tacos-gha.demo
+  - [ ] in ops repo -- default gha identities have less permissions in private
+        repo something something?
 
 ## Testing
 
 ### Tier 1
 
-P2
+P1
+
+We keep breaking these
 
 - [ ] terragrunt slice with dependencies
   - prevent regression: --terragrunt-no-auto-init was exploding during
     terragrunt-info
+- [ ] "bare" terragrunt slices (AKA ops-repo style, `source`d slices)
+
+P2
+
 - [ ] run _something_ with debug mode active
 - [ ] ensure below “Test Plan” is covered in automated tests
   - [x] create PR (”PR1”) on one of the slices; see plan in comments
@@ -223,13 +196,14 @@ P2
 - [ ] FIXME: automated testing for lib/tf_lock
 - [ ] sh.banner("TODO: check that the plan matches what we expect")
 
-## Future Improvements
+# Future Improvements
 
 These may never happen, but that's okay.
 
+- [ ] add a github app with `repo` permission so that we can enable deep-link
+      per-slice in PR comments
 - [ ] TODO: fetch and apply the `--out tfplan` file from plan workflow
 - [ ] TODO: github-script to fetch run-id of the most recent tfplan
-- [ ] TODO: convert from matrix job to unlock slices "all at once"
 - [ ] FIXME: use a more specific type than str
 - [ ] TODO: workflow to automatically add taco:stale label as appropriate
 - [ ] TODO: workflow to automatically add taco:abandoned label as appropriate
@@ -243,6 +217,11 @@ These may never happen, but that's okay.
     - locking slices efficiently (don't need to kill -9 terraform-console)
     - retrieving lock info (don't need to parse `terraform force-unlock` errors)
     - setting lock info (no need for .github/actions/set-user-and-hostname)
+- [ ] P2/3 lock and plan downstream terragrunt dependencies too? needs more
+      discussion
+- [ ] TODO: convert from matrix job to unlock slices "all at once"
+  - @neo attempted but it took ~7 minutes to run the unlock job
+    https://github.com/getsentry/ops/pull/9859
 
 ## Epics
 
@@ -252,6 +231,9 @@ These may never happen, but that's okay.
       execution
 
 ## Upstream
+
+I need to file upstream bugs for these. The maintainers would want to know and
+fix them, I think.
 
 - def **init**( # pyright: ignore[reportMissingSuperCall] # TODO: bugreport
 - upstream feature request on google-github-actions/auth -- this
@@ -280,3 +262,16 @@ onboard preexisting users:
 - getsentry/terraform-sandbox/.github/workflow/{ci,cd}
 - getsentry/eng-pipes
 - getsentry/devenv-deployment-service
+
+# off topic
+
+These items need to live elsewhere
+
+- [ ] TSC presentation about IAM long-term
+
+# legend:
+
+- not started: [ ]
+- in progress: [~]
+- done: [x]
+- needs more discussion: [?]
