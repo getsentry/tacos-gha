@@ -1,10 +1,12 @@
 #!/bin/bash
 set -euo pipefail
 HERE="$(dirname "$(readlink -f "$0")")"
+TACOS_GHA_HOME="$(cd "$HERE"/../..; pwd)"
 
 if [[ "${DEBUG:-}" ]]; then
   set -x
 fi
+PATH="$TACOS_GHA_HOME/bin:$PATH"
 
 
 # FIXME: support `-u $USER` and/or `-u $EMAIL` to request an end-user access token
