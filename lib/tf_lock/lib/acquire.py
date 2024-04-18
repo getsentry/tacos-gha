@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.12
+#!/usr/bin/env -S python3.12 -P
 from __future__ import annotations
 
 import asyncio
