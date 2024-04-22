@@ -15,7 +15,7 @@ on:
         default: refs/heads/stable
       debug:
         type: string
-        default: 0
+        default: 1 #FIXME DO NOT SUBMIT
     secrets:
       ssh-private-key:
         description: "Private SSH key to use for git clone"
@@ -73,8 +73,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        tf-root-module:
-          ${{ fromJSON(needs.determine-tf-root-modules.outputs.slices) }}
+        tf-root-module: ${{ fromJSON(needs.determine-tf-root-modules.outputs.slices) }}
 
     runs-on: ubuntu-latest
     permissions:

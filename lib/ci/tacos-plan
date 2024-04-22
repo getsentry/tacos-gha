@@ -2,6 +2,8 @@
 set -euo pipefail
 export TERRAGRUNT_INCLUDE_MODULE_PREFIX=false
 
+exec 3>&1
+
 # terragrunt in "bare" slices will evaluate relative paths with respect to its
 # hidden terraform working directory, making the plan file hard to find, so
 # it's essential to use an absolute path here.
