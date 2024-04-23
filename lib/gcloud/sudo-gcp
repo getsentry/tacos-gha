@@ -2,6 +2,8 @@
 set -euo pipefail
 HERE="$(dirname "$(readlink -f "$0")")"
 
+export DEBUG="${DEBUG:-}"
+
 if (( DEBUG >= 1 )); then
   set -x
 fi
