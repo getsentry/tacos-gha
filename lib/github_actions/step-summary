@@ -2,10 +2,11 @@
 # Forward stdin to the GHA step summary, and save it to the .summary output of
 # this step.
 set -euo pipefail
-
 exec 3>&1
-set -x
 
+export DEBUG="${DEBUG:-}"
+
+set -x
 tee >(cat >&3) |  # send original, unmodified input to stdout
   # step summary and PR comments can't handle ansi-color like GHA logging does =(
   uncolor |

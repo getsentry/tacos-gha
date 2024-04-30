@@ -2,6 +2,6 @@
 set -euo pipefail
 
 # FIXME: we need pip packaging
-python3.12 -m lib.tacos.slices "$@" |
-  python3.12 -m lib.tacos.path_filter \
+python3.12 -P -m lib.tacos.slices "$@" |
+  python3.12 -P -m lib.tacos.path_filter \
 ;
