@@ -6,11 +6,14 @@ from typing import TYPE_CHECKING
 
 from lib.functions import LessThanOneError as LessThanOneError
 from lib.functions import MoreThanOneError as MoreThanOneError
+from lib.functions import config_lines
 from lib.functions import one
 from lib.types import Environ
 from lib.types import OSPath
 
 from .constant import UTF8
+from .errors import ShError
+from .io import quote
 from .io import xtrace
 from .types import Command
 from .types import Generator
@@ -66,12 +69,7 @@ def lines(cmd: Command, *, encoding: str = UTF8) -> Generator[Line]:
     """
     process = _popen(cmd, encoding=encoding, capture_output=True)
     assert process.stdout, process.stdout
-    for line in process.stdout:
-        line = line.strip()
-        if not line or line.startswith("#"):
-            continue
-
-        yield line
+    yield from config_lines(process.stdout)
 
     # handle termination and error codes
     _wait(process)
@@ -185,8 +183,10 @@ def _wait(
             raise
         retcode = process.poll()
         if check and retcode:
-            raise subprocess.CalledProcessError(
-                retcode, process.args, output=stdout, stderr=stderr
+            assert isinstance(process.args, tuple)
+            raise ShError(
+                f"Command failed: (code {retcode})\n\n    {quote(process.args)}\n",
+                code=retcode,
             )
     assert retcode is not None, retcode
     return subprocess.CompletedProcess(process.args, retcode, stdout, stderr)

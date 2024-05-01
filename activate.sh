@@ -2,7 +2,8 @@
 _here="$(readlink -f "$(dirname "${BASH_SOURCE:-$0}")")"
 
 export TACOS_GHA_HOME="$_here"
-export PATH="$TACOS_GHA_HOME/bin${PATH:+:$PATH}}"
+export PATH="$TACOS_GHA_HOME/bin${PATH:+:$PATH}"
+export PYTHONPATH="$TACOS_GHA_HOME${PYTHONPATH:+:$PYTHONPATH}"
 
 if ! flock -h >/dev/null; then
     echo "Installing missing dependencies... (flock)"
