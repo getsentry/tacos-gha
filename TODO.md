@@ -7,7 +7,6 @@
 Definition: All tacos-gha work beyond this milestone work is optional and can be
 done on a 20%-time basis. (But, to be clear, this milestone is non-optional.)
 
-
 - commitment: 2024-04-03
 - goal: 2024-03-20
 - assignees @50% time: buck ellison neo?
