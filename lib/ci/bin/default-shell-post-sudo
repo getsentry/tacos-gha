@@ -5,7 +5,7 @@ set -euo pipefail
 HERE="$(dirname "$(readlink -f "$0")")"
 umask 002  # stuff is group-writable by default
 
-if [[ "${DEBUG}" ]]; then
+if (( DEBUG > 0 )); then
   gha-printenv post-sudo
 fi
 
@@ -23,6 +23,10 @@ eval="$(cd "$TACOS_GHA_HOME"; direnv allow; direnv export bash)"
 eval "$eval"
 # give direnv amnesia, to prevent settings from being undone
 unset DIRENV_DIFF DIRENV_WATCHES DIRENV_FILE DIRENV_DIR
+
+if (( DEBUG > 0 )); then
+  gha-printenv final
+fi
 
 # the default shell (under github actions) is:
 # bash --noprofile --norc -eo pipefail {0}
