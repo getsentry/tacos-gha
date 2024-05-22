@@ -35,8 +35,9 @@ if "$TACOS_LOCK"; then
       git config --global push.default current
       git checkout -b "$GITHUB_HEAD_REF"
       ( set -ex
+        # add .terraform-lock changes 
         git add -u
-        git commit -m 'updating tf-lock cache' $cache
+        git commit -m 'updating tf-lock cache'
       )
       git_push_aggressively
     fi
