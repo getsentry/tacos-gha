@@ -101,7 +101,9 @@ class Slices:
         """Unlock these slices, forcefully."""
         sh.banner("forcefully unlocking slices")
         with sh.cd(self.path):
+            print(self.path)
             for slice in self:
+                print("slice", slice)
                 tf_lock.force_unlock(slice)
 
     def plan_is_clean(self) -> bool:

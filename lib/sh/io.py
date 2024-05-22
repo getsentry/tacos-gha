@@ -22,8 +22,7 @@ PS4 = f"+ {ansi.TEAL}${ansi.RESET} "
 # 2 - debug
 # 3 - trace
 # note: empty-string vars should be treated as unset
-DEBUG: int = int(getenv("DEBUG") or "1")
-
+DEBUG: int = int(getenv("DEBUG", "1") or "0")
 T = TypeVar("T")
 Uniq = set[tuple[object, ...]]
 UNIQ: Uniq | None = None
