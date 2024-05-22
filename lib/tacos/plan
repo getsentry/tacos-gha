@@ -9,6 +9,19 @@ TACOS_TFPLAN="${TACOS_TFPLAN:-$PWD/tfplan}"
 TACOS_LOCK="${TACOS_LOCK:-false}"
 cache=.config/tf-lock-info
 
+#todo: make this an artifact instead
+# we expect at most 6 slices to be fighting
+git_push_aggressively() {
+  sleep=3
+  limit=30
+  while ! (set -ex; git push -q) && (( sleep <= limit )); do
+    echo "failed! trying again after $sleep seconds..."
+    sleep $sleep
+    (( sleep += 3 ))
+    git pull --rebase
+  done
+}
+
 if "$TACOS_LOCK"; then
   ( set -ex
     env GETSENTRY_SAC_VERB=state-admin sudo-gcp tf-lock-acquire
@@ -22,8 +35,8 @@ if "$TACOS_LOCK"; then
       git checkout -b "$GITHUB_HEAD_REF"
       ( set -ex
         git commit -m 'updating tf-lock cache' $cache
-        git push -q
       )
+      git_push_aggressively
     fi
   fi
 fi
