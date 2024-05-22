@@ -7,17 +7,20 @@ exec 3>&1 1>&2
 # note: for terragrunt, tfplan must be absolute
 TACOS_TFPLAN="${TACOS_TFPLAN:-$PWD/tfplan}"
 TACOS_LOCK="${TACOS_LOCK:-false}"
+cache=.cache/tf-lock-info
 
 if "$TACOS_LOCK"; then
   ( set -ex
     env GETSENTRY_SAC_VERB=state-admin sudo-gcp tf-lock-acquire
   )
-  git add -f .cache/tf-lock-info
-  if ! git diff --cached --exit-code .cache/tf-lock-info; then
-    ( set -ex
-      git commit -m 'updating tf-lock cache' .cache/tf-lock-info
-      git push
-    )
+  if [[ -d $cache ]]; then
+    git add -f $cache
+    if ! git diff --cached --exit-code $cache; then
+      ( set -ex
+        git commit -m 'updating tf-lock cache' $cache
+        git push
+      )
+    fi
   fi
 fi
 
