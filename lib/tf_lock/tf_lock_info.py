@@ -55,17 +55,26 @@ def tf_lock_info(tg_root_module: OSPath) -> json.Value:
             assert isinstance(path, str)
             cache_put(tg_root_module, path)
         else:
-            lock_info.setdefault("Path", cache_get(tg_root_module))
+            path = cache_get(tg_root_module)
+            if path is not None:
+                lock_info.setdefault("Path", path)
 
     return lock_info
 
 
 @UserError.handler
 def main() -> ExitCode:
+    from sys import argv
+
     with sh.quiet():
         import json
 
-        print(json.dumps(tf_lock_info(OSPath.cwd())))
+        if len(argv) >= 2 and argv[1]:
+            # root_module="${1:-"$PWD"}"
+            root_module = OSPath(argv[1])
+        else:
+            root_module = OSPath.cwd()
+        print(json.dumps(tf_lock_info(root_module)))
     return 0
 
 
