@@ -7,7 +7,7 @@ exec 3>&1 1>&2
 # note: for terragrunt, tfplan must be absolute
 TACOS_TFPLAN="${TACOS_TFPLAN:-$PWD/tfplan}"
 TACOS_LOCK="${TACOS_LOCK:-false}"
-cache=.cache/tf-lock-info
+cache=.config/tf-lock-info
 
 if "$TACOS_LOCK"; then
   ( set -ex
