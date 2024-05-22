@@ -36,7 +36,7 @@ if "$TACOS_LOCK"; then
       git checkout -b "$GITHUB_HEAD_REF"
       ( set -ex
         # add .terraform-lock changes 
-        git add -u "$TF_ROOT_MODULE"
+        git add -u .
         git status
         git commit -m 'updating tf-lock cache'
       )
