@@ -18,6 +18,7 @@ git_push_aggressively() {
     echo "failed! trying again after $sleep seconds..."
     sleep $sleep
     (( sleep += 3 ))
+    git status
     git pull --rebase
   done
 }
