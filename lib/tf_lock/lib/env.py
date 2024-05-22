@@ -33,7 +33,7 @@ def get_current_user(env: Environ) -> str:
         return getpass.getuser()
 
 
-here = sh.get_HERE(__file__)
+here: OSPath = sh.get_HERE(__file__)
 LIB = here
 USER = environ["USER"] = get_current_user(environ)
 HOST = environ["HOST"] = get_current_host(environ)

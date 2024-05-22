@@ -34,8 +34,10 @@ CACHE_PATH = Path(".config/tf-lock-info/Path")
 
 
 def cache_get(tg_root_module: OSPath) -> str | None:
-    with (tg_root_module / CACHE_PATH).open() as cache:
-        return one(config_lines(cache))
+    if (tg_root_module / CACHE_PATH).exists():
+        with (tg_root_module / CACHE_PATH).open() as cache:
+            return one(config_lines(cache))
+    return None
 
 
 def cache_put(tg_root_module: OSPath, path: str) -> None:
@@ -48,7 +50,6 @@ def tf_lock_info(tg_root_module: OSPath) -> json.Value:
     with sh.cd(tg_root_module):
         lock_info = sh.json((LIB / "tf-lock-info-uncached",))
         assert isinstance(lock_info, dict)
-
         if lock_info["lock"]:
             path = lock_info["Path"]
             assert isinstance(path, str)
