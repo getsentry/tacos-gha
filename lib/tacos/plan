@@ -18,6 +18,7 @@ if "$TACOS_LOCK"; then
     if ! git diff --cached --exit-code $cache; then
       git config --global user.email "$USER@$HOSTNAME"
       git config --global user.name "$USER"
+      git config --global push.default current
       ( set -ex
         git commit -m 'updating tf-lock cache' $cache
         git push
