@@ -19,8 +19,7 @@ if "$TACOS_LOCK"; then
       git config --global user.email "$USER@$HOSTNAME"
       git config --global user.name "$USER"
       git config --global push.default current
-      git branch -avv
-      env | grep GITHUB | sort
+      git checkout -b "$GITHUB_HEAD_REF"
       ( set -ex
         git commit -m 'updating tf-lock cache' $cache
         git push -q
