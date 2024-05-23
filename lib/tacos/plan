@@ -19,12 +19,13 @@ git_push_aggressively() {
     echo "failed! trying again after $sleep seconds..."
     sleep $sleep
     (( sleep += 3 ))
+    (set -ex
     git status
     git log --oneline --graph --decorate --all FETCH_HEAD
     git fetch --depth=1 origin "$GITHUB_REF"
     git log --oneline --graph --decorate --all FETCH_HEAD
     git rebase FETCH_HEAD
-    git log --oneline --graph --decorate --all FETCH_HEAD
+    git log --oneline --graph --decorate --all FETCH_HEAD)
     # (set -ex; git pull --rebase origin "$GITHUB_HEAD_REF")
   done
 }
