@@ -29,8 +29,10 @@ if "$TACOS_LOCK"; then
   )
   if [[ -d $cache ]]; then
     git add -f $cache
+    (set -ex 
     pwd 
     echo tf root module: "$TF_ROOT_MODULE"
+    )
     if ! git diff --cached --exit-code $cache; then
       git config --global user.email "$USER@$HOSTNAME"
       git config --global user.name "$USER"
