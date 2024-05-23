@@ -13,7 +13,7 @@ cache=.config/tf-lock-info
 # we expect at most 6 slices to be fighting
 git_push_aggressively() {
   sleep=3
-  limit=30
+  limit=20 # 3 min 
   # todo: git push -q 
   while ! (set -ex; git push) && (( sleep <= limit )); do
     echo "failed! trying again after $sleep seconds..."
@@ -22,7 +22,7 @@ git_push_aggressively() {
     (set -ex
     git status
     git log --oneline --graph --decorate --all FETCH_HEAD
-    git fetch --depth=1 origin "$GITHUB_REF"
+    git fetch --depth=2 origin "$GITHUB_REF"
     git log --oneline --graph --decorate --all FETCH_HEAD
     git rebase FETCH_HEAD
     git log --oneline --graph --decorate --all FETCH_HEAD)
