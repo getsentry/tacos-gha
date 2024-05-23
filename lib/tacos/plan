@@ -39,6 +39,7 @@ if "$TACOS_LOCK"; then
         git add -u .
         git status
         git commit -m 'updating tf-lock cache'
+        # git log --stat --oneline --graph --decorate --color=always | head
       )
       git_push_aggressively
     fi
