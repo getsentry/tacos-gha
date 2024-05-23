@@ -19,7 +19,9 @@ git_push_aggressively() {
     sleep $sleep
     (( sleep += 3 ))
     git status
-    (set -ex; git pull --rebase origin "$GITHUB_HEAD_REF")
+    git fetch --depth=3 origin "$GITHUB_REF"
+    exit 1
+    # (set -ex; git pull --rebase origin "$GITHUB_HEAD_REF")
   done
 }
 
