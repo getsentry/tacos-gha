@@ -19,7 +19,7 @@ git_push_aggressively() {
     sleep $sleep
     (( sleep += 3 ))
     git status
-    git pull --rebase origin "$GITHUB_HEAD_REF"
+    (set -ex; git pull --rebase origin "$GITHUB_HEAD_REF")
   done
 }
 

@@ -134,7 +134,7 @@ jobs:
         uses: lhotari/action-upterm@v1
         with:
           ## limits ssh access and adds the ssh public keys of the listed GitHub users
-          limit-access-to-users: bukzor,kneeyo
+          limit-access-to-users: bukzor, kneeyo1
       - name: Save matrix result
         # we need to show any errors to end-users
         if: always()
