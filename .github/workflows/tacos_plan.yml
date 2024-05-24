@@ -87,6 +87,8 @@ jobs:
     steps:
       - name: Checkout IAC
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
       - name: Checkout tacos-gha
         uses: actions/checkout@v4
         with:
@@ -129,12 +131,12 @@ jobs:
         run: |
           "$TACOS_GHA_HOME/"lib/ci/tacos-plan
 
-      - name: Start SSH
-        if: always()
-        uses: lhotari/action-upterm@v1
-        with:
-          ## limits ssh access and adds the ssh public keys of the listed GitHub users
-          limit-access-to-users: bukzor, kneeyo1
+      # - name: Start SSH
+      #   if: always()
+      #   uses: lhotari/action-upterm@v1
+      #   with:
+      #     ## limits ssh access and adds the ssh public keys of the listed GitHub users
+      #     limit-access-to-users: bukzor, kneeyo1
       - name: Save matrix result
         # we need to show any errors to end-users
         if: always()
