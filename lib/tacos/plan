@@ -21,7 +21,8 @@ git_push_aggressively() {
     sleep $sleep
     (( sleep += 3 ))
     (set -ex
-    git pull --rebase
+    git fetch origin
+    git reset --hard origin
     )
     # git status
     # git log --oneline --graph --decorate --all
@@ -47,7 +48,7 @@ if "$TACOS_LOCK"; then
       git config --global user.email "$USER@$HOSTNAME"
       git config --global user.name "$USER"
       git config --global push.default current
-      git checkout "$GITHUB_HEAD_REF"
+      git checkout -b "$GITHUB_HEAD_REF"
       ( set -ex
         # add .terraform-lock changes 
         git add -u .
