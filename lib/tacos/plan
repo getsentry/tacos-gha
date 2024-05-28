@@ -26,7 +26,7 @@ git_push_aggressively() {
     (set -ex
     #git fetch origin "$GITHUB_REF":refs/heads/pull.$sleep
     #git fetch --depth=2 origin "$GITHUB_REF":refs/heads/pull.$sleep
-    git pull --rebase # --shallow-exclude="$graft" origin "$GITHUB_HEAD_REF"
+    git pull --rebase origin "$GITHUB_HEAD_REF" # --shallow-exclude="$graft" 
     git log --oneline --graph --decorate --all
     )
     # git status
