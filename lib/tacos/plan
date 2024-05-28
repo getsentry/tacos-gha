@@ -23,9 +23,10 @@ git_push_aggressively() {
     (( sleep += 3 ))
     (set -ex
     #git fetch origin "$GITHUB_REF":refs/heads/pull.$sleep
-    git fetch --depth=2 origin "$GITHUB_REF":refs/heads/pull.$sleep
+    #git fetch --depth=2 origin "$GITHUB_REF":refs/heads/pull.$sleep
+    git fetch --unshallow origin HEAD
     git log --oneline --graph --decorate --all 
-    git merge pull.$sleep
+    git rebase pull.$sleep
     git log --oneline --graph --decorate --all
     )
     # git status
