@@ -26,7 +26,7 @@ git_push_aggressively() {
     (set -ex
     #git fetch origin "$GITHUB_REF":refs/heads/pull.$sleep
     #git fetch --depth=2 origin "$GITHUB_REF":refs/heads/pull.$sleep
-    git pull --rebase --depth=1
+    git pull --rebase --shallow-exclude="$graft" origin "$GITHUB_HEAD_REF"
     git log --oneline --graph --decorate --all
     )
     # git status
@@ -56,6 +56,7 @@ if "$TACOS_LOCK"; then
       #git checkout -b "$GITHUB_HEAD_REF"
       git fetch origin --depth=1 "$GITHUB_HEAD_REF"
       git checkout "$GITHUB_HEAD_REF"
+      graft="$(git rev-parse HEAD)"
       ( set -ex
         # add .terraform-lock changes 
         git add -u .
