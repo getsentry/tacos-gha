@@ -62,7 +62,7 @@ if "$TACOS_LOCK"; then
         git add -u .
         git status
         git commit -m "updating tf-lock cache: $TF_ROOT_MODULE"
-        # git log --stat --oneline --graph --decorate --color=always | head
+        git log --stat --oneline --graph --decorate --color=always 
       )
       git_push_aggressively
     fi
