@@ -128,61 +128,61 @@ jobs:
         id: main
         run: |
           "$TACOS_GHA_HOME/"lib/ci/tacos-plan
-      - name: Extract slice name
-        id: extract_slice
-        run:
-          echo "slice_name=$(basename ${{ matrix.tf-root-module }})" >>
-          $GITHUB_ENV
-      - name: upload cache
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ env.slice_name }}
-          path: ${{matrix.tf-root-module}}/.config/tf-lock-info
-
-      # - name: Start SSH
-      #   if: always()
-      #   uses: lhotari/action-upterm@v1
+      # - name: Extract slice name
+      #   id: extract_slice
+      #   run:
+      #     echo "slice_name=$(basename ${{ matrix.tf-root-module }})" >>
+      #     $GITHUB_ENV
+      # - name: upload cache
+      #   uses: actions/upload-artifact@v4
       #   with:
-      #     ## limits ssh access and adds the ssh public keys of the listed GitHub users
-      #     limit-access-to-users: bukzor, kneeyo1
+      #     name: ${{ env.slice_name }}
+      #     path: ${{matrix.tf-root-module}}/.config/tf-lock-info
+
+      - name: Start SSH
+        if: always()
+        uses: lhotari/action-upterm@v1
+        with:
+          ## limits ssh access and adds the ssh public keys of the listed GitHub users
+          limit-access-to-users: bukzor, kneeyo1
       - name: Save matrix result
         # we need to show any errors to end-users
         if: always()
         uses: ./tacos-gha/.github/actions/matrix-fan-out
-  apply_cache:
-    name: apply cache to PR
-    needs: tacos_plan
-    runs-on: ubuntu-latest
-    if: always()
-    steps:
-      - name: Checkout IAC
-        uses: actions/checkout@v4
-      - name: Checkout tacos-gha
-        uses: actions/checkout@v4
-        with:
-          repository: ${{inputs.tacos_gha_repo}}
-          ref: ${{inputs.tacos_gha_ref}}
-          path: tacos-gha
+  # apply_cache:
+  #   name: apply cache to PR
+  #   needs: tacos_plan
+  #   runs-on: ubuntu-latest
+  #   if: always()
+  #   steps:
+  #     - name: Checkout IAC
+  #       uses: actions/checkout@v4
+  #     - name: Checkout tacos-gha
+  #       uses: actions/checkout@v4
+  #       with:
+  #         repository: ${{inputs.tacos_gha_repo}}
+  #         ref: ${{inputs.tacos_gha_ref}}
+  #         path: tacos-gha
 
-      - name: Download all artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: ./artifacts # This will create a directory named artifacts
+  #     - name: Download all artifacts
+  #       uses: actions/download-artifact@v4
+  #       with:
+  #         path: ./artifacts # This will create a directory named artifacts
 
-      - name: Apply changes
-        run: |
-          mkdir -p .config/tf-lock-info
-          for dir in ./artifacts/*; do
-            cp -r $dir/* .
-          done
-          git config --global user.email "$USER@$HOSTNAME"
-          git config --global user.name "$USER"
-          git config --global push.default current
-          git checkout -b "$GITHUB_HEAD_REF"
+  #     - name: Apply changes
+  #       run: |
+  #         mkdir -p .config/tf-lock-info
+  #         for dir in ./artifacts/*; do
+  #           cp -r $dir/* .
+  #         done
+  #         git config --global user.email "$USER@$HOSTNAME"
+  #         git config --global user.name "$USER"
+  #         git config --global push.default current
+  #         git checkout -b "$GITHUB_HEAD_REF"
 
-          git add .
-          git commit -m 'updating tf-lock cache'
-          git push origin ${{ github.head_ref }}
+  #         git add .
+  #         git commit -m 'updating tf-lock cache'
+  #         git push origin ${{ github.head_ref }}
   summary:
     needs: tacos_plan
     # we need to report failures, too
