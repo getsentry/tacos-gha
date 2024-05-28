@@ -17,6 +17,7 @@ git_push_aggressively() {
   # limit=20 # 3 min 
   # todo: git push -q 
   # git fetch --unshallow origin HEAD
+  sleep $sleep # trying to force race condition
   while ! (set -ex; git push); do
     if (( sleep > limit )); then exit 1; fi
     echo "failed! trying again after $sleep seconds..."
