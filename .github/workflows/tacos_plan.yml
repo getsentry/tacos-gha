@@ -132,7 +132,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{matrix.tf-root-module}}
-          path: .config/tf-lock-info
+          path: ${{matrix.tf-root-module}}/.config/tf-lock-info
 
       # - name: Start SSH
       #   if: always()
