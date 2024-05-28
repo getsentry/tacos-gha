@@ -54,10 +54,10 @@ if "$TACOS_LOCK"; then
       git config --global user.name "$USER"
       git config --global push.default current
       #git checkout -b "$GITHUB_HEAD_REF"
+      ( set -ex
       git fetch origin --depth=1 "$GITHUB_HEAD_REF"
       git checkout "$GITHUB_HEAD_REF"
       graft="$(git rev-parse HEAD)"
-      ( set -ex
         # add .terraform-lock changes 
         git add -u .
         git status
