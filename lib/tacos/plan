@@ -17,7 +17,7 @@ git_push_aggressively() {
   # limit=20 # 3 min 
   # todo: git push -q 
   # git fetch --unshallow origin HEAD
-  sleep $sleep # trying to force race condition
+  sleep 10 # trying to force race condition
   while ! (set -ex; git push); do
     if (( sleep > limit )); then exit 1; fi
     echo "failed! trying again after $sleep seconds..."
@@ -62,7 +62,7 @@ if "$TACOS_LOCK"; then
         git add -u .
         git status
         git commit -m "updating tf-lock cache: $TF_ROOT_MODULE"
-        git log --stat --oneline --graph --decorate --color=always 
+        git log --oneline --graph --decorate --color=always 
       )
       git_push_aggressively
     fi
