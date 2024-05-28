@@ -16,13 +16,14 @@ git_push_aggressively() {
   limit=6
   # limit=20 # 3 min 
   # todo: git push -q 
-  while ! (set -ex; git push) && (( sleep <= limit )); do
+  while ! (set -ex; git push); do
+    if (( sleep > limit )); then exit 1; fi
     echo "failed! trying again after $sleep seconds..."
     sleep $sleep
     (( sleep += 3 ))
     (set -ex
-    git fetch origin "$GITHUB_REF":refs/heads/pull.$sleep
-    # git fetch --depth=2 origin "$GITHUB_REF":refs/heads/pull.$sleep
+    #git fetch origin "$GITHUB_REF":refs/heads/pull.$sleep
+    git fetch --depth=2 origin "$GITHUB_REF":refs/heads/pull.$sleep
     git log --oneline --graph --decorate --all 
     git merge pull.$sleep
     git log --oneline --graph --decorate --all
