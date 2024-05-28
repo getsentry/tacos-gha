@@ -16,7 +16,7 @@ git_push_aggressively() {
   limit=6
   # limit=20 # 3 min 
   # todo: git push -q 
-  git fetch --unshallow origin HEAD
+  # git fetch --unshallow origin HEAD
   while ! (set -ex; git push); do
     if (( sleep > limit )); then exit 1; fi
     echo "failed! trying again after $sleep seconds..."
@@ -25,9 +25,7 @@ git_push_aggressively() {
     (set -ex
     #git fetch origin "$GITHUB_REF":refs/heads/pull.$sleep
     #git fetch --depth=2 origin "$GITHUB_REF":refs/heads/pull.$sleep
-    git fetch origin "$GITHUB_REF":refs/heads/pull.$sleep
-    git log --oneline --graph --decorate --all 
-    git rebase pull.$sleep
+    git pull --rebase --depth=1
     git log --oneline --graph --decorate --all
     )
     # git status
@@ -54,7 +52,9 @@ if "$TACOS_LOCK"; then
       git config --global user.email "$USER@$HOSTNAME"
       git config --global user.name "$USER"
       git config --global push.default current
-      git checkout -b "$GITHUB_HEAD_REF"
+      #git checkout -b "$GITHUB_HEAD_REF"
+      git fetch origin --depth=1 "$GITHUB_HEAD_REF"
+      git checkout "$GITHUB_HEAD_REF"
       ( set -ex
         # add .terraform-lock changes 
         git add -u .
