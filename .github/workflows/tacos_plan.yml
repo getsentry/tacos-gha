@@ -128,10 +128,15 @@ jobs:
         id: main
         run: |
           "$TACOS_GHA_HOME/"lib/ci/tacos-plan
+      - name: Extract slice name
+        id: extract_slice
+        run:
+          echo "slice_name=$(basename ${{ matrix.tf-root-module }})" >>
+          $GITHUB_ENV
       - name: upload cache
         uses: actions/upload-artifact@v4
         with:
-          name: ${{matrix.tf-root-module}}
+          name: ${{ env.slice_name }}
           path: ${{matrix.tf-root-module}}/.config/tf-lock-info
 
       # - name: Start SSH
