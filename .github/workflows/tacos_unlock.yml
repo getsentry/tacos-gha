@@ -32,45 +32,27 @@ env:
   GETSENTRY_SAC_VERB: state-admin
 
 jobs:
-  determine-tf-root-modules:
-    name: List Slices
+  determine-terraformers:
+    name: list terraformers
     if: |
       false
       || github.event.action != 'labeled'
       || github.event.label.name == ':taco::unlock'
     outputs:
-      slices: ${{ steps.list-slices.outputs.slices }}
-
+      terraformers: ${{ steps.list-terraformers.outputs.terraformers }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
       pull-requests: write
 
-    steps:
-      - name: Checkout IAC
-        uses: actions/checkout@v4
-      - name: Checkout tacos-gha
-        uses: actions/checkout@v4
-        with:
-          repository: ${{inputs.tacos_gha_repo}}
-          ref: ${{inputs.tacos_gha_ref}}
-          path: tacos-gha
-
-      - name: List Slices
-        id: list-slices
-        uses: ./tacos-gha/.github/actions/list-slices
-
   tacos_unlock:
     name: TACOS Unlock
-    needs: [determine-tf-root-modules]
-    if: |
-      needs.determine-tf-root-modules.outputs.slices != '[]'
+    needs: [determine-terraformers]
     strategy:
       fail-fast: false
       matrix:
-        tf-root-module:
-          ${{ fromJSON(needs.determine-tf-root-modules.outputs.slices) }}
-
+        terraformer:
+          ${{ fromJSON(needs.determine-terraformers.outputs.terraformers) }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -78,7 +60,9 @@ jobs:
       id-token: write
 
     env:
-      TF_ROOT_MODULE: ${{matrix.tf-root-module}}
+      SUDO_GCP_SERVICE_ACCOUNT: ${{fromJSON(matrix.terraformer).SUDO_GCP_SERVICE_ACCOUNT}}
+      GETSENTRY_SAC_OIDC: ${{fromJSON(matrix.terraformer).GETSENTRY_SAC_OIDC}}
+      SLICES: ${{toJSON(fromJSON(matrix.terraformer).slices)}}
     steps:
       - name: Checkout IAC
         uses: actions/checkout@v4
@@ -88,8 +72,8 @@ jobs:
           repository: ${{inputs.tacos_gha_repo}}
           ref: ${{inputs.tacos_gha_ref}}
           path: tacos-gha
-      - name: Setup
-        uses: ./tacos-gha/.github/actions/setup
+      - name: basic-setup
+        uses: ./tacos-gha/.github/actions/basic-setup
         with:
           ssh-private-key: ${{ secrets.ssh-private-key }}
           # We explicitly list the low-concern actions, during which users will
@@ -112,7 +96,7 @@ jobs:
 
               || github.triggering_actor
             }}
-
+      # todo: loop through all slices, look for .config, and unlock if match?
       - name: Unlock
         id: main
         run: |

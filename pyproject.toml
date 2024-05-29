@@ -3,6 +3,8 @@ line-length = 79
 target-version = ['py312']
 skip-magic-trailing-comma = true
 preview = true
+enable-unstable-feature = ['hug_parens_with_braces_and_square_brackets']
+
 
 [tool.isort]
 profile = "black"
@@ -12,9 +14,7 @@ multi_line_output = 3
 include_trailing_comma = true
 sections = ['FUTURE', 'STDLIB', 'THIRDPARTY', 'FIRSTPARTY', 'LOCALFOLDER']
 lines_between_sections = 1
-add_imports=[
-  "from __future__ import annotations",
-]
+add_imports = ["from __future__ import annotations"]
 
 [tool.coverage.run]
 plugins = ["covdefaults"]
@@ -32,13 +32,13 @@ xfail_strict = true
 addopts = "-p lib.pytest.plugin.cap1fd -v --durations=0 --durations-min=10 --doctest-modules --last-failed"
 testpaths = ["."]
 norecursedirs = [
-    "**/__pycache__",
-    "**/.*",
-    "venv",
-    "tmp*",
-    "*tmp",
-    "**/bak",
-    "**/scratch",
+  "**/__pycache__",
+  "**/.*",
+  "venv",
+  "tmp*",
+  "*tmp",
+  "**/bak",
+  "**/scratch",
 ]
 python_files = ["*.py"]
 python_classes = ["Test", "Describe"]
@@ -48,22 +48,20 @@ python_functions = ["test", "it"]
 [tool.pyright]
 include = ["."]
 exclude = [
-    "**/__pycache__",
-    "**/.*",
-    "venv",
-    "tmp*",
-    "*tmp",
-    "**/bak",
-    "**/scratch",
+  "**/__pycache__",
+  "**/.*",
+  "venv",
+  "tmp*",
+  "*tmp",
+  "**/bak",
+  "**/scratch",
 ]
 follow_imports_for_stubs = true
 
 pythonPlatform = "Linux"
 
 pythonVersion = "3.12"
-extraPaths = [
-  "venv/lib/python3.12/site-packages/"
-]
+extraPaths = ["venv/lib/python3.12/site-packages/"]
 
 typeCheckingMode = "strict"
 
@@ -78,7 +76,7 @@ reportMissingSuperCall = "error"
 reportPropertyTypeMismatch = "error"
 reportUninitializedInstanceVariable = "error"
 reportUnnecessaryTypeIgnoreComment = "error"
-reportUnusedCallResult = "none"  # too noisy
+reportUnusedCallResult = "none"               # too noisy
 
 # maintainer has an strong anti-idomatic stance on what "constant" means
 # https://github.com/microsoft/pyright/issues/5265
@@ -89,11 +87,7 @@ reportConstantRedefinition = false
 python_version = "3.12"
 
 files = ["."]
-exclude = [
-    "(^|/)venv/$",
-    "(^|/)bak/$",
-    "(^|/)scratch/$",
-]
+exclude = ["(^|/)venv/$", "(^|/)bak/$", "(^|/)scratch/$"]
 scripts_are_modules = true
 
 # Strict mode; enables the following flags: (in mypy 1.7.1)

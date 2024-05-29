@@ -7,7 +7,6 @@ exec 3>&1 1>&2
 # note: for terragrunt, tfplan must be absolute
 TACOS_TFPLAN="${TACOS_TFPLAN:-$PWD/tfplan}"
 TACOS_LOCK="${TACOS_LOCK:-false}"
-cache=.config/tf-lock-info
 
 #todo: make this an artifact instead
 # we expect at most 6 slices to be fighting
@@ -29,25 +28,7 @@ if "$TACOS_LOCK"; then
   ( set -ex
     env GETSENTRY_SAC_VERB=state-admin sudo-gcp tf-lock-acquire
   )
-  if [[ -d $cache ]]; then
-    git add -f $cache
-    if ! git diff --cached --exit-code $cache; then
-      git config --global user.email "$USER@$HOSTNAME"
-      git config --global user.name "$USER"
-      git config --global push.default current
-      #git checkout -b "$GITHUB_HEAD_REF"
-      ( set -ex
-      git fetch origin --depth=1 "$GITHUB_HEAD_REF"
-      git checkout "$GITHUB_HEAD_REF"
-      # graft="$(git rev-parse HEAD)"
-        # add .terraform-lock changes 
-        git add -u .
-        git status
-        git commit -m "updating tf-lock cache: $TF_ROOT_MODULE"
-      )
-      git_push_aggressively
-    fi
-  fi
+  handle-tflock-cache
 fi
 
 quietly sudo-gcp terragrunt run-all init
