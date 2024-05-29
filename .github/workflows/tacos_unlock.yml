@@ -44,6 +44,21 @@ jobs:
     permissions:
       contents: read
       pull-requests: write
+    steps:
+      - name: Checkout IAC
+        uses: actions/checkout@v4
+      - name: Checkout tacos-gha
+        uses: actions/checkout@v4
+        with:
+          repository: ${{inputs.tacos_gha_repo}}
+          ref: ${{inputs.tacos_gha_ref}}
+          path: tacos-gha
+      - name: basic-setup
+        uses: ./tacos-gha/.github/actions/basic-setup
+      - name: List Terraformers
+        id: list-terraformers
+        run: |
+          "$TACOS_GHA_HOME/"lib/ci/list-terraformers
 
   tacos_unlock:
     name: TACOS Unlock
