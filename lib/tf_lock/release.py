@@ -11,11 +11,12 @@ from lib.sh import sh
 from lib.tf_lock.lib.env import tf_working_dir
 from lib.types import Environ
 from lib.types import OSPath
-from lib.types import Path
 from lib.user_error import UserError
 
 from .lib.env import get_current_host
 from .lib.env import get_current_user
+from .tf_lock_info import cache_get
+from .tf_lock_info import tf_lock_info
 
 HERE = sh.get_HERE(__file__)
 TF_LOCK_EHELD = 3
@@ -89,14 +90,9 @@ def assert_dict_of_strings(json: object) -> dict[str, str]:
     return cast(dict[str, str], json)
 
 
-def get_lock_info(root_module: Path) -> Tuple[bool, dict[str, str]]:
-    try:
-        result = sh.json((HERE / "tf-lock-info", str(root_module)))
-    except sh.CalledProcessError as error:
-        # error message was already printed by subcommand
-        raise UserError(code=error.returncode)
+def get_lock_info(root_module: OSPath) -> Tuple[bool, dict[str, str]]:
 
-    assert isinstance(result, dict), result
+    result = dict(tf_lock_info(root_module))
 
     lock = result.pop("lock")
     assert isinstance(lock, bool), lock
@@ -114,9 +110,20 @@ def tf_lock_release(root_module: OSPath, env: Environ) -> None:
     lock_user = lock_info["Who"]
     if tf_user == lock_user:
         with sh.cd(tf_working_dir(root_module)):
-            sh.run(
-                ("terraform", "force-unlock", "-force", "--", lock_info["ID"])
-            )
+            cache = cache_get(root_module)
+            if cache:
+                try:
+                    sh.json(("gcloud", "storage", "rm", cache))
+                except sh.ShError:
+                    pass  # it is unlocked
+            else:
+                sh.run((
+                    "terraform",
+                    "force-unlock",
+                    "-force",
+                    "--",
+                    lock_info["ID"],
+                ))
 
         info(f"tf-lock-release: success: {root_module}({lock_user})")
 

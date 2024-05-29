@@ -46,16 +46,24 @@ def cache_put(tg_root_module: OSPath, path: str) -> None:
     cache.write_text(path)
 
 
-def tf_lock_info(tg_root_module: OSPath) -> json.Value:
+def tf_lock_info(tg_root_module: OSPath) -> json.Object:
     with sh.cd(tg_root_module):
-        lock_info = sh.json((LIB / "tf-lock-info-uncached",))
+        path = cache_get(tg_root_module)
+        lock_info: json.Value
+        if path is None:
+            lock_info = sh.json((LIB / "tf-lock-info-uncached",))
+        else:
+            try:
+                lock_info = sh.json(("gcloud", "storage", "cat", path))
+            except sh.ShError:
+                lock_info = {}
         assert isinstance(lock_info, dict)
-        if lock_info["lock"]:
+
+        if lock_info.get("lock", False):
             path = lock_info["Path"]
             assert isinstance(path, str)
             cache_put(tg_root_module, path)
         else:
-            path = cache_get(tg_root_module)
             if path is not None:
                 lock_info.setdefault("Path", path)
 

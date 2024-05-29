@@ -13,6 +13,7 @@ from .core import returncode as returncode
 from .core import run as run
 from .core import stdout as stdout
 from .core import success as success
+from .errors import ShError as ShError
 from .io import *  # info, debug, banner, comment, and 10+ more
 from .json import jq as jq
 from .json import json as json

@@ -111,7 +111,6 @@ jobs:
 
               || github.triggering_actor
             }}
-      # todo: loop through all slices, look for .config, and unlock if match?
       - name: Unlock
         id: main
         run: |
