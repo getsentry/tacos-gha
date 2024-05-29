@@ -57,9 +57,13 @@ def tf_lock_info(tg_root_module: OSPath) -> json.Object:
                 lock_info = sh.json(("gcloud", "storage", "cat", path))
             except sh.ShError:
                 lock_info = {}
+                lock_info["lock"] = False
+            else:
+                assert isinstance(lock_info, dict)
+                lock_info["lock"] = True
         assert isinstance(lock_info, dict)
 
-        if lock_info.get("lock", False):
+        if lock_info["lock"]:
             path = lock_info["Path"]
             assert isinstance(path, str)
             cache_put(tg_root_module, path)
