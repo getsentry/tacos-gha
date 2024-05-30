@@ -25,7 +25,7 @@ def list_cached_tflock_files() -> list[TFLockFile]:
     from subprocess import check_output
 
     slices = check_output(
-        ("find", ".", "-path", "*/.config/tf-lock-info/Path", "-print0"),
+        ("find", "$(pwd)", "-path", "*/.config/tf-lock-info/Path", "-print0"),
         encoding="UTF-8",
     )
     return sorted([OSPath(slice) for slice in slices.split("\0")])
@@ -34,7 +34,7 @@ def list_cached_tflock_files() -> list[TFLockFile]:
 def list_terraformers() -> Generator[TerraformerResult]:
     """List all slices and the oidc provider and terraformer of that slice"""
     for tflock_file in list_cached_tflock_files():
-        with sh.cd(tflock_file.parents[1]):
+        with sh.cd(tflock_file.parents[2]):
             oidc_provider = sh.stdout(
                 (TACOS_GHA_HOME / "lib/getsentry-sac/oidc-provider",)
             )
