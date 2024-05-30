@@ -12,9 +12,8 @@ if "$TACOS_LOCK"; then
   ( set -ex
     env GETSENTRY_SAC_VERB=state-admin sudo-gcp tf-lock-acquire
   )
-  "$TACOS_GHA_HOME"/handle-tflock-cache
+  "$TACOS_GHA_HOME"/lib/tacos/lib/handle-tflock-cache
 fi
-
 quietly sudo-gcp terragrunt run-all init
 
 if "$TACOS_LOCK"; then
