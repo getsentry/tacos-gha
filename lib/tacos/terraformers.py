@@ -34,7 +34,7 @@ def list_cached_tflock_files() -> list[TFLockFile]:
 def list_terraformers() -> Generator[TerraformerResult]:
     """List all slices and the oidc provider and terraformer of that slice"""
     for tflock_file in list_cached_tflock_files():
-        with sh.cd(tflock_file.parents[2]):
+        with sh.cd(tflock_file.parents[1]):
             oidc_provider = sh.stdout(
                 (TACOS_GHA_HOME / "lib/getsentry-sac/oidc-provider",)
             )
