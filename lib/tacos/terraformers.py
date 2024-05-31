@@ -36,7 +36,9 @@ def list_cached_tflock_files() -> list[TFLockFile]:
         ),
         encoding="UTF-8",
     )
-    return sorted([OSPath(slice) for slice in slices.split("\0")])
+    return sorted([
+        OSPath(slice) for slice in slices.split("\0") if slice and slice != "."
+    ])
 
 
 def list_terraformers() -> Generator[TerraformerResult]:
