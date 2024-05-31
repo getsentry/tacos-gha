@@ -11,6 +11,9 @@ inputs:
   shell:
     description: "private -- do not use"
     default: bash -euxo pipefail {0}
+  matrix:
+    description: defaults to toJSON(matrix)
+    default: ${{ toJSON(matrix) }}
 
 runs:
   using: "composite"
@@ -19,7 +22,7 @@ runs:
     - shell: ${{ inputs.shell }}
       env:
         MATRIX_FAN_OUT_PATH: ${{ inputs.path }}
-        GHA_MATRIX_CONTEXT: ${{ toJSON(matrix) }}
+        GHA_MATRIX_CONTEXT: ${{ inputs.matrix }}
       run: |
         "$GITHUB_ACTION_PATH/"prepare.sh |
           tee -a "$GITHUB_ENV"
