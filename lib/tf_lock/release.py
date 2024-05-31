@@ -116,8 +116,8 @@ def tf_lock_release(root_module: OSPath, env: Environ) -> None:
                     sh.json(("gcloud", "storage", "rm", cache))
                 except sh.ShError:
                     pass  # already unlocked
-                tf_log = open("tf-log.hcl", "x")
-                tf_log.write("success")
+                with open("tf-log.hcl", "w") as tf_log:
+                    tf_log.write("success")
             else:
                 sh.run((
                     "terraform",
