@@ -32,10 +32,12 @@ export DEBUG="${DEBUG:-}"
 if (( DEBUG >= 1 )); then
   export TF_LOG=debug
   export TERRAGRUNT_LOG_LEVEL=info
-  set -x
 fi
 if (( DEBUG >= 3 )); then
   export TERRAGRUNT_LOG_LEVEL=debug
+  if (( DEBUG >= 4 )); then
+    set -x
+  fi
 elif (( DEBUG <= 0 )); then
   export TERRAGRUNT_LOG_LEVEL=error
 fi

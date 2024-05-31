@@ -35,7 +35,7 @@ info() { echo >&2 "$@";  }
 error() { info "$@"; exit 1; }
 
 export DEBUG="${DEBUG:-}"
-if (( DEBUG >= 1 )); then
+if (( DEBUG >= 5 )); then
   set -x
 fi
 
