@@ -5,6 +5,7 @@ set -euo pipefail
 HERE="$(dirname "$(readlink -f "$0")")"
 umask 002  # stuff is group-writable by default
 
+export DEBUG="${DEBUG:-}"
 if (( DEBUG > 0 )); then
   gha-printenv post-sudo
 fi
