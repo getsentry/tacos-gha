@@ -25,6 +25,9 @@ GHA_RUN_URL = "https://github.com/{}/actions/runs/{}"
 FILE_NOT_FOUND = "(file not found: {!r}"
 
 SectionFunction = Callable[[Sequence["SliceSummary"], int], Lines]
+TacosSummary = Callable[
+    [Collection["SliceSummary"], ByteBudget, str, int], Lines
+]
 
 
 def ensmallen(lines: Lines, size_limit: int) -> Lines:
@@ -318,19 +321,10 @@ def error_section(
     return mksection(budget, slices, title="Errors", first=True)
 
 
-def main_helper(
-    tacos_summary: Callable[
-        [Collection[SliceSummary], ByteBudget, str, int], Lines
-    ],
-) -> ExitCode:
-    from sys import argv
-
-    try:
-        arg = argv[1]
-    except IndexError:
-        arg = "./matrix-fan-out"
-
-    path = OSPath(arg)
+def process_matrix_fan_out(
+    tacos_summary: TacosSummary, matrix_fan_out: OSPath
+) -> Iterable[Line]:
+    path = OSPath(matrix_fan_out)
     slices = tuple(SliceSummary.from_matrix_fan_in(path))
     budget = ByteBudget(COMMENT_SIZE_LIMIT - 1000)
 
@@ -339,7 +333,18 @@ def main_helper(
     run_id = int(environ["GITHUB_RUN_ID"])
     repository = environ["GITHUB_REPOSITORY"]
 
-    for line in tacos_summary(slices, budget, repository, run_id):
+    return tacos_summary(slices, budget, repository, run_id)
+
+
+def main_helper(tacos_summary: TacosSummary) -> ExitCode:
+    from sys import argv
+
+    try:
+        arg = argv[1]
+    except IndexError:
+        arg = "./matrix-fan-out"
+
+    for line in process_matrix_fan_out(tacos_summary, OSPath(arg)):
         print(line)
 
     return 0

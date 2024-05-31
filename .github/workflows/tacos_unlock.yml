@@ -127,6 +127,9 @@ jobs:
         # we need to show any errors to end-users
         if: always()
         uses: ./tacos-gha/.github/actions/matrix-fan-out
+        with:
+          path: |
+            **/matrix-fan-out
 
   summary:
     needs: tacos_unlock
