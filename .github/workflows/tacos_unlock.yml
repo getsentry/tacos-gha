@@ -120,7 +120,8 @@ jobs:
       - name: Unlock
         id: main
         run: |
-          tf-step-summary "TACOS Unlock" "$TACOS_GHA_HOME/"lib/tacos/unlock
+          # release all tfstate locks currently held 
+          jq <<< "$SLICES" -r '.[]' | ./tacos-gha/lib/ci/unlock
 
       - name: Save matrix result
         # we need to show any errors to end-users

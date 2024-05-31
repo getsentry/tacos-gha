@@ -28,4 +28,4 @@ $results
 </details>
 EOF
     fi
-) | gha-step-summary;
+) | gha-step-summary | save-matrix-fan-out;

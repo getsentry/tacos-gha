@@ -1,0 +1,40 @@
+#!/bin/bash
+set -euo pipefail
+
+save_var() {
+  path="$1"
+  var="$2"
+
+  eval 'echo "${'"$var"':-}"' > "$path/$var"
+}
+
+tf_log=tf-log.hcl
+console_log=console.log
+outdir="matrix-fan-out"
+mkdir "$outdir"
+cat > "explanation" # put any extended explanation on stdin
+
+# save any local vars we'll need for analysis during fan-in summary
+mkdir -p "$outdir/env"
+for var in HOME GITHUB_WORKSPACE TF_ROOT_MODULE TACOS_LOCK; do
+  save_var "$outdir/env" "$var"
+done
+for var in tacos_verb title script returncode; do
+  save_var "$outdir" "$var"
+done
+
+# TODO: why would this fail though?
+# > failed to get run: HTTP 403: Resource not accessible by integration 
+# > (https://api.github.com/repos/getsentry/ops/actions/runs/8327109032?exclude_pull_requests=true)
+( gh run --repo "$GITHUB_REPOSITORY" view "$GITHUB_RUN_ID" --json jobs \
+    --jq '.jobs[] | select(.name | endswith("'" ($TF_ROOT_MODULE)"'"))' \
+  || echo >&2 failed with exit code $?
+) > "$outdir/gha-job.json"
+( jq .url "$outdir/gha-job.json" -r \
+  || echo >&2 failed with exit code $?
+) > "$outdir/url"
+
+# copy any files we want to keep
+cp "$tf_log" "$console_log" "$outdir"
+
+(set -x; tree "$outdir")

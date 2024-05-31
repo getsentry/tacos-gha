@@ -15,8 +15,7 @@ from lib.user_error import UserError
 
 from .lib.env import get_current_host
 from .lib.env import get_current_user
-
-# from .tf_lock_info import cache_get
+from .tf_lock_info import cache_get
 from .tf_lock_info import tf_lock_info
 
 HERE = sh.get_HERE(__file__)
@@ -110,25 +109,14 @@ def tf_lock_release(root_module: OSPath, env: Environ) -> None:
     tf_user = f"{get_current_user(env)}@{get_current_host(env)}"
     lock_user = lock_info["Who"]
     if tf_user == lock_user:
-        # with sh.cd(tf_working_dir(root_module)):
-        #     cache = cache_get(root_module)
-        #     if cache:
-        #         try:
-        #             sh.json(("gcloud", "storage", "rm", cache))
-        #         except sh.ShError:
-        #             pass  # already unlocked
-        #     else:
-        #         sh.run((
-        #             "terraform",
-        #             "force-unlock",
-        #             "-force",
-        #             "--",
-        #             lock_info["ID"],
-        #         ))
-        # with open("tf-log.hcl", "w") as tf_log:
-        #     tf_log.write("success")
-        try:
-            with sh.cd(tf_working_dir(root_module)):
+        with sh.cd(tf_working_dir(root_module)):
+            cache = cache_get(root_module)
+            if cache:
+                try:
+                    sh.json(("gcloud", "storage", "rm", cache))
+                except sh.ShError:
+                    pass  # already unlocked
+            else:
                 sh.run((
                     "terraform",
                     "force-unlock",
@@ -136,9 +124,8 @@ def tf_lock_release(root_module: OSPath, env: Environ) -> None:
                     "--",
                     lock_info["ID"],
                 ))
-        except sh.CalledProcessError as error:
-            # error message was already printed by subcommand
-            raise UserError(code=error.returncode)
+        with open("tf-log.hcl", "w") as tf_log:
+            tf_log.write("success")
         info(f"tf-lock-release: success: {root_module}({lock_user})")
 
     else:
