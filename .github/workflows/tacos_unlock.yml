@@ -58,7 +58,8 @@ jobs:
       - name: List Terraformers
         id: list-terraformers
         run: |
-          "$TACOS_GHA_HOME/"lib/ci/list-terraformers
+          gha-log-as-step-summary \
+            "$TACOS_GHA_HOME/"lib/ci/list-terraformers
 
   tacos_unlock:
     name: TACOS Unlock
