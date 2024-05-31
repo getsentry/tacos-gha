@@ -22,10 +22,18 @@ class TerraformerResult:
 
 
 def list_cached_tflock_files() -> list[TFLockFile]:
+    import os
     from subprocess import check_output
 
+    current_dir = os.getcwd()
     slices = check_output(
-        ("find", "$(pwd)", "-path", "*/.config/tf-lock-info/Path", "-print0"),
+        (
+            "find",
+            current_dir,
+            "-path",
+            "*/.config/tf-lock-info/Path",
+            "-print0",
+        ),
         encoding="UTF-8",
     )
     return sorted([OSPath(slice) for slice in slices.split("\0")])
