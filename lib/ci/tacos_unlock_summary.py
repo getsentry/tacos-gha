@@ -15,7 +15,7 @@ from .tacos_summary import GHA_RUN_URL
 from .tacos_summary import SKIPPED_MESSAGE
 from .tacos_summary import SliceSummary
 from .tacos_summary import error_section
-from .tacos_summary import process_matrix_fan_out
+from .tacos_summary import process_slices
 
 
 def header(
@@ -79,9 +79,12 @@ def tacos_unlock_summary(
 
 
 def main() -> ExitCode:
-
+    slices: list[SliceSummary] = []
     for matrix_fan_out in sh.lines(("find", ".", "-name", "matrix-fan-out")):
-        process_matrix_fan_out(tacos_unlock_summary, OSPath(matrix_fan_out))
+        slices.append(SliceSummary.from_matrix_fan_out(OSPath(matrix_fan_out)))
+
+    for line in process_slices(tacos_unlock_summary, slices):
+        print(line)
 
     return 0
 

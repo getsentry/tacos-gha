@@ -124,13 +124,9 @@ def tf_lock_release(root_module: OSPath, env: Environ) -> None:
                     "--",
                     lock_info["ID"],
                 ))
-        with open("tf-log.hcl", "w") as tf_log:
-            tf_log.write("success")
         info(f"tf-lock-release: success: {root_module}({lock_user})")
 
     else:
-        with open("tf-log.hcl", "w") as tf_log:
-            tf_log.write("failure")
         raise UserError(
             f"""\
 tf-lock-release: failure: not {lock_user}: {root_module}({tf_user})

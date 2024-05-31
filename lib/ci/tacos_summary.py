@@ -321,11 +321,9 @@ def error_section(
     return mksection(budget, slices, title="Errors", first=True)
 
 
-def process_matrix_fan_out(
-    tacos_summary: TacosSummary, matrix_fan_out: OSPath
+def process_slices(
+    tacos_summary: TacosSummary, slices: Collection[SliceSummary]
 ) -> Iterable[Line]:
-    path = OSPath(matrix_fan_out)
-    slices = tuple(SliceSummary.from_matrix_fan_in(path))
     budget = ByteBudget(COMMENT_SIZE_LIMIT - 1000)
 
     from os import environ
@@ -344,7 +342,10 @@ def main_helper(tacos_summary: TacosSummary) -> ExitCode:
     except IndexError:
         arg = "./matrix-fan-out"
 
-    for line in process_matrix_fan_out(tacos_summary, OSPath(arg)):
+    path = OSPath(arg)
+    slices = tuple(SliceSummary.from_matrix_fan_in(path))
+
+    for line in process_slices(tacos_summary, slices):
         print(line)
 
     return 0
