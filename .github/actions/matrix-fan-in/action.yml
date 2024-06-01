@@ -31,7 +31,7 @@ runs:
       uses: actions/download-artifact@v4
       with:
         pattern: ${{ env.artifact_name }} *${{ inputs.pattern }}*
-        path: matrix-fan-in.tmp
+        path: ${{ inputs.path }}
 
     - name: fix up archive files
       shell: bash
