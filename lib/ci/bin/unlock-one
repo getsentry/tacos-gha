@@ -3,5 +3,4 @@ set -euo pipefail
 
 export TF_ROOT_MODULE=$1
 
-cd "$TF_ROOT_MODULE"
 tf-step-summary "TACOS Unlock" tf-lock-release
