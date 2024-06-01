@@ -155,6 +155,9 @@ jobs:
         uses: ./tacos-gha/.github/actions/just-the-basics
       - name: Run matrix-fan-in
         uses: ./tacos-gha/.github/actions/matrix-fan-in
+        with:
+          path: |
+            **/matrix-fan-out
       - name: Summarize
         id: summary
         run: |
