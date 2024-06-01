@@ -133,6 +133,8 @@ jobs:
         with:
           path: |
             **/matrix-fan-out
+          matrix: |
+            { "terraformer": "${{env.SUDO_GCP_SERVICE_ACCOUNT}}" }
 
   summary:
     needs: tacos_unlock
