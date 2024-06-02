@@ -39,6 +39,14 @@ runs:
         echo "Debug: Current directory is $(pwd)"
         echo "Debug: Listing all files in the current directory:"
         ls -al
+        if [ -d "./matrix-fan-in.tmp" ]; then
+            echo "Debug: matrix-fan-in.tmp directory exists."
+            echo "Debug: Listing all files in matrix-fan-in.tmp:"
+            ls -al ./matrix-fan-in.tmp
+        else
+            echo "Error: matrix-fan-in.tmp directory does not exist."
+            exit 1
+        fi
 
     - name: fix up archive files
       shell: bash
