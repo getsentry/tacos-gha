@@ -33,6 +33,13 @@ runs:
         pattern: ${{ env.artifact_name }} *${{ inputs.pattern }}*
         path: ${{ inputs.path }}
 
+    - name: Debug artifact download
+      shell: bash
+      run: |
+        echo "Debug: Current directory is $(pwd)"
+        echo "Debug: Listing all files in the current directory:"
+        ls -al
+
     - name: fix up archive files
       shell: bash
       env:
