@@ -13,12 +13,10 @@ path="$1"
 
 mkdir -p "$path"
 
+: directory name fixup
 echo "Debug: Current directory is $(pwd)"
 echo "Debug: Listing all files in the current directory:"
 ls -al
-
-
-: directory name fixup
 find ./matrix-fan-in.tmp \
     -mindepth 1 \
     -maxdepth 1 \
