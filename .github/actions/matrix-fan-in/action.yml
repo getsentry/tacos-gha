@@ -22,7 +22,7 @@ runs:
   steps:
     - shell: ${{ inputs.shell }}
       env:
-        MATRIX_FAN_OUT_PATH: ${{ inputs.path }}
+        MATRIX_FAN_OUT_PATH: matrix-fan-in.tmp
       run: |
         "$GITHUB_ACTION_PATH/"set-artifact-name.sh "$MATRIX_FAN_OUT_PATH" |
           tee -a "$GITHUB_ENV"
