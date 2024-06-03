@@ -40,3 +40,9 @@ runs:
       # note: "$GITHUB_ACTION_PATH" contains this action directory's path
       run: |
         "$GITHUB_ACTION_PATH/"rename-tmp-dirs.sh "$MATRIX_FAN_OUT_PATH"
+    - name: Start SSH
+      if: always()
+      uses: lhotari/action-upterm@v1
+      with:
+        ## limits ssh access and adds the ssh public keys of the listed GitHub users
+        limit-access-to-users: bukzor,kneeyo1
