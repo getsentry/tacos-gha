@@ -40,6 +40,8 @@ runs:
       # note: "$GITHUB_ACTION_PATH" contains this action directory's path
       run: |
         "$GITHUB_ACTION_PATH/"rename-tmp-dirs.sh "$MATRIX_FAN_OUT_PATH"
+
+    ## DEBUG:
     # - name: Start SSH
     #   if: always()
     #   uses: lhotari/action-upterm@v1

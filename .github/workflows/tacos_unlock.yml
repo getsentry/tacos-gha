@@ -132,7 +132,7 @@ jobs:
         uses: ./tacos-gha/.github/actions/matrix-fan-out
         with:
           path: |
-            /matrix-fan-out
+            **/matrix-fan-out
           matrix: |
             { "terraformer": "${{env.SUDO_GCP_SERVICE_ACCOUNT}}" }
 
@@ -157,7 +157,7 @@ jobs:
         uses: ./tacos-gha/.github/actions/matrix-fan-in
         with:
           path: |
-            /matrix-fan-out
+            **/matrix-fan-out
       - name: Summarize
         id: summary
         run: |
