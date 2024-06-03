@@ -13,19 +13,27 @@
 # in other words, valid characters include: ' `~!@#$%^&()_+{}-=[];,.
 # unused escapes: ~@#`'()-=[]
 
-# our escape character is $
-s \$ \$\$ g
-s \" \$\^ g
-s \: \$\; g
- s < \$\{ g
- s > \$\} g
-s \| \$\+ g
-s \* \$\& g
-s \? \$\! g
-s \r \$\, g
-s \n \$\. g
-s \\ \$\% g
+# self-escape a few characters so we can use them:
 
-# escape ` ` so we can use a space to denote a slash:
-s|\ |\$\_|g
-s|\/|\ |g
+# our escape-suffix character is ' ' (space)
+s.\/.\x00.g  # 1
+s/([_^;{}+&!,.$])/\1\1/g  # 2
+s.\ .\_ .g  # 3
+
+# 4
+s.\".\^ .g
+s.\:.\; .g
+ s.<.\{ .g
+ s.>.\} .g
+s.\|.\+ .g
+s.\*.\& .g
+s.\?.\! .g
+s.\r.\, .g
+s.\n.\. .g
+s.\\.\$ .g
+
+s.\x00. .g  # 1
+
+### # escape `  ` so we can use a double-space to denote a slash:
+### s.\ .$ .g
+### s.\/. .g

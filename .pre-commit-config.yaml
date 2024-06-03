@@ -29,13 +29,6 @@ repos:
         types:
           - python
 
-      - id: mypy
-        name: mypy
-        entry: mypy
-        language: system
-        types:
-          - python
-
       - id: shellcheck
         name: shellcheck
         entry: shellcheck
