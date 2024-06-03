@@ -22,7 +22,7 @@ runs:
   steps:
     - shell: ${{ inputs.shell }}
       env:
-        MATRIX_FAN_OUT_PATH: matrix-fan-in.tmp
+        MATRIX_FAN_OUT_PATH: ${{ inputs.path }}
       run: |
         "$GITHUB_ACTION_PATH/"set-artifact-name.sh "$MATRIX_FAN_OUT_PATH" |
           tee -a "$GITHUB_ENV"
@@ -36,15 +36,13 @@ runs:
     - name: Debug artifact download
       shell: bash
       run: |
-        echo "Debug: Current directory is $(pwd)"
-        echo "Debug: Listing all files in the current directory:"
-        ls -al
-        if [ -d "./matrix-fan-in.tmp" ]; then
-            echo "Debug: matrix-fan-in.tmp directory exists."
-            echo "Debug: Listing all files in matrix-fan-in.tmp:"
-            ls -al ./matrix-fan-in.tmp
+        echo "Debug: Checking if the ${{ inputs.path }} directory exists:"
+        if [ -d "${{ inputs.path }}" ]; then
+            echo "Debug: ${{ inputs.path }} directory exists."
+            echo "Debug: Listing all files in ${{ inputs.path }}:"
+            ls -al ${{ inputs.path }}
         else
-            echo "Error: matrix-fan-in.tmp directory does not exist."
+            echo "Error: ${{ inputs.path }} directory does not exist."
             exit 1
         fi
 
