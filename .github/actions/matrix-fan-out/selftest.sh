@@ -12,16 +12,20 @@ key="$1"
 set -x
 
 : Processing... "$key"
-outdir="a/b/c"
+outdir="a/b/$MY_MATRIX_IO_DIR"
 mkdir -p "$outdir/x/y/z"
 
 echo "$key" > "$outdir/key"
 echo 1 > "$outdir/x/y/matrix.1.json"
 "$HERE/"square.py "$key" > "$outdir/"square.txt
 
+outdir="./$MY_MATRIX_IO_DIR"
+mkdir -p "$outdir/x/y/z"
 square=$((key ** 2))
 echo "$square" | tee "$outdir/square" "$outdir/x/y/z/matrix.json"
 echo "$RANDOM" | tee "$outdir/x/random.txt" "$outdir/x/y/z/random.json"
 
 outdir="a/b/c"
-find "$outdir" -type f -print0 | xargs -0 head
+find . -type f -path "*/$MY_MATRIX_IO_DIR/**" -print0 |
+  xargs -r0 head \
+;

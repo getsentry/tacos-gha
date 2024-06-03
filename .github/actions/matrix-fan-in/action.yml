@@ -32,6 +32,8 @@ runs:
       with:
         pattern: ${{ env.artifact_name }} *${{ inputs.pattern }}*
         path: ${{ inputs.path }}
+        ##path: matrix-fan-in.tmp
+
     - name: fix up archive files
       shell: bash
       env:

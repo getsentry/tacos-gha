@@ -10,6 +10,8 @@ on:
 defaults:
   run:
     shell: bash -euxo pipefail {0}
+env:
+  MY_MATRIX_IO_DIR: my/fan/out
 
 # Cancel in progress workflows on pull_requests.
 # https://docs.github.com/en/actions/using-jobs/using-concurrency#example-using-a-fallback-value
@@ -62,7 +64,7 @@ jobs:
       - name: Run matrix-fan-out
         uses: ./tacos-gha/.github/actions/matrix-fan-out
         with:
-          path: ./a/b/c
+          path: "**/${{env.MY_MATRIX_IO_DIR}}"
           retention-days: 1
 
   fan-in:
@@ -79,12 +81,14 @@ jobs:
           sparse-checkout: |
             .github/actions/matrix-fan-out
             .github/actions/matrix-fan-in
+
+          # only grab those exact directories, and *nothing* else:
           sparse-checkout-cone-mode: false
 
       - name: Run matrix-fan-in
         uses: ./tacos-gha/.github/actions/matrix-fan-in
         with:
-          path: a/b/c
+          path: "**/${{env.MY_MATRIX_IO_DIR}}"
 
       - name: Check matrix-fan-in.json
         id: main
