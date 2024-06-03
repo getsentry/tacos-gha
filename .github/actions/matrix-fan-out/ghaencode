@@ -13,27 +13,19 @@
 # in other words, valid characters include: ' `~!@#$%^&()_+{}-=[];,.
 # unused escapes: ~@#`'()-=[]
 
-# self-escape a few characters so we can use them:
+# self-escape a couple characters (& and ;) so we can use them:
+s \x00 \&#0\x00 g  # null is a tmp placeholder for semicolon
+s & \&amp\x00 g
+s ; \&semi\x00 g
+s \x00 ; g  # resolve tmp placeholders
 
-# our escape-suffix character is ' ' (space)
-s.\/.\x00.g  # 1
-s/([_^;{}+&!,.$])/\1\1/g  # 2
-s.\ .\_ .g  # 3
-
-# 4
-s.\".\^ .g
-s.\:.\; .g
- s.<.\{ .g
- s.>.\} .g
-s.\|.\+ .g
-s.\*.\& .g
-s.\?.\! .g
-s.\r.\, .g
-s.\n.\. .g
-s.\\.\$ .g
-
-s.\x00. .g  # 1
-
-### # escape `  ` so we can use a double-space to denote a slash:
-### s.\ .$ .g
-### s.\/. .g
+s \" \&quot; g
+s \: \&colon; g
+ s < \&lt; g
+ s > \&gt; g
+s \| \&VerticalLine; g
+s \* \&ast; g
+s \? \&quest; g
+s \r \&#xD; g
+s \n \&NewLine; g
+s \\ \&bsol; g
