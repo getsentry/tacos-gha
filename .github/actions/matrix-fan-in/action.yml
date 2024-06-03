@@ -32,20 +32,6 @@ runs:
       with:
         pattern: ${{ env.artifact_name }} *${{ inputs.pattern }}*
         path: ${{ inputs.path }}
-
-    - name: Debug artifact download
-      shell: bash
-      run: |
-        echo "Debug: Checking if the ${{ inputs.path }} directory exists:"
-        if [ -d "${{ inputs.path }}" ]; then
-            echo "Debug: ${{ inputs.path }} directory exists."
-            echo "Debug: Listing all files in ${{ inputs.path }}:"
-            ls -al ${{ inputs.path }}
-        else
-            echo "Error: ${{ inputs.path }} directory does not exist."
-            exit 1
-        fi
-
     - name: fix up archive files
       shell: bash
       env:
