@@ -1,31 +1,65 @@
-#!/usr/bin/env -S sed -zrf
-# Allow for arbitrary characters to be passed through gha artifact names, via
-# an escaping scheme. This means we can use user inputs as part of our artifact
-# names while still writing no code whatsoever to handle weird user inputs
-# breaking the system.
-#
-# All escapes start with `$` (`$` is escaped as `$$`), with one special case:
-# `/` is escaped to ` `, allowing escaped file paths to be quite readable. (` `
-# is escaped to `$ `.)
+#!/usr/bin/env -S python3 -sS
+r"""
+Allow for arbitrary characters to be passed through gha artifact names, via
+an escaping scheme. This means we can use user inputs as part of our artifact
+names while still writing no code whatsoever to handle weird user inputs
+breaking the system.
 
-# reference:
+All escapes start with `$` (`$` is escaped as `$$`), with one special case:
+`/` is escaped to ` `, allowing escaped file paths to be quite readable. (` `
+is escaped to `$ `.)
+
+reference:
+actions/upload-artifact notes: Invalid characters include: ":<>|*?\r\n\\/
+in other words, valid characters include: ' `~!@#$%^&()_+{}-=[];,.
+unused escapes: ~@#`'()-=[]
+"""
+from __future__ import annotations
+
+import html
+import html.entities
+
 # actions/upload-artifact notes: Invalid characters include: ":<>|*?\r\n\/
-# in other words, valid characters include: ' `~!@#$%^&()_+{}-=[];,.
-# unused escapes: ~@#`'()-=[]
+INVALID_CHARACTERS = """":<>|*?\r\n\\/"""
 
-# self-escape a couple characters (& and ;) so we can use them:
-s \x00 \&#0\x00 g  # null is a tmp placeholder for semicolon
-s & \&amp\x00 g
-s ; \&semi\x00 g
-s \x00 ; g  # resolve tmp placeholders
 
-s \" \&quot; g
-s \: \&colon; g
- s < \&lt; g
- s > \&gt; g
-s \| \&VerticalLine; g
-s \* \&ast; g
-s \? \&quest; g
-s \r \&#xD; g
-s \n \&NewLine; g
-s \\ \&bsol; g
+# maps the Unicode code point to the HTML entity name
+HTML5_CODEPOINT2NAME: dict[str, str] = {}
+for name, codepoint in html.entities.html5.items():
+    HTML5_CODEPOINT2NAME[codepoint] = name
+
+
+def get_entity(char: str) -> str:
+    return (
+        f"&{HTML5_CODEPOINT2NAME[char]}"
+        if char in HTML5_CODEPOINT2NAME
+        else f"&#x{ord(char):X};"
+    )
+
+
+ESCAPES = [
+    (char.encode("latin1"), get_entity(char).encode("latin1"))
+    for char in INVALID_CHARACTERS
+]
+
+
+def escape(s: bytes) -> bytes:
+    for char, escape in ESCAPES:
+        s = s.replace(char, escape)
+    return s
+
+
+def main():
+    from sys import stdin
+    from sys import stdout
+
+    for hunk in stdin.buffer:
+        hunks = iter(hunk.split(b"&"))
+        stdout.buffer.write(escape(next(hunks, b"")))
+        for hunk in hunks:
+            stdout.buffer.write(b"&amp;")
+            stdout.buffer.write(escape(hunk))
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

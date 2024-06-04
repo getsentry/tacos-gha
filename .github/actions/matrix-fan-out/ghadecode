@@ -1,18 +1,19 @@
-#!/usr/bin/env -S sed -zrf
-# Undo `ghaencode`. For details, see `ghaencode`.
+#!/usr/bin/env -S python3 -sS
+"""Undo `ghaencode`. For details, see `ghaencode`."""
+from __future__ import annotations
 
-s \&bsol; \\ g
-s \&NewLine; \n g
-s \&#xD; \r g
-s \&quest; \? g
-s \&ast; \* g
-s \&VerticalLine; \| g
-s \&gt; \> g
-s \&lt; \< g
-s \&colon; \: g
-s \&quot; \" g
+import html
 
-s \&semi; \x00 g  # null is a tmp placeholder for semicolon
-s \&amp; \& g
-s \x00 \; g  # resolve tmp placeholders
-s \&#0; \x00 g
+
+def main():
+    from sys import stdin
+    from sys import stdout
+
+    for line in stdin.buffer:
+        stdout.buffer.write(
+            html.unescape(line.decode("latin1")).encode("latin1")
+        )
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
