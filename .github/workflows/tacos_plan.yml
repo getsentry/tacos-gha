@@ -128,7 +128,7 @@ jobs:
         id: main
         run: |
           "$TACOS_GHA_HOME/"lib/ci/tacos-plan
-        if: {{ github.repository }} == 'ops'
+        if: {{ github.repository }} == 'getsentry/ops'
         env:
           datadog_api_key: ${{ secrets.TF_VAR_DATADOG_API_KEY }}
           datadog_app_key: ${{ secrets.TF_VAR_DATADOG_APP_KEY }}
