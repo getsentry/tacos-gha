@@ -6,7 +6,8 @@ tmp="$(mktemp)"
 trap 'rm "$tmp"' EXIT
 exec >&2  # only logging output here
 
-if (( "${DEBUG:-0}" >= 1 )); then
+export DEBUG="${DEBUG:-}"
+if (( DEBUG >= 1 )); then
   "$@"
 elif ( set -x; "$@" >"$tmp" 2>&1 ); then
   length=$(wc -l <"$tmp")

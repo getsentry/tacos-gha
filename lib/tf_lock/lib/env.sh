@@ -30,6 +30,6 @@ tf_working_dir() {
 }
 
 export DEBUG="${DEBUG:-}"
-if (( DEBUG >= 0 )); then
+if (( DEBUG >= 3 )); then
   set -x
 fi

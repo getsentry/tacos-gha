@@ -15,7 +15,7 @@ on:
         default: refs/heads/stable
       debug:
         type: string
-        default: 0
+        default: "0"
     secrets:
       ssh-private-key:
         description: "Private SSH key to use for git clone"
@@ -78,7 +78,7 @@ jobs:
 
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
       pull-requests: write
       id-token: write
 
@@ -128,12 +128,10 @@ jobs:
         id: main
         run: |
           "$TACOS_GHA_HOME/"lib/ci/tacos-plan
-
       - name: Save matrix result
         # we need to show any errors to end-users
         if: always()
         uses: ./tacos-gha/.github/actions/matrix-fan-out
-
   summary:
     needs: tacos_plan
     # we need to report failures, too

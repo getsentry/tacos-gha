@@ -7,13 +7,15 @@ from lib.byte_budget import BudgetError
 from lib.byte_budget import ByteBudget
 from lib.byte_budget import Lines
 from lib.byte_budget import Log
+from lib.sh import sh
 from lib.types import ExitCode
+from lib.types import OSPath
 
 from .tacos_summary import GHA_RUN_URL
 from .tacos_summary import SKIPPED_MESSAGE
 from .tacos_summary import SliceSummary
 from .tacos_summary import error_section
-from .tacos_summary import main_helper
+from .tacos_summary import process_slices
 
 
 def header(
@@ -77,7 +79,14 @@ def tacos_unlock_summary(
 
 
 def main() -> ExitCode:
-    return main_helper(tacos_unlock_summary)
+    slices: list[SliceSummary] = []
+    for matrix_fan_out in sh.lines(("find", ".", "-name", "matrix-fan-out")):
+        slices.append(SliceSummary.from_matrix_fan_out(OSPath(matrix_fan_out)))
+
+    for line in process_slices(tacos_unlock_summary, slices):
+        print(line)
+
+    return 0
 
 
 if __name__ == "__main__":

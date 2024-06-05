@@ -4,6 +4,7 @@ import contextlib
 from os import getenv
 from typing import ContextManager
 from typing import Iterable
+from typing import TypeVar
 
 from lib import ansi
 
@@ -21,8 +22,8 @@ PS4 = f"+ {ansi.TEAL}${ansi.RESET} "
 # 2 - debug
 # 3 - trace
 # note: empty-string vars should be treated as unset
-DEBUG: int = int(getenv("DEBUG") or "1")
-
+DEBUG: int = int(getenv("DEBUG", "1") or "0")
+T = TypeVar("T")
 Uniq = set[tuple[object, ...]]
 UNIQ: Uniq | None = None
 
@@ -110,12 +111,23 @@ def verbosity(newvalue: int) -> Generator[int]:
         DEBUG = orig
 
 
+@contextlib.contextmanager
+def noop_context(x: T) -> Generator[T]:
+    yield x
+
+
 def quiet() -> ContextManager[int]:
-    return verbosity(0)
+    if getenv("DEBUG") is None:
+        return verbosity(0)
+    else:
+        return noop_context(DEBUG)
 
 
 def loud() -> ContextManager[int]:
-    return verbosity(2)
+    if getenv("DEBUG") is None:
+        return verbosity(2)
+    else:
+        return noop_context(DEBUG)
 
 
 @contextlib.contextmanager

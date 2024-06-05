@@ -23,11 +23,6 @@ from .types import Message
 from .types import WorkflowName
 from .up_to_date import up_to_date
 
-APP_INSTALLATION_REVIEWER = (
-    "op://Team Tacos gha dev/tacos-gha-reviewer/installation.json"
-)
-
-
 Comment = str  # a PR comment
 
 if TYPE_CHECKING:

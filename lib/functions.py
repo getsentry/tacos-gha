@@ -4,6 +4,8 @@ import datetime
 from typing import Iterable
 from typing import TypeVar
 
+from .types import Lines
+
 T = TypeVar("T")
 
 
@@ -34,3 +36,13 @@ def one(xs: Iterable[T]) -> T:
 
 def noop() -> None:
     pass
+
+
+def config_lines(lines: Lines) -> Lines:
+    """Strip commented and empty lines from configuration."""
+    for line in lines:
+        line = line.strip()
+        if not line or line.startswith("#"):
+            continue
+
+        yield line

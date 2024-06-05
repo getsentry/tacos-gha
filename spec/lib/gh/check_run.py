@@ -99,9 +99,14 @@ class CheckRun:
 
         try:
             result.append(
-                ("NEUTRAL", "SUCCESS", "CANCELLED", "", "FAILURE").index(
-                    self.conclusion
-                )
+                (
+                    "SKIPPED",
+                    "NEUTRAL",
+                    "SUCCESS",
+                    "CANCELLED",
+                    "",
+                    "FAILURE",
+                ).index(self.conclusion)
             )
         except ValueError as error:
             raise AssertionError(
@@ -132,13 +137,15 @@ class CheckRun:
 def get_runs_json(pr_url: URL) -> Generator[json.Value]:
     """Get the json of all runs, for the named check."""
     # https://docs.github.com/en/graphql/reference/objects#statuscheckrollup
-    return sh.jq((
-        "gh",
-        "pr",
-        "view",
-        pr_url,
-        "--json",
-        "statusCheckRollup",
-        "--jq",
-        ".statusCheckRollup[]",
-    ))
+    return sh.jq(
+        (
+            "gh",
+            "pr",
+            "view",
+            pr_url,
+            "--json",
+            "statusCheckRollup",
+            "--jq",
+            ".statusCheckRollup[]",
+        )
+    )

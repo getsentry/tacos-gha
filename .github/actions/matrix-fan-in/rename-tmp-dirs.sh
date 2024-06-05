@@ -14,7 +14,7 @@ path="$1"
 mkdir -p "$path"
 
 : directory name fixup
-find ./matrix-fan-in.tmp \
+find "$path"\
     -mindepth 1 \
     -maxdepth 1 \
     -print0 \

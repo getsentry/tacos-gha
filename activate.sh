@@ -2,6 +2,8 @@
 _here="$(readlink -f "$(dirname "${BASH_SOURCE:-$0}")")"
 
 export TACOS_GHA_HOME="$_here"
+
+export PYTHONPATH="$TACOS_GHA_HOME${PYTHONPATH:+:$PYTHONPATH}"
 export PATH="$TACOS_GHA_HOME/bin${PATH:+:$PATH}}"
 export DEBUG="${DEBUG:-}"
 

@@ -25,6 +25,9 @@ GHA_RUN_URL = "https://github.com/{}/actions/runs/{}"
 FILE_NOT_FOUND = "(file not found: {!r}"
 
 SectionFunction = Callable[[Sequence["SliceSummary"], int], Lines]
+TacosSummary = Callable[
+    [Collection["SliceSummary"], ByteBudget, str, int], Lines
+]
 
 
 def ensmallen(lines: Lines, size_limit: int) -> Lines:
@@ -318,11 +321,20 @@ def error_section(
     return mksection(budget, slices, title="Errors", first=True)
 
 
-def main_helper(
-    tacos_summary: Callable[
-        [Collection[SliceSummary], ByteBudget, str, int], Lines
-    ],
-) -> ExitCode:
+def process_slices(
+    tacos_summary: TacosSummary, slices: Collection[SliceSummary]
+) -> Iterable[Line]:
+    budget = ByteBudget(COMMENT_SIZE_LIMIT - 1000)
+
+    from os import environ
+
+    run_id = int(environ["GITHUB_RUN_ID"])
+    repository = environ["GITHUB_REPOSITORY"]
+
+    return tacos_summary(slices, budget, repository, run_id)
+
+
+def main_helper(tacos_summary: TacosSummary) -> ExitCode:
     from sys import argv
 
     try:
@@ -332,14 +344,8 @@ def main_helper(
 
     path = OSPath(arg)
     slices = tuple(SliceSummary.from_matrix_fan_in(path))
-    budget = ByteBudget(COMMENT_SIZE_LIMIT - 1000)
 
-    from os import environ
-
-    run_id = int(environ["GITHUB_RUN_ID"])
-    repository = environ["GITHUB_REPOSITORY"]
-
-    for line in tacos_summary(slices, budget, repository, run_id):
+    for line in process_slices(tacos_summary, slices):
         print(line)
 
     return 0

@@ -19,14 +19,14 @@ from .json import json
 
 @contextmanager
 def cd(
-    dirname: Path, env: Environ = environ, *, direnv: bool = True
+    dirname: OSPath, env: Environ = environ, *, direnv: bool = True
 ) -> Generator[Path]:
     oldpwd = Path.cwd(env)
 
     newpwd = oldpwd / dirname
     cwd = OSPath.cwd()
     if newpwd == oldpwd and cwd.samefile(newpwd):  # we're already there
-        yield oldpwd
+        yield newpwd
         return
 
     xtrace(("cd", dirname))

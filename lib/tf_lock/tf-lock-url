@@ -4,4 +4,4 @@ HERE="$(dirname "$(readlink -f "$0")")"
 . "$HERE/"lib/env.sh
 
 # FIXME: we need pip packaging
-python3.12 -m lib.tf_lock.tf_lock_info "$@"
+python3.12 -m lib.tf_lock.tf_lock_url "$@"

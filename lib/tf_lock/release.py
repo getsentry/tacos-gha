@@ -6,13 +6,17 @@ from typing import Self
 from typing import Tuple
 
 from lib import ansi
-from lib import json
 from lib.parse import Parse
 from lib.sh import sh
+from lib.tf_lock.lib.env import tf_working_dir
 from lib.types import Environ
 from lib.types import OSPath
-from lib.types import Path
 from lib.user_error import UserError
+
+from .lib.env import get_current_host
+from .lib.env import get_current_user
+from .tf_lock_info import cache_get
+from .tf_lock_info import tf_lock_info
 
 HERE = sh.get_HERE(__file__)
 TF_LOCK_EHELD = 3
@@ -73,26 +77,6 @@ def info(msg: object) -> None:
     print(msg, file=stderr, flush=True)
 
 
-def get_current_user(env: Environ) -> str:
-    for var in ("USER", "LOGNAME"):
-        if var in env:
-            return env[var]
-    else:
-        import getpass
-
-        return getpass.getuser()
-
-
-def get_current_host(env: Environ) -> str:
-    for var in ("HOST", "HOSTNAME"):
-        if var in env:
-            return env[var]
-    else:
-        import socket
-
-        return socket.gethostname()
-
-
 def assert_dict_of_strings(json: object) -> dict[str, str]:
     assert isinstance(json, dict), json
 
@@ -106,14 +90,9 @@ def assert_dict_of_strings(json: object) -> dict[str, str]:
     return cast(dict[str, str], json)
 
 
-def get_lock_info(root_module: Path) -> Tuple[bool, dict[str, str]]:
-    try:
-        result = sh.json((HERE / "tf-lock-info", str(root_module)))
-    except sh.CalledProcessError as error:
-        # error message was already printed by subcommand
-        raise UserError(code=error.returncode)
+def get_lock_info(root_module: OSPath) -> Tuple[bool, dict[str, str]]:
 
-    assert isinstance(result, dict), result
+    result = dict(tf_lock_info(root_module))
 
     lock = result.pop("lock")
     assert isinstance(lock, bool), lock
@@ -121,7 +100,7 @@ def get_lock_info(root_module: Path) -> Tuple[bool, dict[str, str]]:
     return lock, assert_dict_of_strings(result)
 
 
-def tf_lock_release(root_module: Path, env: Environ) -> None:
+def tf_lock_release(root_module: OSPath, env: Environ) -> None:
     lock, lock_info = get_lock_info(root_module)
     if not lock:
         info(f"tf-lock-release: success: {root_module}")
@@ -130,8 +109,14 @@ def tf_lock_release(root_module: Path, env: Environ) -> None:
     tf_user = f"{get_current_user(env)}@{get_current_host(env)}"
     lock_user = lock_info["Who"]
     if tf_user == lock_user:
-        try:
-            with sh.cd(tf_working_dir(root_module)):
+        cache = cache_get(root_module)
+        with sh.cd(tf_working_dir(root_module)):
+            if cache:
+                try:
+                    sh.json(("gcloud", "storage", "rm", cache))
+                except sh.ShError:
+                    pass  # already unlocked
+            else:
                 sh.run((
                     "terraform",
                     "force-unlock",
@@ -139,10 +124,6 @@ def tf_lock_release(root_module: Path, env: Environ) -> None:
                     "--",
                     lock_info["ID"],
                 ))
-        except sh.CalledProcessError as error:
-            # error message was already printed by subcommand
-            raise UserError(code=error.returncode)
-
         info(f"tf-lock-release: success: {root_module}({lock_user})")
 
     else:
@@ -157,19 +138,6 @@ tf-lock-release: failure: not {lock_user}: {root_module}({tf_user})
         )
 
 
-def tf_working_dir(root_module: Path) -> Path:
-    """dereference terragrunt indirection, if any"""
-
-    if OSPath(root_module / "terragrunt.hcl").exists():
-        with sh.cd(root_module):
-            sh.run(("terragrunt", "validate-inputs"))
-            info = sh.json(("terragrunt", "terragrunt-info"))
-            info = json.assert_dict_of_strings(info)
-            return Path(info["WorkingDir"])
-    else:
-        return root_module
-
-
 @UserError.handler
 def main() -> None:
     from os import environ
@@ -177,9 +145,9 @@ def main() -> None:
 
     args = argv[1:]
     if args:
-        paths = [Path(arg) for arg in args]
+        paths = [OSPath(arg) for arg in args]
     else:
-        paths = [Path(".")]
+        paths = [OSPath(".")]
 
     from os import environ
 

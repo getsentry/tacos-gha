@@ -32,7 +32,7 @@ jobs:
           exec >&2  # our only output is logging
           printf "keys=[10, 27]" >> "$GITHUB_OUTPUT"
           # for scale testing:
-          ###seq 30 | shuf | jq -R | jq -cs | tee -a "$GITHUB_OUTPUT"
+          #seq 30 | shuf | jq -R | jq -cs | tee -a "$GITHUB_OUTPUT"
 
   fan-out:
     name: Compute Squares
