@@ -5,7 +5,7 @@ exec 1>&2  # stdout is reserved for tf plan/apply results
 (
     echo "### TACOS Unlock"
     echo
-    if results=$(xargs -r -P20 -n1 unlock-one 2>&1); then
+    if results=$(xargs -r -P1 -n1 unlock-one 2>&1); then
     cat <<EOF
 <details>
 <summary>
