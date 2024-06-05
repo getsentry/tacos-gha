@@ -109,8 +109,8 @@ def tf_lock_release(root_module: OSPath, env: Environ) -> None:
     tf_user = f"{get_current_user(env)}@{get_current_host(env)}"
     lock_user = lock_info["Who"]
     if tf_user == lock_user:
+        cache = cache_get(root_module)
         with sh.cd(tf_working_dir(root_module)):
-            cache = cache_get(root_module)
             if cache:
                 try:
                     sh.json(("gcloud", "storage", "rm", cache))
