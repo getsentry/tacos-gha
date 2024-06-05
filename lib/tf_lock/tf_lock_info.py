@@ -61,6 +61,18 @@ def tf_lock_info(tg_root_module: OSPath) -> json.Object:
             else:
                 assert isinstance(lock_info, dict)
                 lock_info["lock"] = True
+
+                # the ID from the lockfile is the UUID, not the actual lock ID.
+                # https://github.com/hashicorp/terraform/blob/main/internal/backend/remote-state/gcs/client.go#L117
+                # We can pull out the lock id from the generation value.
+                metadata = sh.json(("gcloud", "storage", "ls", path, "--json"))
+                assert isinstance(metadata, list)
+                for metadata in metadata:
+                    assert isinstance(metadata, dict)
+                    metadata = metadata["metadata"]
+                    assert isinstance(metadata, dict)
+                    lock_info["ID"] = metadata["generation"]
+
         assert isinstance(lock_info, dict)
 
         if lock_info["lock"]:
