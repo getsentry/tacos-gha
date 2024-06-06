@@ -14,7 +14,12 @@ sum=$(
 
 # >>> sum([(i**2 + 1) for i in range(1, 31)])
 #expected=9485
-expected=$(( 10**2 + 1 + 27**2 + 1 ))
+expected=$((
+  1 + 10**2 +
+  1 + (10/5)**2 +
+  1 + 27**2 +
+  1 + (27/5)**2
+))
 if (( sum != expected )); then
   echo "FAIL: sum should be $expected, got $sum"
   exit 123  # convention borrowed from xargs -- a test failed

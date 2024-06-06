@@ -5,13 +5,13 @@ outdir="$1"
 ( cd "$outdir"
   echo '# squares'
   echo
-  echo "Squares computed: ($(wc -l < matrix.list) total)"
-  exec < matrix.list
+  echo "Squares computed: ($(wc -l < matrix-fan-in/matrix.list) total)"
+  exec < matrix-fan-in/path.list
   while read -r matrix; do
-    echo "  * $(cat "$matrix/key")"
+    echo "  * $(cat "$matrix/matrix-fan-out/key.list")"
   done
 
-  exec < matrix.list
+  exec < matrix-fan-in/matrix.list
   while read -r matrix; do
     key="$(cat "$matrix/key")"
     cat <<EOF
