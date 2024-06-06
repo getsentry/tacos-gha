@@ -5,18 +5,19 @@
 #   after: a/b/c/key=10
 set -euo pipefail
 
-tmpfile="$1"
-newfile="$(
-  "$HERE/"ghadecode <<<"$tmpfile" |
-    # FIXME: matrix-fan-in/rename-tmp should really be python
-    sed -r 's@^\./matrix-fan-in\.tmp/([^(]*) \((.*)\)$@\1/\2@'
+src="$1"
+dst="$(
+  "$HERE/"ghadecode <<<"$(basename "$src")" |
+    # FIXME: this should really be python (rename-tmp-dirs.sh)
+    sed -r 's@^([^(]*) \((.*)\)$@\1/\2@'
 )"
-parent="$(dirname "$newfile")"
-key="$(basename "$newfile")"
 
-mkdir -p "$parent"
-mv "$tmpfile" "$newfile"
+indir="$(dirname "$dst")/matrix-fan-in"
+mkdir -p "$indir"
+mv "$src" "$dst"
 
-# note stdout becomes matrix-fan-in/path.list
-echo -n "$key/"
-cat "$newfile/matrix-fan-out/path.list"
+# fan-in metadata is made from the concatenated fan-out metadata:
+outdir="$dst/matrix-fan-out"
+find "$outdir" -mindepth 1 -maxdepth 1 -type f -print0 |
+  xargs -r0 -n1 "$HERE/"append-to-dir "$indir" \
+;

@@ -33,8 +33,7 @@ runs:
         name: ${{ env.artifact_name }}
         path: |
           ${{ inputs.path }}
-          matrix-fan-out/context.json
-          matrix-fan-out/path.list
+          matrix-fan-out/
         retention-days: ${{ inputs.retention-days }}
         if-no-files-found: error
         overwrite: false # assert no accidental overlaps

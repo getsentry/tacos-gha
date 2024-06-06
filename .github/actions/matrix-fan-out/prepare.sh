@@ -20,11 +20,12 @@ matrix="$(
     --raw-output \
   ;
 )"
-
-find . -type d -path "$MATRIX_FAN_OUT_PATH" |
-  sed 's/^\.\///' |  # snip silly leading ./
+find . -type d -path "$MATRIX_FAN_OUT_PATH" -print0 |
+  sed -z 's/^\.\///' |  # snip silly leading ./
+  xargs -r0 -n1 sh -c 'echo "$1/$2"' - "$matrix" |
   tee >&2 "$outdir/path.list" \
 ;
+echo "$matrix" > "$outdir/matrix.list"
 
 : Calculate artifact name
 "$HERE/"set-artifact-name.sh "$MATRIX_FAN_OUT_PATH ($matrix)"

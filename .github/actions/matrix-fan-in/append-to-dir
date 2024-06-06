@@ -1,0 +1,6 @@
+#!/bin/bash
+set -euo pipefail
+dir="$1"
+src="$2"
+dst="$dir/$(basename "$src")"
+cat "$src" >> "$dst"

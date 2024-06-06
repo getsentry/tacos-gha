@@ -21,26 +21,32 @@ runs:
 
   steps:
     - shell: ${{ inputs.shell }}
+      id: vars
       env:
         MATRIX_FAN_OUT_PATH: ${{ inputs.path }}
       run: |
-        "$GITHUB_ACTION_PATH/"set-artifact-name.sh "$MATRIX_FAN_OUT_PATH" |
-          tee -a "$GITHUB_ENV"
+        artifact=$("$GITHUB_ACTION_PATH/"ghaencode <<< "$MATRIX_FAN_OUT_PATH")
+
+        tee -a "$GITHUB_OUTPUT" <<EOF
+        artifact=$artifact
+        matrix_tmp=matrix-fan-in.tmp
+        EOF
 
     - name: Download artifacts
       uses: actions/download-artifact@v4
       with:
-        pattern: ${{ env.artifact_name }}*${{ inputs.pattern }}*
-        path: matrix-fan-in.tmp
+        pattern: ${{ steps.vars.outputs.artifact }}*${{ inputs.pattern }}*
+        path: ${{ steps.vars.outputs.matrix_tmp }}
 
     - name: fix up archive files
       shell: bash
       env:
+        MATRIX_TMP: ${{ steps.vars.outputs.matrix_tmp }}
         MATRIX_FAN_OUT_PATH: ${{ inputs.path }}
 
       # note: "$GITHUB_ACTION_PATH" contains this action directory's path
       run: |
-        "$GITHUB_ACTION_PATH/"rename-tmp-dirs.sh "$MATRIX_FAN_OUT_PATH"
+        "$GITHUB_ACTION_PATH/"rename-tmp-dirs.sh
 
 ### # DEBUG:
 ### - name: Start SSH

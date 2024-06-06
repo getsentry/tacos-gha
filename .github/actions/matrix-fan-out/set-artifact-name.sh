@@ -9,11 +9,5 @@ path="$1"
 
 set -x
 : Calculate artifact name
-(
-  echo "artifact_name="
-  # remove any leading ./
-  sed -r 's@^\./+@@g' <<<"$path"
-) |
-  tr -d '\n' |
-  "$HERE/"ghaencode \
-;
+echo -n "artifact_name="
+"$HERE/"ghaencode <<< "$path"
