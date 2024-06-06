@@ -21,8 +21,8 @@ matrix="$(
   ;
 )"
 
-find . -type d -path "$MATRIX_FAN_OUT_PATH" -print0 |
-  sed -z 's/^\.\///' |  # snip silly leading ./
+find . -type d -path "$MATRIX_FAN_OUT_PATH" |
+  sed 's/^\.\///' |  # snip silly leading ./
   tee >&2 "$outdir/path.list" \
 ;
 
