@@ -42,11 +42,11 @@ runs:
       run: |
         "$GITHUB_ACTION_PATH/"rename-tmp-dirs.sh "$MATRIX_FAN_OUT_PATH"
 
-    # DEBUG:
-    - name: Start SSH
-      if: always()
-      uses: lhotari/action-upterm@v1
-      with:
-        # the job "actor", plus a few others are allowed ssh access
-        limit-access-to-actor: true
-        limit-access-to-users: bukzor,kneeyo1
+### # DEBUG:
+### - name: Start SSH
+###   if: always()
+###   uses: lhotari/action-upterm@v1
+###   with:
+###     # the job "actor", plus a few others are allowed ssh access
+###     limit-access-to-actor: true
+###     limit-access-to-users: bukzor,kneeyo1
