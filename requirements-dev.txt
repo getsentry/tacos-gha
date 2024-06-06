@@ -6,6 +6,8 @@
 #
 astroid==3.2.2
     # via pylint
+attrs==23.2.0
+    # via hypothesis
 black==24.4.2
     # via -r requirements-dev.in
 build==1.2.1
@@ -20,7 +22,7 @@ click==8.1.7
     #   pip-tools
 covdefaults==2.3.0
     # via -r requirements-dev.in
-coverage==7.5.1
+coverage==7.5.3
     # via
     #   -r requirements-dev.in
     #   covdefaults
@@ -37,6 +39,8 @@ execnet==2.1.1
     # via pytest-xdist
 filelock==3.14.0
     # via virtualenv
+hypothesis==6.103.0
+    # via -r requirements-dev.in
 identify==2.5.36
     # via pre-commit
 iniconfig==2.0.0
@@ -53,7 +57,7 @@ mypy-extensions==1.0.0
     # via
     #   black
     #   mypy
-nodeenv==1.8.0
+nodeenv==1.9.0
     # via
     #   pre-commit
     #   pyright
@@ -85,7 +89,7 @@ pyproject-hooks==1.1.0
     # via
     #   build
     #   pip-tools
-pyright==1.1.364
+pyright==1.1.365
     # via -r requirements-dev.in
 pytest==8.2.1
     # via
@@ -95,9 +99,11 @@ pytest-xdist==3.6.1
     # via -r requirements-dev.in
 pyyaml==6.0.1
     # via pre-commit
+sortedcontainers==2.4.0
+    # via hypothesis
 tomlkit==0.12.5
     # via pylint
-typing-extensions==4.11.0
+typing-extensions==4.12.1
     # via mypy
 virtualenv==20.26.2
     # via pre-commit

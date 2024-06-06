@@ -41,9 +41,14 @@ TODO: why would this fail though?
 TODO: workflow to automatically add taco:abandoned label as appropriate
 TODO: workflow to automatically add taco:stale label as appropriate
 TODO: you'll probably want to rewrite this as a python thread someday
+These were TODO items, but now they're TODONE. :cookie:
+[x] @buck P3: FIXME: tf-lock-info infinite regress if providers are undeclared
+[x] @buck TODO: roll up "commands" in PR comments when exit code is 0
+[x] @buck TODO: roll up init / refresh phases from tf log
 def __init__(  # pyright: ignore[reportMissingSuperCall]  # TODO: bugreport
 raise XFailed("close-on-dirty comment not implemented yet.")
 raise XFailed("notify_owner action does not exist")
 raise XFailed("tacos/drift branch not created")
 sh.banner("TODO: check that the plan matches what we expect")
+todo: make this an artifact instead
 ```

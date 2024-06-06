@@ -1,5 +1,10 @@
-## test dependencies
+## runtime dependencies
 PyJWT[crypto]
+
+## test dependencies
+pytest
+pytest-xdist
+hypothesis
 
 ## typing
 pyright
@@ -13,9 +18,7 @@ black!=24.2.0
 pylint
 pre-commit
 
-# test & coverage
-pytest
-pytest-xdist
+# test coverage
 coverage_enable_subprocess
 coverage
 covdefaults

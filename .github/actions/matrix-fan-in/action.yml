@@ -30,7 +30,7 @@ runs:
     - name: Download artifacts
       uses: actions/download-artifact@v4
       with:
-        pattern: ${{ env.artifact_name }} *${{ inputs.pattern }}*
+        pattern: ${{ env.artifact_name }}*${{ inputs.pattern }}*
         path: ${{ inputs.path }}
         ##path: matrix-fan-in.tmp
 
