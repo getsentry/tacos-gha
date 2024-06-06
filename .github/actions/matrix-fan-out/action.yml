@@ -31,7 +31,10 @@ runs:
       uses: actions/upload-artifact@v4
       with:
         name: ${{ env.artifact_name }}
-        path: ${{ inputs.path }}
+        path: |
+          ${{ inputs.path }}
+          gha-matrix-context.json
+          matrix.list
         retention-days: ${{ inputs.retention-days }}
         if-no-files-found: error
         overwrite: false # assert no accidental overlaps
