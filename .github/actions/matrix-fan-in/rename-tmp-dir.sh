@@ -4,7 +4,6 @@
 #   before: a⧸b⧸c⧸(key=10)
 #   after: a/b/c/key=10
 set -euo pipefail
-# note stdout becomes matrix.list
 
 tmpfile="$1"
 newfile="$(
@@ -13,7 +12,11 @@ newfile="$(
     sed -r 's@^\./matrix-fan-in\.tmp/([^(]*/)\((.*)\)$@\1\2@'
 )"
 parent="$(dirname "$newfile")"
+key="$(basename "$newfile")"
 
 mkdir -p "$parent"
 mv "$tmpfile" "$newfile"
-cat "$newfile/matrix.list"
+
+# note stdout becomes matrix-fan-in/path.list
+echo -n "$key/"
+cat "$newfile/matrix-fan-out/path.list"

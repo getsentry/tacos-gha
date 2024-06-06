@@ -11,6 +11,7 @@ export HERE="$GITHUB_ACTION_PATH"
 
 set -x
 path="$1"
+indir="$path/matrix-fan-in"
 
 mkdir -p "$path"
 
@@ -18,20 +19,19 @@ mkdir -p "$path"
 find ./matrix-fan-in.tmp \
     -mindepth 1 \
     -maxdepth 1 \
-    -print \
-;
-find ./matrix-fan-in.tmp \
-    -mindepth 1 \
-    -maxdepth 1 \
     -print0 \
   |
-  xargs -0 -n1 "$HERE/"rename-tmp-dir.sh \
-> "$path/matrix.list"
+  xargs -0 -n1 "$HERE/"rename-tmp-dir.sh |
+tee "$indir/path.list"
 
-: assertion: the directory is empty
+cat < "$indir/path.list" |
+  xargs --replace cat "{}/matrix-fan-out/context.json" |
+tee "$indir/context.json"
+
+: assertion: the tmp directory is empty
 rmdir matrix-fan-in.tmp
 
 : now lets us have a looksee, shall we?
 tree -Chap --metafirst "$path" || : code $?
 
-tail -vn99 "$path/"matrix.list
+tail -vn99 "$path/"matrix-fan-in/path.list
