@@ -13,7 +13,7 @@ set -x
 path="$1"
 indir="$path/matrix-fan-in"
 
-mkdir -p "$path"
+mkdir -p "$indir"
 
 : directory name fixup
 find ./matrix-fan-in.tmp \

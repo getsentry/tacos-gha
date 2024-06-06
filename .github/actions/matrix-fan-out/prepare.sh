@@ -27,4 +27,4 @@ find . -type d -path "$MATRIX_FAN_OUT_PATH" -print0 |
 ;
 
 : Calculate artifact name
-"$HERE/"set-artifact-name.sh "$MATRIX_FAN_OUT_PATH/($matrix)"
+"$HERE/"set-artifact-name.sh "$MATRIX_FAN_OUT_PATH ($matrix)"
