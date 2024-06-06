@@ -25,12 +25,12 @@ runs:
         GHA_MATRIX_CONTEXT: ${{ inputs.matrix }}
       run: |
         "$GITHUB_ACTION_PATH/"prepare.sh |
-          tee -a "$GITHUB_ENV"
+          tee -a "$GITHUB_OUTPUT"
 
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ env.artifact_name }}
+        name: ${{ steps.prepare.outputs.artifact }}
         path: |
           ${{ inputs.path }}
           matrix-fan-out/

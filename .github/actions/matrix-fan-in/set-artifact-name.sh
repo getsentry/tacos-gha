@@ -1,0 +1,1 @@
+../matrix-fan-out/set-artifact-name.sh

@@ -25,12 +25,10 @@ runs:
       env:
         MATRIX_FAN_OUT_PATH: ${{ inputs.path }}
       run: |
-        artifact=$("$GITHUB_ACTION_PATH/"ghaencode <<< "$MATRIX_FAN_OUT_PATH")
-
-        tee -a "$GITHUB_OUTPUT" <<EOF
-        artifact=$artifact
-        matrix_tmp=matrix-fan-in.tmp
-        EOF
+        (
+          "$GITHUB_ACTION_PATH/"set-artifact-name.sh "$MATRIX_FAN_OUT_PATH"
+          echo matrix_tmp=matrix-fan-in.tmp
+        ) | tee -a "$GITHUB_OUTPUT"
 
     - name: Download artifacts
       uses: actions/download-artifact@v4
@@ -48,11 +46,11 @@ runs:
       run: |
         "$GITHUB_ACTION_PATH/"rename-tmp-dirs.sh
 
-    # DEBUG:
-    - name: Start SSH
-      if: always()
-      uses: lhotari/action-upterm@v1
-      with:
-        # the job "actor", plus a few others are allowed ssh access
-        limit-access-to-actor: true
-        limit-access-to-users: bukzor,kneeyo1
+### # DEBUG:
+### - name: Start SSH
+###   if: always()
+###   uses: lhotari/action-upterm@v1
+###   with:
+###     # the job "actor", plus a few others are allowed ssh access
+###     limit-access-to-actor: true
+###     limit-access-to-users: bukzor,kneeyo1

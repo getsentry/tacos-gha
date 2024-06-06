@@ -13,7 +13,7 @@ outdir="$1"
     done \
   ;
 
-  sort -n matrix-fan-in/path.list |
+  sort -t/ -nk4 matrix-fan-in/path.list |
     while read -r matrix; do
       key="$(cat "$matrix/key")"
       cat <<EOF
