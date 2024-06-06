@@ -1,7 +1,7 @@
 #!/bin/bash
 # Rename unzipped artifact files to something less surprising.
 #
-#   before: ./matrix-fan-in.tmp/matrix a b c (key=10)
+#   before: a⧸b⧸c⧸(key=10)
 #   after: a/b/c/key=10
 set -euo pipefail
 # note stdout becomes matrix.list

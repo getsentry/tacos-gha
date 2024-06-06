@@ -6,6 +6,7 @@
 
 set -euo pipefail
 exec >&2  # our only output is logging
+export artifact_name  # set by prior step
 export HERE="$GITHUB_ACTION_PATH"
 
 set -x
@@ -14,8 +15,12 @@ path="$1"
 mkdir -p "$path"
 
 : directory name fixup
-#find ./matrix-fan-in.tmp \
-find "$path"\
+find ./matrix-fan-in.tmp \
+    -mindepth 1 \
+    -maxdepth 1 \
+    -print \
+;
+find ./matrix-fan-in.tmp \
     -mindepth 1 \
     -maxdepth 1 \
     -print0 \
