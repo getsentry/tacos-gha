@@ -6,15 +6,17 @@ outdir="$1"
   echo '# squares'
   echo
   echo "Squares computed: ($(wc -l < matrix-fan-in/path.list) total)"
-  exec < matrix-fan-in/path.list
-  while IFS= read -r matrix; do
-    echo "  * $(cat "$matrix/matrix-fan-out/key.list")"
-  done
+  xargs < matrix-fan-in/path.list --replace cat {}/key |
+    sort -n |
+    while IFS= read -r key; do
+      echo "  * $key"
+    done \
+  ;
 
-  exec < matrix-fan-in/matrix.list
-  while read -r matrix; do
-    key="$(cat "$matrix/key")"
-    cat <<EOF
+  sort -n matrix-fan-in/path.list |
+    while read -r matrix; do
+      key="$(cat "$matrix/key")"
+      cat <<EOF
 ## $key squared
 <!-- getsentry/tacos-gha "matrix-selftest($key)" -->
 
@@ -26,12 +28,15 @@ $(cat "$matrix/"square.txt)
 
 EOF
 
-  done
+    done \
+  ;
+
   cat <<EOF
 ## files archived
 
 \`\`\`console
 EOF
+
   ( set -x; tree ) 2>&1 |
     # transform xtrace logging to `console` syntax
     sed -r 's/^\++/\n$/' \

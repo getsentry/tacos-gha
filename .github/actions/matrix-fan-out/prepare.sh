@@ -10,7 +10,6 @@ set -x
 mkdir -p "$outdir"
 
 : Record matrix context
-mkdir -p "$MATRIX_FAN_OUT_PATH"
 tee >&2 <<<"$GHA_MATRIX_CONTEXT" "$outdir/context.json"
 
 matrix="$(
