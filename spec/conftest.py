@@ -156,19 +156,35 @@ def workdir(demo: gh.LocalRepo, environ: Environ) -> Generator[OSPath]:
             yield demo.workdir
 
 
+def find_test_envdir(test_path: Path) -> OSPath:
+    path = TACOS_GHA_HOME / test_path.with_suffix(".env")
+    if path.exists():
+        return path
+
+    while path != path.parent:
+        path = path.parent
+        if (result := (path / "default.env")).exists():
+            return result
+    else:
+        raise AssertionError("Could not find test env: {test_path:!}")
+
+
 @fixture
-def slices_subpath(workdir: OSPath, user: str, test_name: str) -> Path:
+def slices_subpath(
+    workdir: OSPath, user: str, test_path: Path, test_name: str
+) -> Path:
     """which subpath of workdir should we search for slices?"""
     # TODO: update actions for minimal slice names
-    ###return Path(f"env.{user}")
     subpath = OSPath(f"terraform/env.{user}/{test_name}")
     if not subpath.exists():
         message = f"first-time setup: {subpath}"
         sh.banner(message)
         sh.run(("mkdir", "-p", subpath.parent))
+
         # note: macos cp has no -r option
         sh.run(("cp", "terraform/env/.gitignore", subpath.parent))
-        sh.run(("cp", "-a", "terraform/env/prod", subpath))
+        sh.run(("cp", "-a", find_test_envdir(test_path), subpath))
+
         sh.run(("git", "add", subpath.parent))
 
         all_slices = Slices.from_path(workdir, subpath)

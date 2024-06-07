@@ -9,23 +9,19 @@ exec >&2  # our only output is logging
 export HERE="$GITHUB_ACTION_PATH"
 
 set -x
-path="$1"
-
-mkdir -p "$path"
 
 : directory name fixup
-find "$path"\
+find "$MATRIX_TMP" \
     -mindepth 1 \
     -maxdepth 1 \
     -print0 \
   |
-  xargs -0 -n1 "$HERE/"rename-tmp-dir.sh \
-> "$path/matrix.list"
+  xargs -r0 -n1 "$HERE/"rename-tmp-dir.sh \
+;
 
-: assertion: the directory is empty
-rmdir matrix-fan-in.tmp
+: assertion: the tmp directory is empty
+rmdir "$MATRIX_TMP"
 
 : now lets us have a looksee, shall we?
-tree -Chap --metafirst "$path" || : code $?
-
-tail -vn99 "$path/"matrix.list
+tree -Chap --metafirst "$MATRIX_FAN_OUT_PATH"
+tail -vn99 "$MATRIX_FAN_OUT_PATH/"matrix-fan-in/*

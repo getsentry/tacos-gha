@@ -1,31 +1,32 @@
-#!/usr/bin/env -S sed -zrf
-# Allow for arbitrary characters to be passed through gha artifact names, via
-# an escaping scheme. This means we can use user inputs as part of our artifact
-# names while still writing no code whatsoever to handle weird user inputs
-# breaking the system.
-#
-# All escapes start with `$` (`$` is escaped as `$$`), with one special case:
-# `/` is escaped to ` `, allowing escaped file paths to be quite readable. (` `
-# is escaped to `$ `.)
+#!/usr/bin/env -S python3 -sS
+r"""
+usage: ghaencode <<< xyz
+"""
 
-# reference:
-# actions/upload-artifact notes: Invalid characters include: ":<>|*?\r\n\/
-# in other words, valid characters include: ' `~!@#$%^&()_+{}-=[];,.
-# unused escapes: ~@#`'()-=[]
+from __future__ import annotations
 
-# our escape character is $
-s \$ \$\$ g
-s \" \$\^ g
-s \: \$\; g
- s < \$\{ g
- s > \$\} g
-s \| \$\+ g
-s \* \$\& g
-s \? \$\! g
-s \r \$\, g
-s \n \$\. g
-s \\ \$\% g
+import ghaencode
 
-# escape ` ` so we can use a space to denote a slash:
-s|\ |\$\_|g
-s|\/|\ |g
+USAGE = (__doc__ + ghaencode.DOC).strip()
+
+
+def main():
+    from sys import stdin
+    from sys import stdout
+
+    if stdin.isatty():
+        return USAGE
+
+    for line in stdin:
+        if line.endswith("\n"):
+            eol = "\n"
+            line = line[:-1]
+        else:
+            eol = ""
+
+        stdout.write(ghaencode.ghaencode(line))
+        stdout.write(eol)
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

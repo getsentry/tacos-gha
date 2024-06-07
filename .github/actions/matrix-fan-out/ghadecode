@@ -1,15 +1,26 @@
-#!/usr/bin/env -S sed -zrf
-# Undo `ghaencode`. For details, see `ghaencode`.
-  s.\ .\/.g
-s.\$\_.\ .g
-s \$\% \\ g
-s \$\. \n g
-s \$\, \r g
-s \$\! \? g
-s \$\& \* g
-s \$\+ \| g
-s \$\} \> g
-s \$\{ \< g
-s \$\; \: g
-s \$\^ \" g
-s \$\$ \$ g
+#!/usr/bin/env -S python3 -sS
+"""
+usage: ghaencode | ghadecode
+
+Undo `ghaencode`. For details, see `ghaencode`.
+"""
+from __future__ import annotations
+
+import ghaencode
+
+USAGE = (__doc__ + ghaencode.DOC).strip()
+
+
+def main():
+    from sys import stdin
+    from sys import stdout
+
+    if stdin.isatty():
+        return USAGE
+
+    for line in stdin:
+        stdout.write(ghaencode.ghadecode(line))
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

@@ -20,18 +20,30 @@ runs:
 
   steps:
     - shell: ${{ inputs.shell }}
+      id: prepare
       env:
         MATRIX_FAN_OUT_PATH: ${{ inputs.path }}
         GHA_MATRIX_CONTEXT: ${{ inputs.matrix }}
       run: |
         "$GITHUB_ACTION_PATH/"prepare.sh |
-          tee -a "$GITHUB_ENV"
+          tee -a "$GITHUB_OUTPUT"
 
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ env.artifact_name }}
-        path: ${{ inputs.path }}
+        name: ${{ steps.prepare.outputs.artifact }}
+        path: |
+          ${{ inputs.path }}
+          ./matrix-fan-out
         retention-days: ${{ inputs.retention-days }}
         if-no-files-found: error
         overwrite: false # assert no accidental overlaps
+
+### # DEBUG:
+### - name: Start SSH
+###   if: always()
+###   uses: lhotari/action-upterm@v1
+###   with:
+###     # the job "actor", plus a few others are allowed ssh access
+###     limit-access-to-actor: true
+###     limit-access-to-users: bukzor,kneeyo1,maxwelllwang
