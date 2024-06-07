@@ -16,8 +16,16 @@ reference:
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
 from typing import Mapping
-from typing import assert_type
+
+if TYPE_CHECKING:
+    from typing import assert_type
+else:
+
+    def assert_type(obj, _):
+        return obj
+
 
 # actions/upload-artifact notes: Invalid characters include: ":<>|*?\r\n\/
 DOC = __doc__

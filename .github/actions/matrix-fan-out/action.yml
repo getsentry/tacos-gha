@@ -20,6 +20,7 @@ runs:
 
   steps:
     - shell: ${{ inputs.shell }}
+      id: prepare
       env:
         MATRIX_FAN_OUT_PATH: ${{ inputs.path }}
         GHA_MATRIX_CONTEXT: ${{ inputs.matrix }}
