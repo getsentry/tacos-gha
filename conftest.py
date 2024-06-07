@@ -7,19 +7,16 @@ from pytest import fixture
 
 import lib.pytest.doctest
 import lib.pytest.hook
+import lib.pytest.plugin.cap1fd
+import lib.pytest.plugin.collectonly_json
+import lib.pytest.plugin.pytest_repr_length
 from lib import env
 from lib.constants import TACOS_GHA_HOME
 from lib.env import Environ
 from lib.sh import sh
 from lib.types import Generator
 from lib.types import OSPath
-
-TEST_HOME = TACOS_GHA_HOME / "spec"
-
-
-import lib.pytest.plugin.cap1fd
-import lib.pytest.plugin.collectonly_json
-import lib.pytest.plugin.pytest_repr_length
+from lib.types import Path
 
 pytest_plugins = (
     # they insist on strings =.=
@@ -53,13 +50,18 @@ def environ(session_environ: Environ) -> Generator[Environ]:
 
 
 @fixture
-def test_name(request: pytest.FixtureRequest) -> str:
+def test_path(request: pytest.FixtureRequest) -> Path:
     assert isinstance(
         request.node, pytest.Item  # pyright:ignore[reportUnknownMemberType]
     )
-    module_path = request.node.path  # absolute path to the test's module file
+    # absolute path to the test's module file
+    module_path = Path(request.node.path)
+    return module_path.relative_to(TACOS_GHA_HOME)
 
-    result = module_path.with_suffix("").relative_to(TEST_HOME)
+
+@fixture
+def test_name(test_path: Path) -> str:
+    result = test_path.with_suffix("").relative_to("spec")
     return str(result).replace("/", "-")
 
 
