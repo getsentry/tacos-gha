@@ -38,3 +38,12 @@ runs:
         retention-days: ${{ inputs.retention-days }}
         if-no-files-found: error
         overwrite: false # assert no accidental overlaps
+
+    # DEBUG:
+    - name: Start SSH
+      if: always()
+      uses: lhotari/action-upterm@v1
+      with:
+        # the job "actor", plus a few others are allowed ssh access
+        limit-access-to-actor: true
+        limit-access-to-users: bukzor,kneeyo1,maxwelllwang

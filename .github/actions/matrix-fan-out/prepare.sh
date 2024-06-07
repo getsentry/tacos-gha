@@ -6,12 +6,6 @@ set -euo pipefail
 HERE="$GITHUB_ACTION_PATH"
 outdir="matrix-fan-out"
 
-set -x
-mkdir -p "$outdir"
-
-: Record matrix context
-tee >&2 <<<"$GHA_MATRIX_CONTEXT" "$outdir/context.json"
-
 matrix="$(
   jq \
     <<<"$GHA_MATRIX_CONTEXT" \
@@ -19,12 +13,21 @@ matrix="$(
     --raw-output \
   ;
 )"
-find . -type d -path "$MATRIX_FAN_OUT_PATH" -print0 |
+
+set -x
+mkdir -p "$outdir"
+
+: Record matrix context
+tee >&2 <<< "$GHA_MATRIX_CONTEXT" "$outdir/context.json"
+tee >&2 <<< "$matrix" "$outdir/matrix.list"
+
+( { set -e +x ; } 2>/dev/null
+  find . -type d -path "$MATRIX_FAN_OUT_PATH" -print0 -prune |
   sed -z 's/^\.\///' |  # snip silly leading ./
-  xargs -r0 -n1 sh -c 'echo "$1/$2"' - "$matrix" |
+  xargs -r0 -n1 sh -c 'echo "$1/$2"' - "$matrix"
+) |
   tee >&2 "$outdir/path.list" \
 ;
-echo "$matrix" > "$outdir/matrix.list"
 
 : Calculate artifact name
 "$HERE/"set-artifact-name.sh "$MATRIX_FAN_OUT_PATH ($matrix)"
