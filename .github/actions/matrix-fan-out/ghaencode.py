@@ -17,12 +17,14 @@ reference:
 from __future__ import annotations
 
 from typing import Mapping
+from typing import assert_type
 
 # actions/upload-artifact notes: Invalid characters include: ":<>|*?\r\n\/
 DOC = __doc__
-INVALID_CHARACTERS = """":<>|*?\r\n\\/"""
+INVALID_CHARACTERS = """\":<>|*?\r\n\\/"""
 
-SUBSTITUTE_CHAR: Mapping[str, str] = {
+ESCAPE_CHAR: str = " "
+ESCAPE: Mapping[str, str] = {
     '"': "“",
     ":": "∶",  # ։
     "<": "‹",
@@ -35,20 +37,18 @@ SUBSTITUTE_CHAR: Mapping[str, str] = {
     "\\": "⧵",  # ⧹
     "/": "⧸",
 }
-assert not set(INVALID_CHARACTERS) - set(SUBSTITUTE_CHAR)
+assert not set(INVALID_CHARACTERS) - set(ESCAPE)
 
-REVERSE: Mapping[str, str] = {rhs: lhs for lhs, rhs in SUBSTITUTE_CHAR.items()}
-
-ESCAPE = " "
+UNESCAPE: Mapping[str, str] = {rhs: lhs for lhs, rhs in ESCAPE.items()}
 
 
 def ghaencode(s: str) -> str:
     buf: list[str] = []
 
     for c in reversed(s):
-        if c == ESCAPE or c in REVERSE:
-            buf.extend((ESCAPE, c))
-        elif (c2 := SUBSTITUTE_CHAR.get(c)) is not None:
+        if c == ESCAPE_CHAR or c in UNESCAPE:
+            buf.extend((ESCAPE_CHAR, c))
+        elif (c2 := ESCAPE.get(c)) is not None:
             buf.append(c2)
         else:
             buf.append(c)
@@ -56,17 +56,15 @@ def ghaencode(s: str) -> str:
     return "".join(reversed(buf))
 
 
-def unescape(
-    char0: str, char1: str | None
-) -> tuple[str, str | None, str | None]:
-    if char0 == ESCAPE and char1 is not None:
-        return char1, None, None
+def unescape(first: str, second: str | None) -> tuple[str, str | None, None]:
+    if first == ESCAPE_CHAR and second is not None:
+        return second, None, None
 
-    elif (char2 := REVERSE.get(char0)) is not None:
-        return char2, char1, None
+    elif (unescaped := UNESCAPE.get(first)) is not None:
+        return unescaped, second, None
 
     else:
-        return char0, char1, None
+        return first, second, None
 
 
 def ghadecode(s: str) -> str:
@@ -74,20 +72,21 @@ def ghadecode(s: str) -> str:
     chars = iter(reversed(s))
     del s  # use chars
 
-    char0 = char1 = None
-    for char0 in chars:
-        for char1 in chars:
-            c, char0, char1 = unescape(char0, char1)
-            buf.append(c)
+    first = second = None
+    for first in chars:
+        for second in chars:
+            unescaped, first, second = unescape(first, second)
+            buf.append(unescaped)
 
-            if char0 is None:
+            if first is None:
                 break
+        else:
+            assert_type(second, None)
+            buf.append(UNESCAPE.get(first, first))
+            first = None
 
-    if char0 is not None:
-        c, char0, char1 = unescape(char0, char1)
-        buf.append(c)
-
-    # we've exhausted our input:
-    assert char0 is char1 is None, (char0, char1)
+    # proof: we've exhausted our input
+    assert_type(first, None)
+    assert_type(second, None)
 
     return "".join(reversed(buf))

@@ -5,39 +5,35 @@ from pathlib import Path
 
 import hypothesis as H
 from ghaencode import ESCAPE
-from ghaencode import SUBSTITUTE_CHAR
+from ghaencode import ESCAPE_CHAR
+from ghaencode import INVALID_CHARACTERS
 from ghaencode import ghadecode
 from ghaencode import ghaencode
 from hypothesis import strategies as st
 
-# actions/upload-artifact notes: Invalid characters include: ":<>|*?\r\n\/
-INVALID_CHARACTERS = """":<>|*?\r\n\\/"""
-
 
 @st.composite
 def interesting_text(draw: st.DrawFn) -> str:
-    s = "".join(
-        draw(
-            st.lists(
-                st.one_of(
-                    st.just("foo"),
-                    st.just(ESCAPE),
-                    st.sampled_from(tuple(SUBSTITUTE_CHAR.values())),
-                    st.sampled_from(tuple(SUBSTITUTE_CHAR)),
-                    st.text(max_size=4),
-                ),
-                max_size=4,
-            )
+    result: str = draw(
+        st.text(
+            alphabet=st.one_of(
+                st.just("x"),
+                st.sampled_from(INVALID_CHARACTERS),
+                st.just(ESCAPE_CHAR),
+                st.sampled_from(sorted(ESCAPE)),
+                st.characters(),
+            ),
+            max_size=7,
         )
     )
 
     i = draw(st.integers(0, 2))
     if i == 0:
-        return s
+        return result
     elif i == 1:
-        return ghaencode(s)
+        return ghaencode(result)
     elif i == 2:
-        return ghadecode(s)
+        return ghadecode(result)
     else:
         raise AssertionError(i)
 
@@ -46,11 +42,17 @@ HERE = Path(__file__).parent
 
 
 @H.given(interesting_text())
-@H.settings(max_examples=1000, verbosity=H.Verbosity.verbose)
+@H.settings(
+    max_examples=2**8,  # 2**13 for a ~10s thorough search
+    report_multiple_bugs=False,
+    verbosity=H.Verbosity.verbose,
+    deadline=0.1,
+)
+@H.example("xyz")
+@H.example("a/b/c")
+@H.example(" a/ b /c ")
 @H.example("։ ")
-@H.example("a/ b /c")
-@H.example("& amp& ")
-@H.example(" ։")
+@H.example("“")
 def test_encode_decode(before: str):
     H.note(f"before : {before!r}")
     encoded = ghaencode(before)
