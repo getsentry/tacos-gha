@@ -39,7 +39,9 @@ save_matrix_fan_out() {
   # copy any files we want to keep
   cp "$tf_log" "$console_log" "$outdir"
 
-  (set -x; tree "$outdir")
+  if (( DEBUG >= 1 )); then
+    (set -x; tree "$outdir")
+  fi
 }
 
 save_legacy_summary() {
@@ -133,7 +135,7 @@ cat "$tf_log"
 explanation="$(cat)"  # put any extended explanation on stdin
 
 export DEBUG="${DEBUG:-}"
-if (( DEBUG > 0 )); then
+if (( DEBUG >= 2 )); then
   set -x
 fi
 save_matrix_fan_out "$explanation"

@@ -8,5 +8,8 @@ HERE="$GITHUB_ACTION_PATH"
 path="$1"
 
 : Calculate artifact name
-artifact=$("$HERE/"ghaencode <<< "$path")
+artifact=$(
+  sed <<< "$path" 's/^\.\///' |  # snip silly leading ./
+  "$HERE/"ghaencode
+)
 echo "artifact=$artifact"

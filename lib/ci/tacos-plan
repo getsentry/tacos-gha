@@ -23,6 +23,9 @@ tf-step-summary "TACOS Plan" "$TACOS_GHA_HOME/"lib/tacos/plan \
 ;
 
 # copy any files we want to keep
-cp "$TF_ROOT_MODULE/tfplan" matrix-fan-out/tfplan
+src="$TF_ROOT_MODULE/tfplan"
+if [[ -e "$src" ]]; then
+  cp -a "$src" matrix-fan-out
+fi
 
 exit "$returncode"

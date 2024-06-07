@@ -34,7 +34,7 @@ runs:
         name: ${{ steps.prepare.outputs.artifact }}
         path: |
           ${{ inputs.path }}
-          matrix-fan-out/
+          ./matrix-fan-out
         retention-days: ${{ inputs.retention-days }}
         if-no-files-found: error
         overwrite: false # assert no accidental overlaps
