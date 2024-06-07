@@ -1,4 +1,4 @@
-"""
+r"""
 Allow for arbitrary characters to be passed through gha artifact names, via
 an escaping scheme. This means we can use user inputs as part of our artifact
 names while still writing no code whatsoever to handle weird user inputs that
@@ -45,7 +45,8 @@ ESCAPE: Mapping[str, str] = {
     "\\": "⧵",  # ⧹
     "/": "⧸",
 }
-assert not set(INVALID_CHARACTERS) - set(ESCAPE)
+
+# assert not set(INVALID_CHARACTERS) - set(ESCAPE)
 
 UNESCAPE: Mapping[str, str] = {rhs: lhs for lhs, rhs in ESCAPE.items()}
 

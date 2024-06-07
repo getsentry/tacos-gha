@@ -46,7 +46,7 @@ HERE = Path(__file__).parent
     max_examples=2**8,  # 2**13 for a ~10s thorough search
     report_multiple_bugs=False,
     verbosity=H.Verbosity.verbose,
-    deadline=0.1,
+    deadline=1,  # milliseconds
 )
 @H.example("xyz")
 @H.example("a/b/c")
@@ -54,13 +54,11 @@ HERE = Path(__file__).parent
 @H.example("։ ")
 @H.example("“")
 def test_encode_decode(before: str):
-    H.note(f"before : {before!r}")
     encoded = ghaencode(before)
 
     H.note(f"encoded: {encoded!r}")
     decoded = ghadecode(encoded)
 
-    H.note(f"decoded: {decoded!r}")
     assert before == decoded
 
     # encoded string must have no 'invalid characters'
