@@ -31,13 +31,17 @@ export TF_CLI_ARGS_apply="-lock=false -refresh=false"
 export DEBUG="${DEBUG:-}"
 if (( DEBUG >= 1 )); then
   export TF_LOG=debug
-  export TERRAGRUNT_LOG_LEVEL=info
+fi
+if (( DEBUG >= 4 )); then
   set -x
 fi
 if (( DEBUG >= 3 )); then
   export TERRAGRUNT_LOG_LEVEL=debug
-elif (( DEBUG <= 0 )); then
+elif (( DEBUG < 0 )); then
   export TERRAGRUNT_LOG_LEVEL=error
+else  # 0 <= DEBUG < 3
+  # NOTE: "inner" terraform errors are logged as "info"
+  export TERRAGRUNT_LOG_LEVEL=info
 fi
 
 TERRAGRUNT="$(which terragrunt)"
@@ -45,9 +49,32 @@ while [[ "$TERRAGRUNT" -ef "$0" ]]; do
   TERRAGRUNT="$(super "$TERRAGRUNT")"
 done
 
-# sed: shorten the absurdly long "module prefix", but don't combine stdout/err
-"$TERRAGRUNT" "$@" \
+env \
+  sed=>(
+    sed -ur "
+      # shorten terragrunt's absurdly long output, using relative paths
+      s#$PWD/##g
+      s#$PWD\>#.#g
+      s#^\[\.\] ##  # remove any empty 'module prefix'
+
+      # shorten terragrunt's absurdly long output, using symbolic paths
+      s#$TERRAGRUNT_DOWNLOAD\>#\$TERRAGRUNT_DOWNLOAD#
+      s#$REPO_ROOT\>#\$REPO_ROOT#
+      s#$REPO\>#\$REPO#
+      s#$HOME\>#~#
+    " >&2
+  ) \
+  tty-attach bash -euc '
+    # .. but dont separate stdout/err, unless they were already
+    if [[ /dev/fd/1 -ef /dev/fd/2 ]]; then
+      exec 2>"$sed" 1>&2
+    else
+      exec 2>"$sed"
+    fi
+
+    "$@"
+  ' \
   0</dev/null \
-  1> >( sed -ur "s#$PWD/##g; s#$PWD\>#.#; s#^\[\.\] ##" >&1 ) \
-  2> >( sed -ur "s#$PWD/##g; s#$PWD\>#.#; s#^\[\.\] ##" >&2 ) \
+  - \
+  "$TERRAGRUNT" "$@" \
 ;

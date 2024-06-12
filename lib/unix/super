@@ -17,7 +17,7 @@ fi
 script="${1:-}"  # what are we looking for?
 if [[ -x "$script" ]]; then
   found=false
-elif command -v "$script"; then
+elif command -v "$script" >/dev/null; then
   found=true
 else
   usage

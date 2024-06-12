@@ -41,7 +41,7 @@ fi
 
 export configuration_properties_core_account
 export credential_access_token
-eval "$(
+eval="$(  # eval in two steps to avoid ignoring error codes
   unset CLOUDSDK_CORE_ACCOUNT
   unset CLOUDSDK_AUTH_ACCESS_TOKEN
   # enable interactive reauth, iff we have a controlling tty
@@ -49,6 +49,7 @@ eval "$(
     --format 'config[export](configuration.properties.core.account,credential.access_token)' \
   ;
 )"
+eval "$eval"
 origin_identity="${configuration_properties_core_account:-}"
 token="$credential_access_token"
 target_identity="${target_identity:-}"
@@ -92,6 +93,14 @@ set -x CLOUDSDK_CORE_ACCOUNT "$target_identity"
 set -x GOOGLE_OAUTH_ACCESS_TOKEN '$token'
 set -x CLOUDSDK_AUTH_ACCESS_TOKEN "\$GOOGLE_OAUTH_ACCESS_TOKEN"
 EOF
+elif [[ "$SHELL" =~ (^|/)json$ ]]; then
+  cat <<EOF
+{"CLOUDSDK_CORE_ACCOUNT":"$target_identity"
+,"GOOGLE_OAUTH_ACCESS_TOKEN":"$token"
+,"CLOUDSDK_AUTH_ACCESS_TOKEN":"$token"
+}
+EOF
+  exit 0
 else
   cat <<EOF
 export CLOUDSDK_CORE_ACCOUNT="$target_identity"
@@ -100,7 +109,7 @@ export CLOUDSDK_AUTH_ACCESS_TOKEN="\$GOOGLE_OAUTH_ACCESS_TOKEN"
 EOF
 fi
 
-info "You are authenticated for the next hour as: $target_identity"
+info "This process is authenticated for the next hour as: $target_identity"
 
 cat <<EOF
 
