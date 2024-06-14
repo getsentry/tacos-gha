@@ -90,8 +90,8 @@ runs:
       run: |
         # The provider secrets are passed to terraform as variable, thus
         # setting a TF_VAR environment variable each.
-
-        echo -e ${{ inputs.tf-provider-secrets }} | \
+        echo "var ${{ inputs.tf-provider-secrets }}"
+        echo ${{ inputs.tf-provider-secrets }} | \
         jq -r 'to_entries[] | "\(.key)=\(.value)"' | \
         while IFS== read -r key value; do
           echo "Setting: $key, Value: ::add-mask::$value"
