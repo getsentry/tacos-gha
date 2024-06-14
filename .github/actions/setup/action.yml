@@ -12,7 +12,6 @@ inputs:
   shell:
     description: "private -- do not use"
     default: env ./tacos-gha/lib/ci/default-shell {0}
-secrets:  
   tf-provider-secrets:
     description: Json map containing the secrets to be set as env vars for TF.
     required: false
@@ -92,7 +91,7 @@ runs:
         # The provider secrets are passed to terraform as variable, thus
         # setting a TF_VAR environment variable each.
 
-        echo ${{ secrets.tf-provider-secrets }} | \
+        echo ${{ inputs.tf-provider-secrets }} | \
         jq -r 'to_entries[] | "\(.key)=\(.value)"' | \
         while IFS== read -r key value; do
           echo "Setting: $key, Value: ::add-mask::$value"
