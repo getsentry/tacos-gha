@@ -105,6 +105,7 @@ jobs:
         uses: ./tacos-gha/.github/actions/setup
         with:
           ssh-private-key: ${{ secrets.ssh-private-key }}
+          tf-provider-secrets: ${{ secrets.tf-provider-secrets }}
           # We explicitly list the low-concern actions, during which users will
           # recieve a higher level of access -- the identity of the original PR
           # author. All other actions will receive lower access -- the identity
