@@ -93,8 +93,8 @@ runs:
         echo -e "${{ inputs.tf-provider-secrets }}" | \
         jq -r 'to_entries[] | "\(.key)=\(.value)"' | \
         while IFS== read -r key value; do
-          echo "Setting: $key, Value: ::add-mask::$value"
-          gha-set-env "TF_VAR_$key" <<< "$value"
+          echo "Setting: $key"
+          gha-set-env "TF_VAR_$key" <<< "::add-mask::$value"
         done
 
     # this should really be default behavior:
