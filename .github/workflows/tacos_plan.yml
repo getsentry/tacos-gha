@@ -16,11 +16,8 @@ on:
       debug:
         type: string
         default: 0
-    secrets:
-      ssh-private-key:
-        description: "Private SSH key to use for git clone"
-        required: false
       tf-provider-secrets:
+        type: string
         description: |
           Json map containing the secrets TF providers need to operate.
           Each entry of the map represents a secret. 
@@ -28,6 +25,11 @@ on:
           and set as TF_VAR environment variable: `TF_VAR_PAGERDUTY_TOKEN`
           in this case.
         required: false
+    secrets:
+      ssh-private-key:
+        description: "Private SSH key to use for git clone"
+        required: false
+      
 
 defaults:
   run:
@@ -105,7 +107,7 @@ jobs:
         uses: ./tacos-gha/.github/actions/setup
         with:
           ssh-private-key: ${{ secrets.ssh-private-key }}
-          tf-provider-secrets: ${{ secrets.tf-provider-secrets }}
+          tf-provider-secrets: ${{ inputs.tf-provider-secrets }}
           # We explicitly list the low-concern actions, during which users will
           # recieve a higher level of access -- the identity of the original PR
           # author. All other actions will receive lower access -- the identity
