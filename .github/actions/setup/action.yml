@@ -94,7 +94,7 @@ runs:
         jq -r 'to_entries[] | "\(.key)=\(.value)"' | \
         while IFS== read -r key value; do
           echo "Setting: $key"
-          echo "::add-mask::$value"
+          cat <<< "::add-mask::$value"
           gha-set-env "TF_VAR_$key" <<< "$value"
         done
 
