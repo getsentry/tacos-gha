@@ -91,7 +91,9 @@ runs:
         # The provider secrets are passed to terraform as variable, thus
         # setting a TF_VAR environment variable each.
         echo -e "var ${{ inputs.tf-provider-secrets }}"
-        echo -e ${{ inputs.tf-provider-secrets }} | jq -r 'to_entries[] | "\(.key)=\(.value)"' | while IFS== read -r key value; do
+        echo -e "${{ inputs.tf-provider-secrets }}" | \
+        jq -r 'to_entries[] | "\(.key)=\(.value)"' | \
+        while IFS== read -r key value; do
           echo "Setting: $key, Value: ::add-mask::$value"
           gha-set-env "TF_VAR_$key" <<< "$value"
         done
