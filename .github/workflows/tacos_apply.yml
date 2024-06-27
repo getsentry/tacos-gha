@@ -17,14 +17,14 @@ on:
       ssh-private-key:
         description: "Private SSH key to use for git clone"
         required: false
-      tf-provider-secrets:
+      custom-secrets:
         description: |
-          Json map containing the secrets TF providers need to operate.
-          Each entry of the map represents a secret. 
-          Each secret (example: `PAGERDUTY_TOKEN: zxczxcz...`) is unpacked
-          and set as TF_VAR environment variable: `TF_VAR_PAGERDUTY_TOKEN`
-          in this case.
+          Json map containing further secrets passed to your IAC. Each entry of
+          the map represents a secret. Each key is unpacked and set as an environment variable.
+          For example, `{"PAGERDUTY_TOKEN": "zxczxcz..."}` will result in
+          `$PAGERDUTY_TOKEN`.
         required: false
+        default: "{}"
 
 defaults:
   run:
@@ -102,7 +102,7 @@ jobs:
         uses: ./tacos-gha/.github/actions/setup
         with:
           ssh-private-key: ${{ secrets.ssh-private-key }}
-          tf-provider-secrets: ${{ secrets.tf-provider-secrets }}
+          custom-secrets: ${{ secrets.custom-secrets }}
 
       # TODO: fetch and apply the tfplan artifact from plan workflow
       # so that apply matches the plan reviewed by construction
