@@ -24,7 +24,7 @@ on:
           For example, `{"PAGERDUTY_TOKEN": "zxczxcz..."}` will result in
           `$PAGERDUTY_TOKEN`.
         required: false
-        default: "{}"
+
 
 defaults:
   run:
