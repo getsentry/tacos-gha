@@ -85,7 +85,7 @@ runs:
         #   should be a default behavior
         cat <<< "::add-mask::$(gcloud auth print-access-token)"
 
-    - name: custom secrets: mask and set environment
+    - name: custom secrets mask and set environment
       shell: ${{inputs.shell}}
       env:
         custom_secrets: "${{inputs.custom-secrets}}"
