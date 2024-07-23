@@ -222,7 +222,7 @@ class SliceSummary(NamedTuple):
 
     @property
     def tag(self) -> str:
-        return f"{self.name} <!--🌮:{self.tacos_verb}-->"
+        return f" {self.name} <!--🌮:{self.tacos_verb}-->"
 
     def markdown_details(self, budget: ByteBudget, rollup: Boolish) -> Lines:
         # budget -= 200  # account for static output

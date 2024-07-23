@@ -6,12 +6,12 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime
 from functools import cache
-from itertools import pairwise
 from typing import Iterable
 from typing import Self
 
 from lib.constants import NOW
 from lib.constants import USER
+from lib.parse import Parse
 from lib.sh import sh
 from lib.types import Generator
 from lib.types import OSPath
@@ -20,7 +20,7 @@ from spec.lib.gh import gh
 from spec.lib.slice import Slice
 from spec.lib.slice import Slices
 
-COMMENT_TAG = "<!--🌮:"
+COMMENT_TAG = " <!--🌮:"
 COMMENT_TAG_END = "-->"
 APP_INSTALLATION_REVIEWER = (
     "op://Team Tacos gha"
@@ -215,18 +215,25 @@ def parse_comment(
 ) -> Generator[tuple[str, Slice, str]]:
     """Go through a comment for the (potentially multiple) actions in it.
 
-    A comment can contain a summery of several actions, delimited by lines like
-    <!--🌮:{action}-->. First separate these sections, then parse out what
+    A comment can contain a summery of several actions, delimited by text like
+    ` {slice} <!--🌮:{action}-->`. First separate these sections, then parse out what
     action they are and what slice they apply to."""
-    lines = comment.splitlines(keepends=True)
-    section_delimiters = [i for i, l in enumerate(lines) if COMMENT_TAG in l]
-    section_delimiters.append(len(lines))
-    sections = ["".join(lines[i:j]) for i, j in pairwise(section_delimiters)]
-    for section in sections:
-        before, _tag_start, after = section.partition(COMMENT_TAG)
-        job, _tag_end, after = after.partition(COMMENT_TAG_END)
-        if job_filter is not None and job != job_filter:
-            continue  # this is not the job_filter you're looking for
-        slice = Slice(before[before.index("terraform/") : -1])
-        slice = slice.relative_to(slices_subpath)
-        yield job, slice, section
+    before, tag_start, comment = comment.partition(COMMENT_TAG)
+    while tag_start:
+        job, tag_end, comment = comment.partition(COMMENT_TAG_END)
+        next_before, next_tag_start, comment = comment.partition(COMMENT_TAG)
+
+        # everything up to the final newline (if any) describes *this* job
+        after, nl, next_before = next_before.rpartition("\n")
+
+        if job_filter is None or job == job_filter:
+            slice_comment = "".join(
+                (before, tag_start, job, tag_end, after, nl)
+            )
+
+            slice = Slice(Parse(before).after.last(" "))
+            slice = slice.relative_to(slices_subpath)
+
+            yield job, slice, slice_comment
+
+        before, tag_start = next_before, next_tag_start
