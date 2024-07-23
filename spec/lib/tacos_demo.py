@@ -20,8 +20,8 @@ from spec.lib.gh import gh
 from spec.lib.slice import Slice
 from spec.lib.slice import Slices
 
-COMMENT_TAG = '\n<!-- getsentry/tacos-gha "'
-COMMENT_TAG_END = '" -->\n'
+COMMENT_TAG = " <!--🌮:"
+COMMENT_TAG_END = "-->"
 APP_INSTALLATION_REVIEWER = (
     "op://Team Tacos gha"
     " dev/gh-app--tacos-gha-reviewer/app-installation/sentryio-org"
@@ -213,25 +213,27 @@ def parse_comments(
 def parse_comment(
     job_filter: str | None, slices_subpath: Path, comment: str
 ) -> Generator[tuple[str, Slice, str]]:
-    remainder = comment
-    while True:
-        comment, tag_start, remainder = remainder.partition(COMMENT_TAG)
-        if not tag_start:
-            return
+    """Go through a comment for the (potentially multiple) actions in it.
 
-        tag, tag_end, remainder = remainder.partition(COMMENT_TAG_END)
+    A comment can contain a summery of several actions, delimited by text like
+    ` {slice} <!--🌮:{action}-->`. First separate these sections, then parse out what
+    action they are and what slice they apply to."""
+    before, tag_start, comment = comment.partition(COMMENT_TAG)
+    while tag_start:
+        job, tag_end, comment = comment.partition(COMMENT_TAG_END)
+        next_before, next_tag_start, comment = comment.partition(COMMENT_TAG)
 
-        tag = Parse(tag)
-        job = tag.before.first("(")  # )
-        if job_filter is not None and job != job_filter:
-            continue  # this is not the job_filter you're looking for
+        # everything up to the final newline (if any) describes *this* job
+        after, nl, next_before = next_before.rpartition("\n")
 
-        comment = "".join((comment, tag_start, tag, tag_end))
+        if job_filter is None or job == job_filter:
+            slice_comment = "".join(
+                (before, tag_start, job, tag_end, after, nl)
+            )
 
-        parsed = tag.between("(", ")")
-        if parsed == tag:
-            slice = Slice(".")
-        else:
-            slice = Slice(parsed)
+            slice = Slice(Parse(before).after.last(" "))
             slice = slice.relative_to(slices_subpath)
-        yield job, slice, comment
+
+            yield job, slice, slice_comment
+
+        before, tag_start = next_before, next_tag_start

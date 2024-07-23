@@ -7,11 +7,13 @@ from spec.lib.slice import Slice
 from .tacos_demo import parse_comment
 
 COMMENT = """
-abc
-<!-- getsentry/tacos-gha "foo(a/bar)" -->
+# a/b/snarf <!--🌮:quux-->
+
+abc a/z/ohai <!--🌮:fifi-->[ a/bebe <!--🌮:bobo-->](123)
+
+* a/bar <!--🌮:foo-->
+
 xyz
-<!-- getsentry/tacos-gha "quux(a/b/snarf)" -->
-123
 """
 
 
@@ -32,16 +34,10 @@ class DescribeParseComment:
                 job_filter=None, slices_subpath=Path(""), comment=COMMENT
             )
         ) == (
-            (
-                "foo",
-                Slice("a/bar"),
-                '\nabc\n<!-- getsentry/tacos-gha "foo(a/bar)" -->\n',
-            ),
-            (
-                "quux",
-                Slice("a/b/snarf"),
-                'xyz\n<!-- getsentry/tacos-gha "quux(a/b/snarf)" -->\n',
-            ),
+            ("quux", Slice("a/b/snarf"), "\n# a/b/snarf <!--🌮:quux-->\n\n"),
+            ("fifi", Slice("a/z/ohai"), "abc a/z/ohai <!--🌮:fifi-->"),
+            ("bobo", Slice("a/bebe"), "[ a/bebe <!--🌮:bobo-->](123)\n\n"),
+            ("foo", Slice("a/bar"), "* a/bar <!--🌮:foo-->\n\nxyz\n"),
         )
 
     def it_can_filter_job(self) -> None:
@@ -50,11 +46,7 @@ class DescribeParseComment:
                 job_filter="quux", slices_subpath=Path(""), comment=COMMENT
             )
         ) == (
-            (
-                "quux",
-                Slice("a/b/snarf"),
-                'xyz\n<!-- getsentry/tacos-gha "quux(a/b/snarf)" -->\n',
-            ),
+            ("quux", Slice("a/b/snarf"), "\n# a/b/snarf <!--🌮:quux-->\n\n"),
         )
 
     def it_can_subpath(self) -> None:
@@ -63,14 +55,8 @@ class DescribeParseComment:
                 job_filter=None, slices_subpath=Path("a"), comment=COMMENT
             )
         ) == (
-            (
-                "foo",
-                Slice("bar"),
-                '\nabc\n<!-- getsentry/tacos-gha "foo(a/bar)" -->\n',
-            ),
-            (
-                "quux",
-                Slice("b/snarf"),
-                'xyz\n<!-- getsentry/tacos-gha "quux(a/b/snarf)" -->\n',
-            ),
+            ("quux", Slice("b/snarf"), "\n# a/b/snarf <!--🌮:quux-->\n\n"),
+            ("fifi", Slice("z/ohai"), "abc a/z/ohai <!--🌮:fifi-->"),
+            ("bobo", Slice("bebe"), "[ a/bebe <!--🌮:bobo-->](123)\n\n"),
+            ("foo", Slice("bar"), "* a/bar <!--🌮:foo-->\n\nxyz\n"),
         )
