@@ -6,12 +6,12 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime
 from functools import cache
+from itertools import pairwise
 from typing import Iterable
 from typing import Self
 
 from lib.constants import NOW
 from lib.constants import USER
-from lib.parse import Parse
 from lib.sh import sh
 from lib.types import Generator
 from lib.types import OSPath
@@ -20,8 +20,8 @@ from spec.lib.gh import gh
 from spec.lib.slice import Slice
 from spec.lib.slice import Slices
 
-COMMENT_TAG = '\n<!-- getsentry/tacos-gha "'
-COMMENT_TAG_END = '" -->\n'
+COMMENT_TAG = "<!--🌮:"
+COMMENT_TAG_END = "-->"
 APP_INSTALLATION_REVIEWER = (
     "op://Team Tacos gha"
     " dev/gh-app--tacos-gha-reviewer/app-installation/sentryio-org"
@@ -213,25 +213,15 @@ def parse_comments(
 def parse_comment(
     job_filter: str | None, slices_subpath: Path, comment: str
 ) -> Generator[tuple[str, Slice, str]]:
-    remainder = comment
-    while True:
-        comment, tag_start, remainder = remainder.partition(COMMENT_TAG)
-        if not tag_start:
-            return
-
-        tag, tag_end, remainder = remainder.partition(COMMENT_TAG_END)
-
-        tag = Parse(tag)
-        job = tag.before.first("(")  # )
+    lines = comment.splitlines(keepends=True)
+    points = [i for i, l in enumerate(lines) if COMMENT_TAG in l]
+    points.append(len(lines))
+    chunks = ["".join(lines[i:j]) for i, j in pairwise(points)]
+    for chunk in chunks:
+        before, _tag_start, after = chunk.partition(COMMENT_TAG)
+        job, _tag_end, after = after.partition(COMMENT_TAG_END)
         if job_filter is not None and job != job_filter:
             continue  # this is not the job_filter you're looking for
-
-        comment = "".join((comment, tag_start, tag, tag_end))
-
-        parsed = tag.between("(", ")")
-        if parsed == tag:
-            slice = Slice(".")
-        else:
-            slice = Slice(parsed)
-            slice = slice.relative_to(slices_subpath)
-        yield job, slice, comment
+        slice = Slice(before[before.index("terraform/") : -1])
+        slice = slice.relative_to(slices_subpath)
+        yield job, slice, chunk
