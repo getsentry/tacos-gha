@@ -41,8 +41,12 @@ issues to be fixed.
     - [x] invite to standup
 - [~] @neo bug: unlock after removing changes can result in orphaned locks
 
-  - fix: Restore the old, old implementation of unlock: no matrix, unlock all
-    slices. Just be sure to do nothing, successfully if lock is held by not-me.
+  - the Right Way: our cached state file PR -- work in progress
+    - latest news: testing under ops repo
+    - matrix fan-in/out funniness
+  - the Quick Fix: when taking a lock fails, double-check if it's from a closed
+    PR and force it unlocked if so. This isn't the right fix, but it's Good
+    Enough for today and easy to implement.
 
 - [~] @ellison schedule a friday burn-down working meeting
 
@@ -54,6 +58,9 @@ issues to be fixed.
 - [~] @maxwell datadog ops events
 
   - remove the `if-not-ci` wrapper and it _may_ just work? `git grep if-not-ci`
+  - the core code for this in sentry-kube can be (needs to be) extracted to a
+    separate module with only stdlib dependencies
+  - we can't spend five minutes installing sentry-kube dependencies under GHA
 
 - [~] @ellison fix test suite -- update to new tag style, used in combined plan
   summary

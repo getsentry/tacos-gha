@@ -86,6 +86,17 @@ def cli_auth_gcloud(
     return xdg_environ
 
 
+@fixture(scope="session")
+def tenv_config(session_environ: Environ) -> Environ:
+    """Ensure tenv under test can still find/install its binary cache."""
+    # tenv doesn't honor xdg standards at all :(
+    env = session_environ
+    home = Path(env["HOME"])  # NOTE: this is the usual, non-fixtured homedir
+    env.setdefault("TENV_ROOT", str(home / ".tenv"))
+    env["TENV_AUTO_INSTALL"] = "true"
+    return env
+
+
 # TODO(P3): refactor to an object that takes token in constructor
 @fixture(scope="session")
 def cli_auth_gh(session_environ: Environ) -> Environ:
@@ -115,13 +126,13 @@ def git_config(environ: Environ) -> Environ:
 
 @fixture(scope="session")
 def session_environ(
-    cli_auth_gh: Environ, cli_auth_op: None
+    cli_auth_gh: Environ, cli_auth_op: None, tenv_config: None
 ) -> Generator[Environ]:
     """Several small customizations to the default environ, for tacos-demo."""
     yield cli_auth_gh
 
-    # these exist only for pytest fixture dependency hinting
-    del cli_auth_op
+    # these exist only for pytest fixture-dependency hinting
+    del cli_auth_op, tenv_config
 
 
 @fixture
