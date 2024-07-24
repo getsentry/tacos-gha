@@ -1,0 +1,17 @@
+name: Required check
+
+on:
+  pull_request:
+
+jobs:
+  required_check:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout IAC
+        uses: actions/checkout@v4
+      - name: Perform check
+        run: |
+          if [ -e required_check.fail ]; then exit 1; fi
