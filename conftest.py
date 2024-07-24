@@ -78,7 +78,10 @@ def home(cwd: OSPath, environ: Environ) -> Generator[tuple[OSPath, OSPath]]:
     home.mkdir()
     environ["HOME"] = str(home)
 
-    yield OSPath(orig_home), home
+    orig_path = OSPath(orig_home)
+    environ["TENV_ROOT"] = str(orig_path / ".tenv")
+
+    yield orig_path, home
 
     environ["HOME"] = orig_home
 
