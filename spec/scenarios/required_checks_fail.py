@@ -23,6 +23,7 @@ def test(
         sh.banner("apply")
         pr.approve()
         assert pr.is_approved()
+        print(pr.is_passing_checks())
 
         assert not pr.slices.plan_is_clean()
         since = pr.add_label(":taco::apply")
