@@ -1,7 +1,18 @@
 name: Required check
 
 on:
-  pull_request:
+  workflow_call:
+    inputs:
+      tacos_gha_repo:
+        type: string
+        default: getsentry/tacos-gha
+      tacos_gha_ref:
+        type: string
+        default: refs/heads/stable
+    secrets:
+      ssh-private-key:
+        description: "Private SSH key to use for git clone"
+        required: false
 
 jobs:
   required_check:
