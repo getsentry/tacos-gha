@@ -21,6 +21,13 @@ Please try again after code review.
 EOF
 fi
 
+# Required CI checks must pass in order to apply
+if ! "$GITHUB_PR_PASSES_REQUIRED_CHECKS"; then
+    refuse "PR has not passed all required checks" <<EOF
+Please try again after required checks are passing.
+EOF
+fi
+
 if "$GITHUB_PR_DRAFT"; then
     refuse "PR is not Ready" <<EOF
 Draft PRs cannot be applied.
