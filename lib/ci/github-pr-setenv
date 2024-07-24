@@ -24,7 +24,7 @@ gh pr view "$pr_url" --json reviewDecision |
 
 # All required checks must be success or skipped
 gh pr checks "$pr_url" --json state --required |
-  jq 'map(any(.state == ("SUCCESS", "SKIPPED"); .)) | all' |
+  jq 'map(any(.state == ("SUCCESS", "SKIPPED"); .)) | all == "true"'|
   gha-set-env 'GITHUB_PR_PASSES_REQUIRED_CHECKS' \
 ;
 
