@@ -22,12 +22,13 @@ def test(
         assert pr.is_approved()
 
         # Wait for all checks
-        pr.check().wait
+        pr.check().wait()
 
-        print(pr.is_passing_checks())
+        assert pr.is_passing_checks() is False
 
         assert not pr.slices.plan_is_clean()
         since = pr.add_label(":taco::apply")
 
         assert pr.check("Terraform Apply").wait(since).failure
+
         assert "PR has not passed all required checks" in pr.comments(since)

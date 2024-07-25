@@ -143,10 +143,8 @@ class PR:
             "state",
             "--required",
             "--jq",
-            'map(any(.state == ("SUCCESS", "SKIPPED"); .)) | all',
+            'all(.[]; .state == "SUCCESS" or .state == "SKIPPED")',
         ))
-        print("===========")
-        print(status)
         return status == "true"
 
     def add_label(self, label: Label) -> datetime:
