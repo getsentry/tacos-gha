@@ -1,8 +1,6 @@
 #!/usr/bin/env py.test
 from __future__ import annotations
 
-from pathlib import Path
-
 from lib.sh import sh
 from spec.lib import tacos_demo
 from spec.lib.gh import gh
@@ -13,7 +11,7 @@ def test(
     slices: Slices, test_name: str, demo: gh.LocalRepo, tacos_branch: str
 ) -> None:
     with tacos_demo.PR.opened_for_slices(
-        slices, test_name, demo, tacos_branch
+        slices, test_name, demo, tacos_branch, fail_ci=True
     ) as pr:
         sh.banner("look at your plan")
         plan = pr.get_plans()

@@ -56,8 +56,9 @@ class PR(gh.PR):
         sh.run(("git", "checkout", "-q", "origin/main"))
         edit_workflow_versions(demo, tacos_branch)
         fail_ci_path = demo.path / "required_check.fail"
-        sh.run(("touch", fail_ci_path))
-        sh.run(("git", "add", fail_ci_path))
+        if fail_ci:
+            sh.run(("touch", fail_ci_path))
+            sh.run(("git", "add", fail_ci_path))
 
         branch, message = edit_slices(slices, test_name, branch, message)
         self = cls.open(branch, message, slices=slices, draft=draft)
@@ -90,10 +91,18 @@ class PR(gh.PR):
         branch: gh.Branch = None,
         message: gh.Message = None,
         draft: bool = False,
+        fail_ci: bool = False,
     ) -> Generator[Self]:
         with sh.cd(slices.path):
             pr = cls.for_slices(
-                slices, test_name, demo, tacos_branch, branch, message, draft
+                slices,
+                test_name,
+                demo,
+                tacos_branch,
+                branch,
+                message,
+                draft,
+                fail_ci,
             )
             try:
                 yield pr
