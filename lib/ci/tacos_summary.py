@@ -90,11 +90,13 @@ def get_file(path: OSPath, default: str = FILE_NOT_FOUND) -> str:
         return default.format(path.name)
 
 
-def get_lines(path: OSPath) -> Log:
+def get_lines(path: OSPath, ignore_file_not_found: bool = False) -> Log:
     try:
         return tuple(sh.stdout(("uncolor", path)).strip().splitlines())
     except Exception as error:
         if not path.exists():
+            if ignore_file_not_found:
+                return []
             return [FILE_NOT_FOUND.format(path.name)]
         else:
             return [str(error)]
@@ -115,8 +117,10 @@ class SliceSummary(NamedTuple):
 
         return cls(
             name=get_file(path / "env/TF_ROOT_MODULE"),
-            tf_log=get_lines(path / "tf-log.hcl"),
-            console_log=get_lines(path / "console.log"),
+            tf_log=get_lines(path / "tf-log.hcl", ignore_file_not_found=True),
+            console_log=get_lines(
+                path / "console.log", ignore_file_not_found=True
+            ),
             tacos_verb=get_file(path / "tacos_verb"),
             explanation=get_file(path / "explanation"),
             returncode=int(get_file(path / "returncode", default="-1")),
