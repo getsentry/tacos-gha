@@ -12,7 +12,7 @@ from spec.lib.slice import Slices
 def test(
     slices: Slices, test_name: str, demo: gh.LocalRepo, tacos_branch: str
 ) -> None:
-    Path("required_check.fail").touch()
+    Path(demo.path / "required_check.fail").touch()
     with tacos_demo.PR.opened_for_slices(
         slices, test_name, demo, tacos_branch
     ) as pr:
@@ -23,6 +23,10 @@ def test(
         sh.banner("apply")
         pr.approve()
         assert pr.is_approved()
+
+        # Wait for all checks
+        pr.check().wait
+
         print(pr.is_passing_checks())
 
         assert not pr.slices.plan_is_clean()
