@@ -12,7 +12,6 @@ from spec.lib.slice import Slices
 def test(
     slices: Slices, test_name: str, demo: gh.LocalRepo, tacos_branch: str
 ) -> None:
-    Path(demo.path / "required_check.fail").touch()
     with tacos_demo.PR.opened_for_slices(
         slices, test_name, demo, tacos_branch
     ) as pr:

@@ -51,9 +51,14 @@ class PR(gh.PR):
         branch: object = None,
         message: object = None,
         draft: bool = False,
+        fail_ci: bool = False,
     ) -> Self:
         sh.run(("git", "checkout", "-q", "origin/main"))
         edit_workflow_versions(demo, tacos_branch)
+        fail_ci_path = demo.path / "required_check.fail"
+        sh.run(("touch", fail_ci_path))
+        sh.run(("git", "add", fail_ci_path))
+
         branch, message = edit_slices(slices, test_name, branch, message)
         self = cls.open(branch, message, slices=slices, draft=draft)
 
