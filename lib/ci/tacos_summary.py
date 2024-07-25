@@ -114,7 +114,7 @@ class SliceSummary(NamedTuple):
         # convert a bunch of files into something well-typed
 
         return cls(
-            name=get_file(path / "env/TF_ROOT_MODULE", ""),
+            name=get_file(path / "env/TF_ROOT_MODULE"),
             tf_log=get_lines(path / "tf-log.hcl"),
             console_log=get_lines(path / "console.log"),
             tacos_verb=get_file(path / "tacos_verb"),
