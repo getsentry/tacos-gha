@@ -201,6 +201,7 @@ def slices_subpath(workdir: OSPath, user: str, test_name: str) -> Path:
 
         sh.banner("first-time setup: approve and merge")
         pr.approve(tacos_demo.get_reviewer())
+        assert pr.check("Required check").wait().success
         pr.merge()
         wait.for_(pr.is_closed)
 
