@@ -2,8 +2,8 @@ FIXME: automated testing for lib/tf_lock
 
 ```console
 cd slice-0-project
-alias sudo-plan='sudo-gcp -u tacos-gha-tf-plan@sac-dev-sa.iam.gserviceaccount.com'
-alias sudo-apply='sudo-gcp -u tacos-gha-tf-apply@sac-dev-sa.iam.gserviceaccount.com'
+alias sudo-plan='env GETSENTRY_SAC_VERB=plan sudo-gcp'
+alias sudo-apply='env GETSENTRY_SAC_VERB=apply sudo-gcp'
 
 sudo-plan tf-lock-info
 > {"lock": false}
