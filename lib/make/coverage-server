@@ -9,7 +9,7 @@ fi
 
 set -x
 
-python3.12 -P \
+python3 \
   -m http.server \
   --directory ./coverage-html \
   --bind 127.0.0.1 \

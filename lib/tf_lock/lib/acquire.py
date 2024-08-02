@@ -1,4 +1,4 @@
-#!/usr/bin/env -S python3.12 -P
+#!/usr/bin/env python3.12
 from __future__ import annotations
 
 import asyncio
@@ -71,12 +71,7 @@ async def run_terraform(
     tty.setraw(parent)
 
     proc = await asyncio.create_subprocess_exec(
-        *cmd,
-        stdout=child,
-        stdin=child,
-        # this is required to ensure that terraform console is killed without cleanup
-        # this ensures the lock isn't dropped
-        start_new_session=True,
+        *cmd, stdout=child, stdin=child
     )
     os.close(child)
 
@@ -91,9 +86,6 @@ async def run_terraform(
 
 
 async def acquire() -> ExitCode:
-    import os
-    import signal
-
     proc, output = await run_terraform(TERRAFORM)
     wait = asyncio.create_task(proc.wait())
     timer = asyncio.create_task(asyncio.sleep(TIMEOUT))
@@ -107,13 +99,12 @@ async def acquire() -> ExitCode:
             returncode = wait.result()
             return f"terraform exitted early, code {returncode}"
         elif timer.done() or not prompt.done():
-            # use negative process id because we want to kill the process group
-            os.kill(-proc.pid, signal.SIGKILL)
+            proc.kill()
             return f"timeout (seconds): {TIMEOUT}"
         elif (result := prompt.result()).endswith("> "):
             debug("got prompt, exit un-gracefully")
             assert not wait.done(), wait
-            os.kill(-proc.pid, signal.SIGKILL)
+            proc.kill()
             debug("terraform exitted, code", await proc.wait())
             return 0
         else:

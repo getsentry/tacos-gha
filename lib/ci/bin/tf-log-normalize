@@ -9,7 +9,7 @@ color="(${csi}[0-9;]*m)?"
 grey="${csi}37m"
 reset="${csi}m"
 
-sed -ur '
+sed -r '
     # clarify noop ":" commands as comments
     s/^\++ '"$color"'\$'"$color"' : (.*)/\n'"$grey"'# \3'"$reset"'/
 

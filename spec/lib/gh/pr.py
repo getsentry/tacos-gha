@@ -133,20 +133,6 @@ class PR:
         ))
         return status == "APPROVED"
 
-    def is_passing_checks(self) -> bool:
-        status = sh.stdout((
-            "gh",
-            "pr",
-            "checks",
-            self.url,
-            "--json",
-            "state",
-            "--required",
-            "--jq",
-            'all(.[]; .state == "SUCCESS" or .state == "SKIPPED")',
-        ))
-        return status == "true"
-
     def add_label(self, label: Label) -> datetime:
         """Returns a timestamp from *just before* the label was added."""
         sh.banner(f"adding label {label} to PR:")

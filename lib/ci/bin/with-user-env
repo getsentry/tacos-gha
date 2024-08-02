@@ -6,7 +6,6 @@ shift 1
 (set -x; cd "$user_dir")  # just so it shows in logs
 cd "$user_dir"
 
-export DEBUG="${DEBUG:-}"
 if (( DEBUG >= 3 )); then
   set -x
 fi

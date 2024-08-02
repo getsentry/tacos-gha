@@ -7,8 +7,6 @@
 [core]
     # a trivial editor which does nothing, successfully
     editor = "true"
-    # a trivial pager
-    pager = "cat"
 [init]
     defaultBranch = main
 [push]

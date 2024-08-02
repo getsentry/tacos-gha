@@ -3,6 +3,7 @@ set -euo pipefail
 title="$1"
 script="$2"
 
+
 save_var() {
   path="$1"
   var="$2"
@@ -132,7 +133,6 @@ with-user-env "$TF_ROOT_MODULE" \
 cat "$tf_log"
 explanation="$(cat)"  # put any extended explanation on stdin
 
-export DEBUG="${DEBUG:-}"
 if (( DEBUG > 0 )); then
   set -x
 fi
