@@ -37,7 +37,6 @@ TODO: make use of lib.patch, to replace ad-hoc monkeypatching
 TODO: should we detect drift in parallel across every slice?
 TODO: update actions for minimal slice names
 TODO: upstream feature request on google-github-actions/auth -- this
-TODO: why would this fail though?
 TODO: workflow to automatically add taco:abandoned label as appropriate
 TODO: workflow to automatically add taco:stale label as appropriate
 TODO: you'll probably want to rewrite this as a python thread someday

@@ -10,7 +10,7 @@ TACOS_LOCK="${TACOS_LOCK:-false}"
 
 if "$TACOS_LOCK"; then
   ( set -ex
-    env GETSENTRY_SAC_VERB=state-admin sudo-gcp tf-lock-acquire
+    GETSENTRY_SAC_VERB=state-admin sudo-gcp tf-lock-acquire
   )
 fi
 
