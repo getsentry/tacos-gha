@@ -4,11 +4,11 @@
 #
 #    pip-compile --strip-extras requirements-dev.in
 #
-astroid==3.1.0
+astroid==3.2.4
     # via pylint
-black==24.1.1
+black==24.4.2
     # via -r requirements-dev.in
-build==1.1.1
+build==1.2.1
     # via pip-tools
 cffi==1.16.0
     # via cryptography
@@ -20,24 +20,24 @@ click==8.1.7
     #   pip-tools
 covdefaults==2.3.0
     # via -r requirements-dev.in
-coverage==7.4.3
+coverage==7.6.0
     # via
     #   -r requirements-dev.in
     #   covdefaults
     #   coverage-enable-subprocess
 coverage-enable-subprocess==1.0
     # via -r requirements-dev.in
-cryptography==42.0.5
+cryptography==43.0.0
     # via pyjwt
 dill==0.3.8
     # via pylint
 distlib==0.3.8
     # via virtualenv
-execnet==2.0.2
+execnet==2.1.1
     # via pytest-xdist
-filelock==3.13.1
+filelock==3.15.4
     # via virtualenv
-identify==2.5.35
+identify==2.6.0
     # via pre-commit
 iniconfig==2.0.0
     # via pytest
@@ -45,63 +45,82 @@ isort==5.13.2
     # via
     #   -r requirements-dev.in
     #   pylint
+jedi==0.19.1
+    # via pudb
 mccabe==0.7.0
     # via pylint
-mypy==1.8.0
+mypy==1.11.0
     # via -r requirements-dev.in
 mypy-extensions==1.0.0
     # via
     #   black
     #   mypy
-nodeenv==1.8.0
+nodeenv==1.9.1
     # via
     #   pre-commit
     #   pyright
-packaging==23.2
+packaging==24.1
     # via
     #   black
     #   build
+    #   pudb
     #   pytest
+parso==0.8.4
+    # via jedi
 pathspec==0.12.1
     # via black
 pip-tools==7.4.1
     # via -r requirements-dev.in
-platformdirs==4.2.0
+platformdirs==4.2.2
     # via
     #   black
     #   pylint
     #   virtualenv
-pluggy==1.4.0
+pluggy==1.5.0
     # via pytest
-pre-commit==3.6.2
+pre-commit==3.7.1
     # via -r requirements-dev.in
-pycparser==2.21
+pudb==2024.1.2
+    # via -r requirements-dev.in
+pycparser==2.22
     # via cffi
+pygments==2.18.0
+    # via pudb
 pyjwt==2.8.0
     # via -r requirements-dev.in
-pylint==3.1.0
+pylint==3.2.6
     # via -r requirements-dev.in
-pyproject-hooks==1.0.0
+pyproject-hooks==1.1.0
     # via
     #   build
     #   pip-tools
-pyright==1.1.352
+pyright==1.1.372
     # via -r requirements-dev.in
-pytest==8.0.2
+pytest==8.3.1
     # via
     #   -r requirements-dev.in
     #   pytest-xdist
-pytest-xdist==3.5.0
+pytest-xdist==3.6.1
     # via -r requirements-dev.in
 pyyaml==6.0.1
     # via pre-commit
-tomlkit==0.12.4
+tomlkit==0.13.0
     # via pylint
-typing-extensions==4.10.0
-    # via mypy
-virtualenv==20.25.1
+typing-extensions==4.12.2
+    # via
+    #   mypy
+    #   urwid
+urwid==2.6.15
+    # via
+    #   pudb
+    #   urwid-readline
+urwid-readline==0.14
+    # via pudb
+virtualenv==20.26.3
     # via pre-commit
-wheel==0.42.0
+wcwidth==0.2.13
+    # via urwid
+wheel==0.43.0
     # via pip-tools
 
 # The following packages are considered to be unsafe in a requirements file:

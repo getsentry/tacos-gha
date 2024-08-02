@@ -9,7 +9,8 @@ Find the next command in your $PATH with the same name as SCRIPT.
 EOF
 }
 
-if (( "${DEBUG:-0}" >= 4 )); then
+export DEBUG="${DEBUG:-}"
+if (( DEBUG >= 4 )); then
   set -x
 fi
 

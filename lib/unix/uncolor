@@ -1,2 +1,2 @@
-#!/usr/bin/env -S sed -rf
+#!/usr/bin/env -S sed -urf
 s/\x1b[^[:alpha:]]*[[:alpha:]]//g

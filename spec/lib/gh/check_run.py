@@ -99,9 +99,14 @@ class CheckRun:
 
         try:
             result.append(
-                ("NEUTRAL", "SUCCESS", "CANCELLED", "", "FAILURE").index(
-                    self.conclusion
-                )
+                (
+                    "NEUTRAL",
+                    "SKIPPED",
+                    "SUCCESS",
+                    "CANCELLED",
+                    "",
+                    "FAILURE",
+                ).index(self.conclusion)
             )
         except ValueError as error:
             raise AssertionError(

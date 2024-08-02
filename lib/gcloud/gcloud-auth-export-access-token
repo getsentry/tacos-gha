@@ -34,7 +34,8 @@ scopes='[
 info() { echo >&2 "$@";  }
 error() { info "$@"; exit 1; }
 
-if [[ "${DEBUG:-}" ]]; then
+export DEBUG="${DEBUG:-}"
+if (( DEBUG >= 1 )); then
   set -x
 fi
 

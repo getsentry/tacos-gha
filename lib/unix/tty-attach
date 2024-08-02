@@ -2,7 +2,8 @@
 set -euo pipefail
 # attach subcommand to an interactive terminal, if possible
 
-if (( ${DEBUG:-0} >= 2 )); then
+export DEBUG="${DEBUG:-}"
+if (( DEBUG >= 2 )); then
   set -x
 fi
 
