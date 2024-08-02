@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env -S python3.12 -P
 """Acquire the terraform state lock and print its ID (an integer)"""
 
 from __future__ import annotations

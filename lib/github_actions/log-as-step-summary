@@ -13,7 +13,7 @@ set -euo pipefail
   ( # ... add markdown markup,
     echo '```console'
     # match `console` syntax highlighting by removing '+ ' from xtrace lines
-    sed -r 's/^\++ \$ /$ /'
+    sed -ur 's/^\++ \$ /$ /'
     echo '```'
   ) |
   # ... send to step summary,
