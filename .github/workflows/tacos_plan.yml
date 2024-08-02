@@ -13,6 +13,9 @@ on:
       tacos_gha_ref:
         type: string
         default: refs/heads/stable
+      debug:
+        type: string
+        default: 0
     secrets:
       ssh-private-key:
         description: "Private SSH key to use for git clone"
@@ -31,6 +34,7 @@ concurrency:
 # FIXME: only use state-admin access for a locking (non-draft) plan
 env:
   GETSENTRY_SAC_VERB: state-admin
+  DEBUG: ${{inputs.debug}}
 
 jobs:
   determine-tf-root-modules:

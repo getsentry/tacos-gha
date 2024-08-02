@@ -16,9 +16,16 @@ gh pr view "$pr_url" --json reviews |
 ;
 
 # NOTE: it's possible to have approvers but not be approved, due to codeowners
+# NOTE: empty string for reviewDecision signifies no review is required
 gh pr view "$pr_url" --json reviewDecision |
-  jq '.reviewDecision == "APPROVED"' |
+  jq '.reviewDecision == "APPROVED" or .reviewDecision == ""' |
   gha-set-env 'GITHUB_PR_APPROVED' \
+;
+
+# All required checks must be success or skipped
+gh pr checks "$pr_url" --json state --required |
+  jq 'all(.[]; .state == "SUCCESS" or .state == "SKIPPED")'|
+  gha-set-env 'GITHUB_PR_PASSES_REQUIRED_CHECKS' \
 ;
 
 gh pr view "$pr_url" --json state --jq .state |
