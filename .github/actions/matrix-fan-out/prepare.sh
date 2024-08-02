@@ -8,7 +8,6 @@ HERE="$GITHUB_ACTION_PATH"
 set -x
 
 : Record matrix context
-mkdir -p "$MATRIX_FAN_OUT_PATH"
 tee \
   <<<"$GHA_MATRIX_CONTEXT" \
   "$MATRIX_FAN_OUT_PATH/gha-matrix-context.json" \
