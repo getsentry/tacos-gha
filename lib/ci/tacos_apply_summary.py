@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env -S python3.12 -P
 from __future__ import annotations
 
 from typing import Collection
@@ -54,14 +54,12 @@ def clean_section(
     if not slices:
         return
 
-    yield from budget.lines(
-        (
-            "",
-            "## Clean",
-            "Hurray! These slices already match the infrastructure.",
-            "Good job on keeping it clean. :cookie: ",
-        )
-    )
+    yield from budget.lines((
+        "",
+        "## Clean",
+        "Hurray! These slices already match the infrastructure.",
+        "Good job on keeping it clean. :cookie: ",
+    ))
     budget.lines(SKIPPED_MESSAGE)
     for i, slice in enumerate(slices):
         try:

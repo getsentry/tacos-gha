@@ -22,3 +22,6 @@ covdefaults
 
 # dependency management
 pip-tools
+
+# debug
+pudb

@@ -78,6 +78,8 @@ jobs:
       contents: read
       pull-requests: write
       id-token: write
+      checks: read
+      actions: read
 
     env:
       TF_ROOT_MODULE: ${{matrix.tf-root-module}}
