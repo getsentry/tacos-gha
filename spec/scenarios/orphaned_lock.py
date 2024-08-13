@@ -28,6 +28,7 @@ def test(
         ) as pr1,
     ):
         # check that pr1 plans correctly and holds lock for slice
+        slices.edit()
         pr1.check("Terraform Plan").wait().success
         assert slices.assert_locked(), "plan did not correctly lock slices"
 
