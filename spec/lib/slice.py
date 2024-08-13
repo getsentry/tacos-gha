@@ -116,6 +116,7 @@ class Slices:
     def revert(self) -> None:
         sh.banner("reverting slices")
         sh.run(("git", "-C", self.path, "reset", "--hard", "origin/main"))
+        sh.run(("git", "push", "origin", "HEAD"))
 
     def force_clean(self) -> None:
         # cleanup: apply main in case the test left things in a dirty state
