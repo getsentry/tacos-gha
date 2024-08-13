@@ -5,6 +5,8 @@ from __future__ import annotations
 
 import asyncio
 
+from lib import ansi
+from lib.parse import Parse
 from lib.sh import sh
 from lib.types import ExitCode
 from lib.types import OSPath
@@ -17,6 +19,7 @@ from .lib.env import TF_LOCK_EHELD
 from .lib.env import USER
 from .lib.env import tf_working_dir
 from .release import TFLockUser
+from .tf_lock import force_unlock
 
 
 def tf_lock_acquire(root_module: Path) -> ExitCode:
@@ -43,6 +46,31 @@ def tf_lock_acquire(root_module: Path) -> ExitCode:
                 )
                 return 0
 
+            else:
+                p = Parse(lock_user)
+                username = p.before.first("@")
+                # a pr holds the lock.
+                if "github" in str(lock_user):
+                    pr_number = p.after.first("@").before.first(".")
+                    repo_name = p.after.first(".").before.last(".", ".", ".")
+                    org_name = p.after.first(repo_name, ".").before.last(
+                        ".github"
+                    )
+
+                    if is_pr_closed(org_name, repo_name, pr_number):
+                        sh.info("forcing unlock on a closed PR.")
+                        force_unlock(root_module)
+                    else:
+                        pr_link = f"https://github.com/{org_name}/{repo_name}/pull/{pr_number}"
+
+                        sh.info(
+                            f"tf-lock-acquire: Lock failed. User {ansi.TEAL}{username}{ansi.RESET} is holding the lock in this PR: {ansi.TEAL}{pr_link}{ansi.RESET}"
+                        )
+                else:
+                    host = p.after.first("@")
+                    sh.info((
+                        f"tf-lock-acquire: Lock failed. User {ansi.TEAL}{username}{ansi.RESET} is holding the lock. It looks like they took it manually, from {ansi.TEAL}{host}{ansi.RESET}."
+                    ))
             sh.info(
                 f"tf-lock-acquire: failure: not {lock_user}: {root_module}({tf_user})"
             )
@@ -60,6 +88,37 @@ def tf_lock_acquire(root_module: Path) -> ExitCode:
                 return returncode
 
         # start over
+
+
+def is_pr_closed(org_name: str, repo_name: str, pr_number: str) -> bool:
+    import json
+    import os
+    from urllib.error import HTTPError
+    from urllib.request import Request
+    from urllib.request import urlopen
+
+    access_token = os.getenv("GH_TOKEN")
+    api_url = f"https://api.github.com/repos/{org_name}/{repo_name}/pulls/{pr_number}"
+    headers = {
+        "Authorization": f"token {access_token}",
+        "Accept": "application/vnd.github.v3+json",
+    }
+    req = Request(api_url, headers=headers)
+
+    try:
+        with urlopen(req) as response:
+            pr_data = json.loads(response.read().decode())
+            if pr_data["state"] == "closed":
+                return True
+    except HTTPError as e:
+        if e.code == 404:
+            raise ValueError(
+                "PR not found or you do not have access to this repository."
+            )
+        else:
+            raise Exception(f"Failed to fetch PR details: {e.code}")
+
+    return False
 
 
 def main() -> ExitCode:
