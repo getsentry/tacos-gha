@@ -113,10 +113,11 @@ class Slices:
         with sh.cd(self.path):
             tf.apply(sorted(self))
 
+    # TODO: only revert these slices
     def revert(self) -> None:
         sh.banner("reverting slices")
         sh.run(("git", "-C", self.path, "reset", "--hard", "origin/main"))
-        sh.run(("git", "push", "origin", "HEAD"))
+        sh.run(("git", "push", "-f", "origin", "HEAD"))
 
     def force_clean(self) -> None:
         # cleanup: apply main in case the test left things in a dirty state

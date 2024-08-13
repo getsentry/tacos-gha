@@ -30,7 +30,7 @@ def test(
         # check that pr1 plans correctly and holds lock for slice
         slices.edit()
         pr1.check("Terraform Plan").wait().success
-        assert slices.assert_locked(), "plan did not correctly lock slices"
+        slices.assert_locked()
 
         # revert slice
         slices.revert()
@@ -38,9 +38,7 @@ def test(
         # orphan slices from pr1
         pr1.close()
 
-        assert (
-            slices.assert_locked()
-        ), "either slices were not correctly orphaned, or you fixed the unlock bug"
+        slices.assert_locked()
 
     with (
         tacos_demo.PR.opened_for_slices(
