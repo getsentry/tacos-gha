@@ -1,14 +1,12 @@
 #!/usr/bin/env py.test
 from __future__ import annotations
 
-import pytest
 from pytest import fixture
 
 from lib.sh import sh
 from spec.lib import tacos_demo
 from spec.lib.gh import gh
 from spec.lib.slice import Slices
-from spec.lib.xfail import XFailed
 
 
 @fixture
@@ -17,7 +15,6 @@ def slices(slices: Slices) -> Slices:
     return slices.random(count=1)
 
 
-@pytest.mark.xfail(raises=XFailed)
 def test(
     slices: Slices, test_name: str, demo: gh.LocalRepo, tacos_branch: gh.Branch
 ) -> None:
