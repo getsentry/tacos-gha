@@ -69,6 +69,7 @@ def tf_lock_acquire(root_module: Path) -> ExitCode:
         # start over
 
 
+# TODO: deduplicate wrt spec.gh.pr.PR.is_closed
 def is_pr_closed(gh_url: str) -> bool:
     status = sh.stdout(
         ("gh", "pr", "view", gh_url, "--json", "state", "--jq", ".state")
