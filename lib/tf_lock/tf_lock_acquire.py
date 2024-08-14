@@ -46,14 +46,8 @@ def tf_lock_acquire(root_module: Path) -> ExitCode:
 
             tf_lock_user = TFLockUser.from_string(lock_user)
             # a pr holds the lock.
-            if (
-                tf_lock_user.org
-                and tf_lock_user.repo
-                and tf_lock_user.pr_number
-            ):
-                if is_pr_closed(
-                    tf_lock_user.org, tf_lock_user.repo, tf_lock_user.pr_number
-                ):
+            if tf_lock_user.pr_url:
+                if is_pr_closed(tf_lock_user.pr_url):
                     sh.info("forcing unlock on a closed PR.")
                     force_unlock(root_module)
                     continue
@@ -76,35 +70,11 @@ def tf_lock_acquire(root_module: Path) -> ExitCode:
         # start over
 
 
-def is_pr_closed(org_name: str, repo_name: str, pr_number: int) -> bool:
-    import json
-    import os
-    from urllib.error import HTTPError
-    from urllib.request import Request
-    from urllib.request import urlopen
-
-    access_token = os.getenv("GH_TOKEN")
-    api_url = f"https://api.github.com/repos/{org_name}/{repo_name}/pulls/{pr_number}"
-    headers = {
-        "Authorization": f"token {access_token}",
-        "Accept": "application/vnd.github.v3+json",
-    }
-    req = Request(api_url, headers=headers)
-
-    try:
-        with urlopen(req) as response:
-            pr_data = json.loads(response.read().decode())
-            if pr_data["state"] == "closed":
-                return True
-    except HTTPError as e:
-        if e.code == 404:
-            raise ValueError(
-                "PR not found or you do not have access to this repository."
-            )
-        else:
-            raise Exception(f"Failed to fetch PR details: {e.code}")
-
-    return False
+def is_pr_closed(gh_url: str) -> bool:
+    status = sh.stdout(
+        ("gh", "pr", "view", gh_url, "--json", "state", "--jq", ".state")
+    )
+    return status in ["CLOSED", "MERGED"]
 
 
 def main() -> ExitCode:
