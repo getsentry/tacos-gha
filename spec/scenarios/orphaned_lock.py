@@ -53,4 +53,4 @@ def test(
             # check that pr2 plans correctly
             assert pr2.check("Terraform Plan").wait().success
         except AssertionError:
-            raise XFailed("PLan fails due to orphaned lock")
+            raise XFailed("Plan fails due to orphaned lock")
