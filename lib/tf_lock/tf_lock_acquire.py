@@ -45,8 +45,7 @@ def tf_lock_acquire(root_module: Path) -> ExitCode:
                 return 0
 
             tf_lock_user = TFLockUser.from_string(lock_user)
-            # a pr holds the lock.
-            if tf_lock_user.pr_url:
+            if tf_lock_user.pr_url:  # a pr holds the lock.
                 if is_pr_closed(tf_lock_user.pr_url):
                     sh.info("forcing unlock on a closed PR.")
                     force_unlock(root_module)
