@@ -5,8 +5,6 @@ from __future__ import annotations
 
 import asyncio
 
-from lib import ansi
-from lib.parse import Parse
 from lib.sh import sh
 from lib.types import ExitCode
 from lib.types import OSPath
@@ -48,12 +46,11 @@ def tf_lock_acquire(root_module: Path) -> ExitCode:
 
             tf_lock_user = TFLockUser.from_string(lock_user)
             # a pr holds the lock.
-            if "github" in str(tf_lock_user.host):
-                assert (
-                    tf_lock_user.org is not None
-                    and tf_lock_user.repo is not None
-                    and tf_lock_user.pr_number is not None
-                )
+            if (
+                tf_lock_user.org
+                and tf_lock_user.repo
+                and tf_lock_user.pr_number
+            ):
                 if is_pr_closed(
                     tf_lock_user.org, tf_lock_user.repo, tf_lock_user.pr_number
                 ):
@@ -65,7 +62,6 @@ def tf_lock_acquire(root_module: Path) -> ExitCode:
                 f"tf-lock-acquire: failure: not {lock_user}: {root_module}({tf_user})"
             )
 
-            lock_user = TFLockUser.from_string(lock_user)
             sh.info(tf_lock_user.eheld_message())
 
             return TF_LOCK_EHELD
