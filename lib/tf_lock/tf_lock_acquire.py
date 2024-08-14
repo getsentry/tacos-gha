@@ -74,7 +74,7 @@ def is_pr_closed(gh_url: str) -> bool:
     status = sh.stdout(
         ("gh", "pr", "view", gh_url, "--json", "state", "--jq", ".state")
     )
-    return status in ("CLOSED", "MERGED")
+    return status in ("CLOSED", "MERGED", "DRAFT")
 
 
 def main() -> ExitCode:
