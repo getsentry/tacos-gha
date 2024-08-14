@@ -9,6 +9,7 @@ from typing import Self
 from typing import Sequence
 
 from lib import json
+from lib import pr
 from lib import wait
 from lib.functions import now as mknow
 from lib.sh import sh
@@ -40,9 +41,8 @@ if TYPE_CHECKING:
 
 
 @dataclass(frozen=True)
-class PR:
+class PR(pr.PR):
     branch: Branch
-    url: URL
     since: datetime
     draft: bool
 
@@ -103,12 +103,6 @@ class PR:
             if not self.is_closed():
                 raise
         return since
-
-    def is_closed(self) -> bool:
-        status = sh.stdout(
-            ("gh", "pr", "view", self.url, "--json", "state", "--jq", ".state")
-        )
-        return status in ["CLOSED", "MERGED"]
 
     def approve(
         self, app_installation: app.Installation, now: datetime | None = None

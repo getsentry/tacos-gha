@@ -5,7 +5,9 @@ from __future__ import annotations
 
 import asyncio
 
+from lib.pr import PR
 from lib.sh import sh
+from lib.types import URL
 from lib.types import ExitCode
 from lib.types import OSPath
 from lib.types import Path
@@ -46,7 +48,7 @@ def tf_lock_acquire(root_module: Path) -> ExitCode:
 
             tf_lock_user = TFLockUser.from_string(lock_user)
             if tf_lock_user.pr_url:  # a pr holds the lock.
-                if is_pr_closed(tf_lock_user.pr_url):
+                if PR(URL(tf_lock_user.pr_url)).is_closed():
                     sh.info("forcing unlock on a closed PR.")
                     force_unlock(root_module)
                     continue
@@ -67,14 +69,6 @@ def tf_lock_acquire(root_module: Path) -> ExitCode:
                 return returncode
 
         # start over
-
-
-# TODO: deduplicate wrt spec.gh.pr.PR.is_closed
-def is_pr_closed(gh_url: str) -> bool:
-    status = sh.stdout(
-        ("gh", "pr", "view", gh_url, "--json", "state", "--jq", ".state")
-    )
-    return status in ("CLOSED", "MERGED")
 
 
 def main() -> ExitCode:
