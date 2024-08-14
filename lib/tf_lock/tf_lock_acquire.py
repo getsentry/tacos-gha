@@ -46,38 +46,27 @@ def tf_lock_acquire(root_module: Path) -> ExitCode:
                 )
                 return 0
 
-            else:
-                p = Parse(lock_user)
-                username = p.before.first("@")
-                # a pr holds the lock.
-                if "github" in str(lock_user):
-                    pr_number = p.after.first("@").before.first(".")
-                    repo_name = p.after.first(".").before.last(".", ".", ".")
-                    org_name = p.after.first(repo_name, ".").before.last(
-                        ".github"
-                    )
+            tf_lock_user = TFLockUser.from_string(lock_user)
+            # a pr holds the lock.
+            if "github" in str(tf_lock_user.host):
+                assert (
+                    tf_lock_user.org is not None
+                    and tf_lock_user.repo is not None
+                    and tf_lock_user.pr_number is not None
+                )
+                if is_pr_closed(
+                    tf_lock_user.org, tf_lock_user.repo, tf_lock_user.pr_number
+                ):
+                    sh.info("forcing unlock on a closed PR.")
+                    force_unlock(root_module)
+                    continue
 
-                    if is_pr_closed(org_name, repo_name, pr_number):
-                        sh.info("forcing unlock on a closed PR.")
-                        force_unlock(root_module)
-                        continue
-                    else:
-                        pr_link = f"https://github.com/{org_name}/{repo_name}/pull/{pr_number}"
-
-                        sh.info(
-                            f"tf-lock-acquire: Lock failed. User {ansi.TEAL}{username}{ansi.RESET} is holding the lock in this PR: {ansi.TEAL}{pr_link}{ansi.RESET}"
-                        )
-                else:
-                    host = p.after.first("@")
-                    sh.info((
-                        f"tf-lock-acquire: Lock failed. User {ansi.TEAL}{username}{ansi.RESET} is holding the lock. It looks like they took it manually, from {ansi.TEAL}{host}{ansi.RESET}."
-                    ))
             sh.info(
                 f"tf-lock-acquire: failure: not {lock_user}: {root_module}({tf_user})"
             )
 
             lock_user = TFLockUser.from_string(lock_user)
-            sh.info(lock_user.eheld_message())
+            sh.info(tf_lock_user.eheld_message())
 
             return TF_LOCK_EHELD
 
@@ -91,7 +80,7 @@ def tf_lock_acquire(root_module: Path) -> ExitCode:
         # start over
 
 
-def is_pr_closed(org_name: str, repo_name: str, pr_number: str) -> bool:
+def is_pr_closed(org_name: str, repo_name: str, pr_number: int) -> bool:
     import json
     import os
     from urllib.error import HTTPError
