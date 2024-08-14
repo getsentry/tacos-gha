@@ -74,7 +74,12 @@ def is_pr_unlockable(gh_url: str) -> bool:
     status = sh.stdout(
         ("gh", "pr", "view", gh_url, "--json", "state", "--jq", ".state")
     )
-    return status in ("CLOSED", "MERGED", "DRAFT")
+    is_draft = sh.json(
+        ("gh", "pr", "view", gh_url, "--json", "isDraft", "--jq", ".isDraft")
+    )
+    assert isinstance(is_draft, bool)
+
+    return status in ("CLOSED", "MERGED") or is_draft
 
 
 def main() -> ExitCode:
