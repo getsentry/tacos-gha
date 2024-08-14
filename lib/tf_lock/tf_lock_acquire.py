@@ -17,6 +17,7 @@ from .lib.env import TF_LOCK_EHELD
 from .lib.env import USER
 from .lib.env import tf_working_dir
 from .release import TFLockUser
+from .tf_lock import force_unlock
 
 
 def tf_lock_acquire(root_module: Path) -> ExitCode:
@@ -43,12 +44,18 @@ def tf_lock_acquire(root_module: Path) -> ExitCode:
                 )
                 return 0
 
+            tf_lock_user = TFLockUser.from_string(lock_user)
+            if tf_lock_user.pr_url:  # a pr holds the lock.
+                if is_pr_closed(tf_lock_user.pr_url):
+                    sh.info("forcing unlock on a closed PR.")
+                    force_unlock(root_module)
+                    continue
+
             sh.info(
                 f"tf-lock-acquire: failure: not {lock_user}: {root_module}({tf_user})"
             )
 
-            lock_user = TFLockUser.from_string(lock_user)
-            sh.info(lock_user.eheld_message())
+            sh.info(tf_lock_user.eheld_message())
 
             return TF_LOCK_EHELD
 
@@ -60,6 +67,14 @@ def tf_lock_acquire(root_module: Path) -> ExitCode:
                 return returncode
 
         # start over
+
+
+# TODO: deduplicate wrt spec.gh.pr.PR.is_closed
+def is_pr_closed(gh_url: str) -> bool:
+    status = sh.stdout(
+        ("gh", "pr", "view", gh_url, "--json", "state", "--jq", ".state")
+    )
+    return status in ("CLOSED", "MERGED")
 
 
 def main() -> ExitCode:
