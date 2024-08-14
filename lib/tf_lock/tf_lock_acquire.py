@@ -46,7 +46,7 @@ def tf_lock_acquire(root_module: Path) -> ExitCode:
 
             tf_lock_user = TFLockUser.from_string(lock_user)
             if tf_lock_user.pr_url:  # a pr holds the lock.
-                if is_pr_closed(tf_lock_user.pr_url):
+                if is_pr_unlockable(tf_lock_user.pr_url):
                     sh.info("forcing unlock on a closed PR.")
                     force_unlock(root_module)
                     continue
@@ -70,7 +70,7 @@ def tf_lock_acquire(root_module: Path) -> ExitCode:
 
 
 # TODO: deduplicate wrt spec.gh.pr.PR.is_closed
-def is_pr_closed(gh_url: str) -> bool:
+def is_pr_unlockable(gh_url: str) -> bool:
     status = sh.stdout(
         ("gh", "pr", "view", gh_url, "--json", "state", "--jq", ".state")
     )
