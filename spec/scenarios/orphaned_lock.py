@@ -1,9 +1,8 @@
 #!/usr/bin/env py.test
 from __future__ import annotations
 
-from pytest import fixture
 import pytest
-
+from pytest import fixture
 
 from lib.sh import sh
 from spec.lib import tacos_demo
@@ -48,9 +47,5 @@ def test(
             slices, test_name, demo, tacos_branch, branch=2
         ) as pr2,
     ):
-
-        try:
-            # check that pr2 plans correctly
-            assert pr2.check("Terraform Plan").wait().success
-        except AssertionError:
-            raise XFailed("Plan fails due to orphaned lock")
+        # check that pr2 plans correctly
+        assert pr2.check("Terraform Plan").wait().success
