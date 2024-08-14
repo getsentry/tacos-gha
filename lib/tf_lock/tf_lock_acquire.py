@@ -60,6 +60,7 @@ def tf_lock_acquire(root_module: Path) -> ExitCode:
                     if is_pr_closed(org_name, repo_name, pr_number):
                         sh.info("forcing unlock on a closed PR.")
                         force_unlock(root_module)
+                        continue
                     else:
                         pr_link = f"https://github.com/{org_name}/{repo_name}/pull/{pr_number}"
 
