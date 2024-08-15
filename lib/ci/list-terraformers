@@ -1,0 +1,10 @@
+#!/bin/bash
+set -euo pipefail
+
+python3 -m lib.tacos.terraformers |
+jq -R |
+jq -cs |
+gha-set-output terraformers |
+# prettify
+jq . \
+;

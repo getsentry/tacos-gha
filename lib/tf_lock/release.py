@@ -121,32 +121,35 @@ def get_lock_info(root_module: Path) -> Tuple[bool, dict[str, str]]:
     return lock, assert_dict_of_strings(result)
 
 
-def tf_lock_release(root_module: Path, env: Environ) -> None:
+def tf_lock_release(root_module: Path, env: Environ) -> UserError | None:
     lock, lock_info = get_lock_info(root_module)
     if not lock:
         info(f"tf-lock-release: success: {root_module}")
-        return
+        return None
 
     tf_user = f"{get_current_user(env)}@{get_current_host(env)}"
     lock_user = lock_info["Who"]
     if tf_user == lock_user:
         try:
             with sh.cd(tf_working_dir(root_module)):
-                sh.run((
-                    "terraform",
-                    "force-unlock",
-                    "-force",
-                    "--",
-                    lock_info["ID"],
-                ))
+                sh.run(
+                    (
+                        "terraform",
+                        "force-unlock",
+                        "-force",
+                        "--",
+                        lock_info["ID"],
+                    )
+                )
         except sh.CalledProcessError as error:
             # error message was already printed by subcommand
-            raise UserError(code=error.returncode)
+            return UserError(code=error.returncode)
 
         info(f"tf-lock-release: success: {root_module}({lock_user})")
+        return None
 
     else:
-        raise UserError(
+        return UserError(
             f"""\
 tf-lock-release: failure: not {lock_user}: {root_module}({tf_user})
 {TFLockUser.from_string(lock_user).eheld_message()}
@@ -184,8 +187,15 @@ def main() -> None:
     from os import environ
 
     with sh.quiet():
+        failures = 0
         for path in paths:
-            tf_lock_release(path, env=environ.copy())
+            res = tf_lock_release(path, env=environ.copy())
+            if res is not None:
+                sh.debug(res)
+                failures += 1
+        successes = len(paths) - failures
+        sh.info(f"Successfully unlocked {successes} slices.")
+        sh.info(f"Failed to unlock {failures} slices.")
 
 
 if __name__ == "__main__":

@@ -1,5 +1,7 @@
-#!/bin/sh
+#!/bin/bash
 # print a list of all known terragrunt slices
+set -euo pipefail
+
 terragrunt output-module-groups |
   jq '.[] | .[]' -r |
   sed -r 's@^'"$PWD"'/@@' \
