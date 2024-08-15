@@ -72,10 +72,10 @@ def test_drafted(
 
         slices.assert_locked()
 
-    with (
-        tacos_demo.PR.opened_for_slices(
-            slices, test_name, demo, tacos_branch, branch=2
-        ) as pr2,
-    ):
-        # check that pr2 plans correctly
-        assert pr2.check("Terraform Plan").wait().success
+        with (
+            tacos_demo.PR.opened_for_slices(
+                slices, test_name, demo, tacos_branch, branch=2
+            ) as pr2,
+        ):
+            # check that pr2 plans correctly
+            assert pr2.check("Terraform Plan").wait().success
