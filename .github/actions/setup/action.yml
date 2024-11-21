@@ -1,9 +1,9 @@
 name: Setup
+description: "Sets up a Terraform environment for TACOS"
 
 inputs:
   ssh-private-key:
     description: "Private SSH key to use for git clone"
-    type: string
     default: ""
   user:
     description: the username that will be used for following steps
@@ -98,7 +98,16 @@ runs:
       with:
         terraform_wrapper: false
         terraform_version: ${{ env.TF_VERSION }}
-
+    - name: Install uv
+      uses: astral-sh/setup-uv@v3
+      with:
+        version: "0.5.4"
+        enable-cache: true
+    - name: Install terraform logging tools
+      shell: ${{inputs.shell}}
+      run: uv pip install sentry-infra-event-notifier --index-url https://pypi.devinfra.sentry.io/simple
+      env:
+        UV_SYSTEM_PYTHON: 1
     - name: set $GITHUB_PR_DRAFT
       shell: ${{inputs.shell}}
       run: |
