@@ -1,9 +1,9 @@
 name: Setup
+description: "Sets up a Terraform environment for TACOS"
 
 inputs:
   ssh-private-key:
     description: "Private SSH key to use for git clone"
-    type: string
     default: ""
   user:
     description: the username that will be used for following steps
@@ -98,6 +98,10 @@ runs:
       with:
         terraform_wrapper: false
         terraform_version: ${{ env.TF_VERSION }}
+
+    - name: Install terraform logging tools
+      shell: ${{inputs.shell}}
+      run: pip install sentry-infra-event-notifier --index-url https://pypi.devinfra.sentry.io/simple
 
     - name: set $GITHUB_PR_DRAFT
       shell: ${{inputs.shell}}
