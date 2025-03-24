@@ -84,21 +84,13 @@ else
   error "FAILED: don't know how to authenticate as '$target_identity'"
 fi
 
-# NOTE: CLOUDSDK_CORE_ACCOUNT is necessary to get the right user during 
+# NOTE: CLOUDSDK_CORE_ACCOUNT is necessary to get the right user during
 # `gcloud compute ssh`
-if [[ "$SHELL" =~ (^|/)fish$ ]]; then
-  cat <<EOF
-set -x CLOUDSDK_CORE_ACCOUNT "$target_identity"
-set -x GOOGLE_OAUTH_ACCESS_TOKEN '$token'
-set -x CLOUDSDK_AUTH_ACCESS_TOKEN "\$GOOGLE_OAUTH_ACCESS_TOKEN"
-EOF
-else
-  cat <<EOF
+cat <<EOF
 export CLOUDSDK_CORE_ACCOUNT="$target_identity"
 export GOOGLE_OAUTH_ACCESS_TOKEN='$token'
 export CLOUDSDK_AUTH_ACCESS_TOKEN="\$GOOGLE_OAUTH_ACCESS_TOKEN"
 EOF
-fi
 
 info "You are authenticated for the next hour as: $target_identity"
 
