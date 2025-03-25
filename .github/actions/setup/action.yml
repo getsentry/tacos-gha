@@ -9,6 +9,9 @@ inputs:
     description: the username that will be used for following steps
     required: false
     default: ${{github.triggering_actor}}
+  custom-secrets:
+    description: Json map containing additional secrets to be set as env vars.
+    required: true
   shell:
     description: "private -- do not use"
     default: env ./tacos-gha/lib/ci/default-shell {0}
@@ -81,6 +84,13 @@ runs:
         # TODO: upstream feature request on google-github-actions/auth -- this
         #   should be a default behavior
         cat <<< "::add-mask::$(gcloud auth print-access-token)"
+
+    - name: custom secrets mask and set environment
+      shell: ${{inputs.shell}}
+      env:
+        custom_secrets: "${{inputs.custom-secrets}}"
+      run: |
+        gha-set-secrets <<< "$custom_secrets" \
 
     # this should really be default behavior:
     - shell: ${{inputs.shell}}
