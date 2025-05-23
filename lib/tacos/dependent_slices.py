@@ -245,13 +245,19 @@ def lines_to_paths(lines: Iterable[str]) -> Generator[OSPath]:
 def main() -> int:
     import fileinput
 
-    fs = FileSystem.from_git()
-    modified_paths = lines_to_paths(fileinput.input(encoding="utf-8"))
+    file_filter = PathFilter.from_files()
 
-    path_filter = PathFilter.from_config()
+    fs = FileSystem.from_git()
+    modified_paths = [
+        x
+        for x in lines_to_paths(fileinput.input(encoding="utf-8"))
+        if file_filter.match(str(x))
+    ]
+
+    slice_filter = PathFilter.from_slices()
 
     for slice in dependent_slices(modified_paths, fs):
-        if path_filter.match(str(slice)):
+        if slice_filter.match(str(slice)):
             print(slice)
         else:
             sh.debug(f"slice ignored due to allowlist: {slice}")
