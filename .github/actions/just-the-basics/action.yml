@@ -20,7 +20,9 @@ runs:
     - name: install direnv
       uses: HatsuneMiku3939/direnv-action@v1
       with:
-        path: ${{ github.action_path }}/.envrc
+        # action_path contains the directory of this action (just-the-basics)
+        # traverse up 3 times to reach the envrc in the root of the repo.
+        path: ${{ github.action_path }}/../../../.envrc
     - name: show GHA contexts
       shell: ${{inputs.shell}}
       run: |
