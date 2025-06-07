@@ -19,6 +19,7 @@ exec >&2
 : make sure github command-files are writable
 chmod -R g+rw "$(dirname "$GITHUB_OUTPUT")"
 
+echo "before sudo"
 sudo=(
   # switch user to "$USER" (by default this is a noop)
   sudo --preserve-env --set-home -u "$USER"
