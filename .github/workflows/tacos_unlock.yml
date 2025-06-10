@@ -39,8 +39,9 @@ jobs:
       || github.event.action != 'labeled'
       || github.event.label.name == ':taco::unlock'
     outputs:
-      slices: ${{ steps.list-slices.outputs.slices }}
-
+      slices: ${{ steps.list-slices }}
+    env:
+      PR_NUMBER: ${{ github.event.number }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -49,13 +50,14 @@ jobs:
     steps:
       - name: Checkout IAC
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - name: Checkout tacos-gha
         uses: actions/checkout@v4
         with:
           repository: ${{inputs.tacos_gha_repo}}
           ref: ${{inputs.tacos_gha_ref}}
           path: tacos-gha
-
       - name: List Slices
         id: list-slices
         uses: ./tacos-gha/.github/actions/list-slices
