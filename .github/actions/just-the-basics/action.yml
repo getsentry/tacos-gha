@@ -18,9 +18,7 @@ runs:
 
     # default-shell requires direnv
     - name: install direnv
-      uses: HatsuneMiku3939/direnv-action@v1
-      with:
-        path: ${{ github.action_path }}/.envrc
+      uses: bukzor/direnv-install@v1.1.1/bukzor1
     - name: show GHA contexts
       shell: ${{inputs.shell}}
       run: |
