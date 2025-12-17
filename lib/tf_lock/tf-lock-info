@@ -31,7 +31,7 @@ while (( i < limit )); do
     then
     echo >&2 "No remote tfstate configured, path: '$root_module'"
     exit 1
-  elif grep -Eq <<< "$error" $'^\t\* storage: object doesn'\''t exist$'; then
+  elif grep -Eq <<< "$error" $'storage: object doesn'\''t exist$'; then
     echo '{"lock": false}'
     exit 0
   elif grep -Eq <<< "$error" \
