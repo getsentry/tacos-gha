@@ -85,6 +85,7 @@ runs:
     # this should really be default behavior:
     - shell: ${{inputs.shell}}
       run: |
+        cd "$TF_ROOT_MODULE"
         gha-set-env 'TF_VERSION' < "$(nearest-config-file .terraform-version)"
         gha-set-env 'TERRAGRUNT_VERSION' < "$(nearest-config-file .terragrunt-version)"
 
