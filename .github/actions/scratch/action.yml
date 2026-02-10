@@ -11,11 +11,11 @@ runs:
   using: composite
   steps:
     - name: ok
-      shell: ${{inputs.shell}}
+      shell: bash -euxo pipefail {0}
       run: echo ok
 
     - name: show env (before)
-      shell: ${{inputs.shell}}
+      shell: bash -euxo pipefail {0}
       run: |
         sort -z /proc/self/environ |
           tr '\0\n' '\n;' \
@@ -23,7 +23,9 @@ runs:
         git diff --no-index --color-word='([[:alnum:]_]+|.)' -U0 orig.env pre-action.env || :
 
     - name: show full context
-      shell: ${{inputs.shell}}
+      shell: bash -euxo pipefail {0}
+      env:
+        INPUTS_JSON: ${{ toJSON(inputs) }}
       run: |
         : <<'EOF'
         github:   ${{ toJSON(github) }},
@@ -37,11 +39,11 @@ runs:
         strategy: ${{ toJSON(strategy) }},
         matrix:   ${{ toJSON(matrix) }},
         needs:    # not valid in custom action
-        inputs:   ${{ toJSON(inputs) }},
         EOF
+        echo "inputs: $INPUTS_JSON"
 
     - name: show unix infos (before)
-      shell: ${{inputs.shell}}
+      shell: bash -euxo pipefail {0}
       run: |
         whoami
         id
@@ -61,7 +63,7 @@ runs:
         user: ${{github.triggering_actor}}
 
     - name: show unix infos (after)
-      shell: ${{inputs.shell}}
+      shell: bash -euxo pipefail {0}
       run: |
         whoami
         id
@@ -76,7 +78,7 @@ runs:
         uname --operating-system
 
     - name: show env (after)
-      shell: ${{inputs.shell}}
+      shell: bash -euxo pipefail {0}
       run: |
         sort -z /proc/self/environ |
           tr '\0\n' '\n;' \

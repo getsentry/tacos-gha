@@ -20,7 +20,9 @@ runs:
     - name: install direnv
       uses: bukzor/direnv-install@v1.1.1/bukzor1
     - name: show GHA contexts
-      shell: ${{inputs.shell}}
+      shell: env ./tacos-gha/lib/ci/default-shell {0}
+      env:
+        INPUTS_JSON: ${{ toJSON(inputs) }}
       run: |
         : GHA contexts: <<'EOF'
           github:   # too huge, enable debug logging to see
@@ -34,24 +36,24 @@ runs:
           strategy: ${{ toJSON(strategy) }},
           matrix:   ${{ toJSON(matrix) }},
           needs:    # not valid in custom action
-          inputs:   ${{ toJSON(inputs) }},
         EOF
+        echo "inputs: $INPUTS_JSON"
         : DOC: https://docs.github.com/en/actions/learn-github-actions/contexts
     - name: "debug: show `github` context"
       if: ${{runner.debug}}
-      shell: ${{inputs.shell}}
+      shell: env ./tacos-gha/lib/ci/default-shell {0}
       run: |
         : its huge... expand script, above to view <<'EOF'
           github:   ${{ toJSON(github) }},
         EOF
     - name: enable `gh` cli
-      shell: ${{inputs.shell}}
+      shell: env ./tacos-gha/lib/ci/default-shell {0}
       run: |
         gha-set-env 'GH_TOKEN' <<< "$GH_TOKEN"
       env:
         GH_TOKEN: ${{ github.token }}
     - name: get python version
-      shell: ${{inputs.shell}}
+      shell: env ./tacos-gha/lib/ci/default-shell {0}
       run: |
         grep -Ev '^#' "$TACOS_GHA_HOME/".python-version |
           gha-set-env 'PYTHON_VERSION' \
