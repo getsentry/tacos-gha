@@ -3,6 +3,7 @@ name: TACOS Apply
 # downstream projects should use events:
 ###pull_request:
 ###  types: [labeled]
+###merge_group:
 
 on:
   workflow_call:
@@ -34,12 +35,18 @@ env:
 jobs:
   determine-tf-root-modules:
     name: List Slices
+    # Run on merge_group events OR labeled events with the apply label
     # note: we want to noop if they converted to draft first
     if: |
       true
-      && github.event.action == 'labeled'
-      && github.event.label.name == ':taco::apply'
-      && github.event.pull_request.draft == false
+      && (
+        github.event_name == 'merge_group'
+        || (
+          github.event.action == 'labeled'
+          && github.event.label.name == ':taco::apply'
+          && github.event.pull_request.draft == false
+        )
+      )
     outputs:
       slices: ${{ steps.list-slices.outputs.slices }}
 
@@ -101,6 +108,9 @@ jobs:
           # author. All other actions will receive lower access -- the identity
           # of the person pushing the "Re-run" button.
           #
+          # For merge_group events, we use the triggering_actor (the person who
+          # added to merge queue).
+          #
           # see doc/permissions.md
           user: |-
             ${{
@@ -125,7 +135,22 @@ jobs:
 
       - name: set $GITHUB_PR_*
         run: |
-          "$TACOS_GHA_HOME/"lib/ci/github-pr-setenv "${{ github.event.pull_request.html_url }}"
+          if [[ "${{ github.event_name }}" == "merge_group" ]]; then
+            # For merge queue, extract PR number from head_ref (format: refs/heads/gh-readonly-queue/main/pr-123-<sha>)
+            PR_REF="${{ github.event.merge_group.head_ref }}"
+            if [[ "$PR_REF" =~ pr-([0-9]+)- ]]; then
+              PR_NUMBER="${BASH_REMATCH[1]}"
+              PR_URL="${{ github.server_url }}/${{ github.repository }}/pull/${PR_NUMBER}"
+              "$TACOS_GHA_HOME/"lib/ci/github-pr-setenv "$PR_URL"
+            else
+              echo "Warning: Could not extract PR number from merge group head_ref: $PR_REF"
+              # Set minimal environment for merge group without PR reference
+              export GITHUB_PR_NUMBER="unknown"
+              export GITHUB_PR_URL="unknown"
+            fi
+          else
+            "$TACOS_GHA_HOME/"lib/ci/github-pr-setenv "${{ github.event.pull_request.html_url }}"
+          fi
 
       - name: Apply
         id: main
@@ -164,7 +189,8 @@ jobs:
 
       - name: Update PR
         # we want to report failures, too
-        if: always()
+        # but only update PR comments when running in a pull_request context
+        if: always() && github.event_name == 'pull_request'
 
         uses: thollander/actions-comment-pull-request@v2.4.3
         with:
@@ -173,6 +199,8 @@ jobs:
           mode: recreate
 
   reset-label:
+    # Only reset label for pull_request events, not merge_group
+    if: github.event_name == 'pull_request'
     uses: ./.github/workflows/reset-label.yml
     with:
       label: ":taco::apply"
