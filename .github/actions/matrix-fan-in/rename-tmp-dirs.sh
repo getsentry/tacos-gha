@@ -16,7 +16,7 @@ mkdir -p "$path"
 # Fail early if no artifacts were downloaded
 if [ ! -d ./matrix-fan-in.tmp ] || [ -z "$(ls -A ./matrix-fan-in.tmp 2>/dev/null)" ]; then
   echo "ERROR: No artifacts found in matrix-fan-in.tmp" >&2
-  echo "This may indicate matrix jobs failed or exceeded the 500 artifact limit." >&2
+  echo "This may indicate matrix jobs failed or we touched too many slices and exceed Githubs 500 artifact limit." >&2
   exit 1
 fi
 
