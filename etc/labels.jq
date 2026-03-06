@@ -10,7 +10,6 @@
 #       plan taco     #f6c95c   (246,201,92)
 #       lock queso    #e7af00   (231,175,0)
 #   conflict salsa    #c91919   (201,25,25)
-#     unlock lechuga  #41a332   (65,163,50)
 #      apply carne    #983d00   (152,61,0)
 #      stale taco mal #877958   (135, 121, 88)
 
@@ -24,12 +23,6 @@
     "name": ":taco::conflict",
     "description": "TACOS has detected a merge conflict.",
     "color": "c91919",
-  }
-
-, {
-    "name": ":taco::unlock",
-    "description": "Release the terraform lock for these changes.",
-    "color": "41a332",
   }
 
 , {
