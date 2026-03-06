@@ -13,13 +13,20 @@ path="$1"
 
 mkdir -p "$path"
 
+# Fail early if no artifacts were downloaded
+if [ ! -d ./matrix-fan-in.tmp ] || [ -z "$(ls -A ./matrix-fan-in.tmp 2>/dev/null)" ]; then
+  echo "ERROR: No artifacts found in matrix-fan-in.tmp" >&2
+  echo "This may indicate matrix jobs failed or we touched too many slices and exceeded Github's 256 matrix limit." >&2
+  exit 1
+fi
+
 : directory name fixup
 find ./matrix-fan-in.tmp \
     -mindepth 1 \
     -maxdepth 1 \
     -print0 \
   |
-  xargs -0 -n1 "$HERE/"rename-tmp-dir.sh \
+  xargs -0 -r -n1 "$HERE/"rename-tmp-dir.sh \
 > "$path/matrix.list"
 
 : assertion: the directory is empty

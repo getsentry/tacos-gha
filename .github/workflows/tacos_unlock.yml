@@ -2,7 +2,7 @@ name: TACOS Unlock
 
 # downstream projects should use events:
 ###pull_request:
-###  types: [closed, converted_to_draft, labeled]
+###  types: [closed, converted_to_draft]
 
 on:
   workflow_call:
@@ -34,10 +34,6 @@ env:
 jobs:
   determine-tf-root-modules:
     name: List Slices
-    if: |
-      false
-      || github.event.action != 'labeled'
-      || github.event.label.name == ':taco::unlock'
     outputs:
       slices: ${{ steps.list-slices.outputs.slices }}
 
@@ -159,12 +155,3 @@ jobs:
           message: ${{ fromJSON(steps.summary.outputs.summary) }}
           comment_tag: unlock
           mode: recreate
-
-  reset-label:
-    name: Reset Label
-
-    uses: ./.github/workflows/reset-label.yml
-    with:
-      label: ":taco::unlock"
-      tacos_gha_repo: ${{inputs.tacos_gha_repo}}
-      tacos_gha_ref: ${{inputs.tacos_gha_ref}}
