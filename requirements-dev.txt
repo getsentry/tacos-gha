@@ -10,7 +10,7 @@ black==24.4.2
     # via -r requirements-dev.in
 build==1.2.1
     # via pip-tools
-cffi==1.16.0
+cffi==2.0.0
     # via cryptography
 cfgv==3.4.0
     # via pre-commit
@@ -27,7 +27,7 @@ coverage==7.6.0
     #   coverage-enable-subprocess
 coverage-enable-subprocess==1.0
     # via -r requirements-dev.in
-cryptography==43.0.0
+cryptography==46.0.5
     # via pyjwt
 dill==0.3.8
     # via pylint
