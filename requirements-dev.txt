@@ -65,6 +65,7 @@ packaging==24.1
     #   build
     #   pudb
     #   pytest
+    #   wheel
 parso==0.8.4
     # via jedi
 pathspec==0.12.1
@@ -122,7 +123,7 @@ virtualenv==20.35.4
     #   pre-commit
 wcwidth==0.2.13
     # via urwid
-wheel==0.43.0
+wheel==0.46.2
     # via pip-tools
 
 # The following packages are considered to be unsafe in a requirements file:
