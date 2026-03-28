@@ -19,9 +19,11 @@ runs:
   steps:
     - name: "change hostname: ${{inputs.hostname}}"
       shell: ${{inputs.shell}}
+      env:
+        INPUT_HOSTNAME: ${{inputs.hostname}}
       run: |
-        : change hostname: ${{inputs.hostname}}
-        HOSTNAME='${{inputs.hostname}}'
+        : change hostname: "$INPUT_HOSTNAME"
+        HOSTNAME="$INPUT_HOSTNAME"
         sudo tee <<< "127.0.0.1	$HOSTNAME" -a /etc/hosts
         sudo hostname "$HOSTNAME"
         hostname -f
@@ -29,8 +31,10 @@ runs:
 
     - name: "add user: ${{inputs.user}}"
       shell: ${{inputs.shell}}
+      env:
+        INPUT_USER: ${{inputs.user}}
       run: |
-        : "add user: ${{inputs.user}}"
+        : "add user: $INPUT_USER"
 
         olduser="$USER"
         id "$olduser"
@@ -40,7 +44,7 @@ runs:
 
         : add the requested username
         : remove square brackets from bot names as they are invalid for linux
-        newuser="$( tr -d '[]' <<< "${{inputs.user}}" )"
+        newuser="$( tr -d '[]' <<< "$INPUT_USER" )"
         sudo useradd \
           --gid="$(id -gn)" \
           --groups="$(id -Gn | tr ' ' ,),$olduser" \

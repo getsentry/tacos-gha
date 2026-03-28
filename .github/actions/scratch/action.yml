@@ -24,20 +24,29 @@ runs:
 
     - name: show full context
       shell: ${{inputs.shell}}
+      env:
+        GITHUB_CONTEXT: ${{ toJSON(github) }}
+        ENV_CONTEXT: ${{ toJSON(env) }}
+        JOB_CONTEXT: ${{ toJSON(job) }}
+        STEPS_CONTEXT: ${{ toJSON(steps) }}
+        RUNNER_CONTEXT: ${{ toJSON(runner) }}
+        STRATEGY_CONTEXT: ${{ toJSON(strategy) }}
+        MATRIX_CONTEXT: ${{ toJSON(matrix) }}
+        INPUTS_CONTEXT: ${{ toJSON(inputs) }}
       run: |
         : <<'EOF'
-        github:   ${{ toJSON(github) }},
-        env:      ${{ toJSON(env) }},
+        github:   "$GITHUB_CONTEXT",
+        env:      "$ENV_CONTEXT",
         vars:     # not valid in custom action
-        job:      ${{ toJSON(job) }},
+        job:      "$JOB_CONTEXT",
         jobs:     # for reusable workflows only
-        steps:    ${{ toJSON(steps) }},
-        runner:   ${{ toJSON(runner) }},
+        steps:    "$STEPS_CONTEXT",
+        runner:   "$RUNNER_CONTEXT",
         secrets:  # not valid in custom action
-        strategy: ${{ toJSON(strategy) }},
-        matrix:   ${{ toJSON(matrix) }},
+        strategy: "$STRATEGY_CONTEXT",
+        matrix:   "$MATRIX_CONTEXT",
         needs:    # not valid in custom action
-        inputs:   ${{ toJSON(inputs) }},
+        inputs:   "$INPUTS_CONTEXT",
         EOF
 
     - name: show unix infos (before)

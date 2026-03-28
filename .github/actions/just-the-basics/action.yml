@@ -21,28 +21,38 @@ runs:
       uses: bukzor/direnv-install@4cb348d6482fe7c2878782e592d53152bac94f4c # v1.1.1/bukzor1
     - name: show GHA contexts
       shell: ${{inputs.shell}}
+      env:
+        ENV_CONTEXT: ${{ toJSON(env) }}
+        JOB_CONTEXT: ${{ toJSON(job) }}
+        STEPS_CONTEXT: ${{ toJSON(steps) }}
+        RUNNER_CONTEXT: ${{ toJSON(runner) }}
+        STRATEGY_CONTEXT: ${{ toJSON(strategy) }}
+        MATRIX_CONTEXT: ${{ toJSON(matrix) }}
+        INPUTS_CONTEXT: ${{ toJSON(inputs) }}
       run: |
         : GHA contexts: <<'EOF'
           github:   # too huge, enable debug logging to see
-          env:      ${{ toJSON(env) }},
+          env:      "$ENV_CONTEXT",
           vars:     # not valid in custom action
-          job:      ${{ toJSON(job) }},
+          job:      "$JOB_CONTEXT",
           jobs:     # for reusable workflows only
-          steps:    ${{ toJSON(steps) }},
-          runner:   ${{ toJSON(runner) }},
+          steps:    "$STEPS_CONTEXT",
+          runner:   "$RUNNER_CONTEXT",
           secrets:  # not valid in custom action
-          strategy: ${{ toJSON(strategy) }},
-          matrix:   ${{ toJSON(matrix) }},
+          strategy: "$STRATEGY_CONTEXT",
+          matrix:   "$MATRIX_CONTEXT",
           needs:    # not valid in custom action
-          inputs:   ${{ toJSON(inputs) }},
+          inputs:   "$INPUTS_CONTEXT",
         EOF
         : DOC: https://docs.github.com/en/actions/learn-github-actions/contexts
     - name: "debug: show `github` context"
       if: ${{runner.debug}}
       shell: ${{inputs.shell}}
+      env:
+        GITHUB_CONTEXT: ${{ toJSON(github) }}
       run: |
         : its huge... expand script, above to view <<'EOF'
-          github:   ${{ toJSON(github) }},
+          github:   "$GITHUB_CONTEXT",
         EOF
     - name: enable `gh` cli
       shell: ${{inputs.shell}}
