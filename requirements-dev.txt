@@ -84,7 +84,7 @@ pudb==2024.1.2
     # via -r requirements-dev.in
 pycparser==2.22
     # via cffi
-pygments==2.18.0
+pygments==2.20.0
     # via pudb
 pyjwt==2.8.0
     # via -r requirements-dev.in
