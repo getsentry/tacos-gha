@@ -85,7 +85,9 @@ pudb==2024.1.2
 pycparser==2.22
     # via cffi
 pygments==2.18.0
-    # via pudb
+    # via
+    #   pudb
+    #   pytest
 pyjwt==2.8.0
     # via -r requirements-dev.in
 pylint==3.2.6
@@ -96,7 +98,7 @@ pyproject-hooks==1.1.0
     #   pip-tools
 pyright==1.1.372
     # via -r requirements-dev.in
-pytest==8.3.1
+pytest==9.0.3
     # via
     #   -r requirements-dev.in
     #   pytest-xdist
