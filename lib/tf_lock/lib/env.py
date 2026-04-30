@@ -66,6 +66,8 @@ def tf_working_dir(root_module: OSPath) -> Path:
                 ))
             else:
                 working_dir_key = "working_dir"
+                # hcl validate --inputs makes terragrunt generate its templates
+                sh.run(("terragrunt", "hcl", "validate", "--inputs"))
                 terragrunt_info = sh.json(
                     ("terragrunt", "info", "print", "--no-auto-init=false")
                 )

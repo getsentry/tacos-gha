@@ -20,11 +20,14 @@ tf_working_dir() {
     ( cd "$root_module"
       if [ "${TERRAGRUNT_VERSION}" = "0.54.15" ]; then
         # validate-inputs makes terragrunt generate its templates
-        terragrunt  --terragrunt-no-auto-init=false validate-inputs
+        terragrunt --terragrunt-no-auto-init=false validate-inputs
 
-        terragrunt  --terragrunt-no-auto-init=false terragrunt-info |
+        terragrunt --terragrunt-no-auto-init=false terragrunt-info |
           jq -r .WorkingDir
       else
+        # hcl validate --inputs makes terragrunt generate its templates
+        terragrunt hcl validate --inputs
+
         terragrunt info print --no-auto-init=false |
           jq -r .working_dir
       fi
