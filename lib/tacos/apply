@@ -8,9 +8,15 @@ exec 3>&1 1>&2
   sudo-gcp tf-lock-acquire
 )
 
-quietly sudo-gcp terragrunt run-all init
-quietly sudo-gcp terragrunt run-all refresh
+if [ "${TERRAGRUNT_VERSION}" = "0.54.15" ]; then
+    run_all=("run-all")
+else
+    run_all=("run" "--all")
+fi
+
+quietly sudo-gcp terragrunt "${run_all[@]}" init
+quietly sudo-gcp terragrunt "${run_all[@]}" refresh
 
 set -x
 : TODO: fetch and apply the tfplan artifact from plan workflow
-sudo-gcp terragrunt run-all apply --auto-approve >&3
+sudo-gcp terragrunt "${run_all[@]}" apply --auto-approve >&3
