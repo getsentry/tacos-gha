@@ -10,7 +10,7 @@ TACOS_LOCK="${TACOS_LOCK:-false}"
 if [ "${TERRAGRUNT_VERSION}" = "0.54.15" ]; then
     run_all=("run-all")
 else
-    run_all=("run" "--all")
+    run_all=("run" "--all" "--")
 fi
 
 if "$TACOS_LOCK"; then
