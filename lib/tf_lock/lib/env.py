@@ -17,6 +17,7 @@ HERE = sh.get_HERE(__file__)
 USER = environ["USER"] = get_current_user(environ)
 HOST = environ["HOST"] = get_current_host(environ)
 HOSTNAME = environ["HOSTNAME"] = environ["HOST"]
+TERRAGRUNT_VERSION = environ["TERRAGRUNT_VERSION"]
 
 TF_LOCK_ENONE = 2
 TF_LOCK_EHELD = 3
@@ -50,19 +51,28 @@ path_prepend("PATH", TACOS_GHA_HOME + "/lib/tf_lock/bin")
 def tf_working_dir(root_module: OSPath) -> Path:
     if (root_module / "terragrunt.hcl").exists():
         with sh.cd(root_module):
-            # validate-inputs makes terragrunt generate its templates
-            sh.run((
-                "terragrunt",
-                "--terragrunt-no-auto-init=false",
-                "validate-inputs",
-            ))
-            terragrunt_info = sh.json((
-                "terragrunt",
-                "--terragrunt-no-auto-init=false",
-                "terragrunt-info",
-            ))
+            if TERRAGRUNT_VERSION == "0.54.15":
+                working_dir_key = "WorkingDir"
+                # validate-inputs makes terragrunt generate its templates
+                sh.run((
+                    "terragrunt",
+                    "--terragrunt-no-auto-init=false",
+                    "validate-inputs",
+                ))
+                terragrunt_info = sh.json((
+                    "terragrunt",
+                    "--terragrunt-no-auto-init=false",
+                    "terragrunt-info",
+                ))
+            else:
+                working_dir_key = "working_dir"
+                # hcl validate --inputs makes terragrunt generate its templates
+                sh.run(("terragrunt", "hcl", "validate", "--inputs"))
+                terragrunt_info = sh.json(
+                    ("terragrunt", "info", "print", "--no-auto-init=false")
+                )
             assert isinstance(terragrunt_info, dict), terragrunt_info
-            working_dir = terragrunt_info.get("WorkingDir")
+            working_dir = terragrunt_info.get(working_dir_key)
             assert isinstance(working_dir, str)
             return Path(working_dir)
 

@@ -12,6 +12,7 @@ black!=24.2.0
 # lint
 pylint
 pre-commit
+virtualenv>=20.26.6  # CVE-2024-53899: Fix command injection vulnerability
 
 # test & coverage
 pytest

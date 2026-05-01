@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from os import environ
 from typing import Self
 from typing import Tuple
 
@@ -16,6 +17,7 @@ from lib.user_error import UserError
 
 HERE = sh.get_HERE(__file__)
 TF_LOCK_EHELD = 3
+TERRAGRUNT_VERSION = environ["TERRAGRUNT_VERSION"]
 
 
 @dataclass(frozen=True)
@@ -162,10 +164,17 @@ def tf_working_dir(root_module: Path) -> Path:
 
     if OSPath(root_module / "terragrunt.hcl").exists():
         with sh.cd(root_module):
-            sh.run(("terragrunt", "validate-inputs"))
-            info = sh.json(("terragrunt", "terragrunt-info"))
+            if TERRAGRUNT_VERSION == "0.54.15":
+                working_dir_key = "WorkingDir"
+                sh.run(("terragrunt", "validate-inputs"))
+                info = sh.json(("terragrunt", "terragrunt-info"))
+            else:
+                working_dir_key = "working_dir"
+                # hcl validate --inputs makes terragrunt generate its templates
+                sh.run(("terragrunt", "hcl", "validate", "--inputs"))
+                info = sh.json(("terragrunt", "info", "print"))
             info = json.assert_dict_of_strings(info)
-            return Path(info["WorkingDir"])
+            return Path(info[working_dir_key])
     else:
         return root_module
 
@@ -180,8 +189,6 @@ def main() -> None:
         paths = [Path(arg) for arg in args]
     else:
         paths = [Path(".")]
-
-    from os import environ
 
     with sh.quiet():
         for path in paths:

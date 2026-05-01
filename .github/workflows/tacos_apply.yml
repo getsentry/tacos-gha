@@ -50,9 +50,9 @@ jobs:
 
     steps:
       - name: Checkout IAC
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
       - name: Checkout tacos-gha
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
           repository: ${{inputs.tacos_gha_repo}}
           ref: ${{inputs.tacos_gha_ref}}
@@ -85,9 +85,9 @@ jobs:
       TF_ROOT_MODULE: ${{matrix.tf-root-module}}
     steps:
       - name: Checkout IAC
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
       - name: Checkout tacos-gha
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
           repository: ${{inputs.tacos_gha_repo}}
           ref: ${{inputs.tacos_gha_ref}}
@@ -117,7 +117,7 @@ jobs:
       # TODO: fetch and apply the tfplan artifact from plan workflow
       # so that apply matches the plan reviewed by construction
       ### - name: fetch tfplan: ${{which}}
-      ###   uses: actions/download-artifact@v4
+      ###   uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
       ###   with:
       ###     name: tfplan
       ###     # TODO: github-script to fetch run-id of the most recent tfplan
@@ -146,7 +146,7 @@ jobs:
 
     steps:
       - name: Checkout tacos-gha
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
           repository: ${{inputs.tacos_gha_repo}}
           ref: ${{inputs.tacos_gha_ref}}
@@ -166,7 +166,7 @@ jobs:
         # we want to report failures, too
         if: always()
 
-        uses: thollander/actions-comment-pull-request@v2.4.3
+        uses: thollander/actions-comment-pull-request@1d3973dc4b8e1399c0620d3f2b1aa5e795465308 # v2.4.3
         with:
           message: ${{ fromJSON(steps.summary.outputs.summary) }}
           comment_tag: apply
