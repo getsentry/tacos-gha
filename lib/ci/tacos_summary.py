@@ -130,6 +130,15 @@ class SliceSummary(NamedTuple):
 
             yield cls.from_matrix_fan_out(path / matrix)
 
+    def _in_any_log_line(self, needle: str) -> bool:
+        """Substring search across tf_log lines.
+
+        TG 1.x prefixes stdout lines with structured logging
+        (e.g. "14:14:06.505 STDOUT [.] terraform: No changes..."),
+        so exact tuple membership ("needle" in self.tf_log) no longer works.
+        """
+        return any(needle in line for line in self.tf_log)
+
     @property
     def dirty(self) -> bool:
         """The tf-plan is nonempty."""
@@ -139,9 +148,8 @@ class SliceSummary(NamedTuple):
     def clean(self) -> bool:
         """The job succeeded."""
         if self.tacos_verb == "apply":
-            if (
+            if self._in_any_log_line(
                 "No changes. Your infrastructure matches the configuration."
-                in self.tf_log
             ):
                 return self.returncode == 0
             else:
@@ -152,9 +160,8 @@ class SliceSummary(NamedTuple):
     @property
     def applied(self) -> bool:
         """The job succeeded and made changes."""
-        if (
-            self.tacos_verb == "apply"
-            and "Terraform will perform the following actions:" in self.tf_log
+        if self.tacos_verb == "apply" and self._in_any_log_line(
+            "Terraform will perform the following actions:"
         ):
             return self.returncode == 0
         else:
