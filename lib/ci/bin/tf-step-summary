@@ -46,7 +46,7 @@ save_legacy_summary() {
   explanation="$1"
 
   summary="$(
-    if tac "$tf_log" | uncolor | grep -E -m1 '^(Apply complete|Plan:|No changes)'; then
+    if tac "$tf_log" | uncolor | grep -E -m1 '(Apply complete|Plan:|No changes)'; then
       : :D
     elif cat "$console_log" "$tf_log" | uncolor | grep -E -m1 'error|Error|ERROR'; then
       : D:
