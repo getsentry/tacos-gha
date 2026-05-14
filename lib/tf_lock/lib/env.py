@@ -51,7 +51,7 @@ path_prepend("PATH", TACOS_GHA_HOME + "/lib/tf_lock/bin")
 def tf_working_dir(root_module: OSPath) -> Path:
     if (root_module / "terragrunt.hcl").exists():
         with sh.cd(root_module):
-            if TERRAGRUNT_VERSION == "0.54.15":
+            if TERRAGRUNT_VERSION.startswith("0."):
                 working_dir_key = "WorkingDir"
                 # validate-inputs makes terragrunt generate its templates
                 sh.run((
