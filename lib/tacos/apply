@@ -8,7 +8,7 @@ exec 3>&1 1>&2
   sudo-gcp tf-lock-acquire
 )
 
-if [ "${TERRAGRUNT_VERSION}" = "0.54.15" ]; then
+if [[ "${TERRAGRUNT_VERSION}" == 0.* ]]; then
     run_all=("run-all")
 else
     run_all=("run" "--all" "--")
