@@ -20,6 +20,12 @@ on:
       ssh-private-key:
         description: "Private SSH key to use for git clone"
         required: false
+      DD_API_KEY:
+        description: "Datadog API key for Terraform provider"
+        required: false
+      DD_APP_KEY:
+        description: "Datadog App key for Terraform provider"
+        required: false
 
 defaults:
   run:
@@ -86,6 +92,8 @@ jobs:
 
     env:
       TF_ROOT_MODULE: ${{matrix.tf-root-module}}
+      DD_API_KEY: ${{ secrets.DD_API_KEY }}
+      DD_APP_KEY: ${{ secrets.DD_APP_KEY }}
     steps:
       - name: Checkout IAC
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
