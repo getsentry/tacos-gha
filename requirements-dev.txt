@@ -6,7 +6,7 @@
 #
 astroid==3.2.4
     # via pylint
-black==24.4.2
+black==26.3.1
     # via -r requirements-dev.in
 build==1.2.1
     # via pip-tools
@@ -67,7 +67,7 @@ packaging==24.1
     #   pytest
 parso==0.8.4
     # via jedi
-pathspec==0.12.1
+pathspec==1.0.4
     # via black
 pip-tools==7.4.1
     # via -r requirements-dev.in
@@ -102,6 +102,8 @@ pytest==8.3.1
     #   pytest-xdist
 pytest-xdist==3.6.1
     # via -r requirements-dev.in
+pytokens==0.4.1
+    # via black
 pyyaml==6.0.1
     # via pre-commit
 tomlkit==0.13.0
