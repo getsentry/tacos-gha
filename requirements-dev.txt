@@ -87,8 +87,10 @@ pycparser==2.22
     # via cffi
 pygments==2.20.0
     # via pudb
-pyjwt==2.8.0
-    # via -r requirements-dev.in
+pyjwt==2.13.0
+    # via
+    #   -r requirements-dev.in
+    #   pyjwt
 pylint==3.2.6
     # via -r requirements-dev.in
 pyproject-hooks==1.1.0
