@@ -28,10 +28,11 @@ runs:
           comment+=$'\n'
         done < <(echo "$DISABLED_SLICES" | jq -c '.[]')
 
+        delimiter="TACOS_$(openssl rand -hex 8)"
         {
-          echo "comment<<TACOS_EOF"
+          echo "comment<<${delimiter}"
           echo "$comment"
-          echo "TACOS_EOF"
+          echo "${delimiter}"
         } >> "$GITHUB_OUTPUT"
 
     - name: Post Disabled Slices Comment
