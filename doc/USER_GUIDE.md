@@ -59,6 +59,11 @@ git add terragrunt/regions/multi-tenant/kafka/snuba-errors/us/.tacos-disabled
 
 The sentinel file must be committed and tracked by git to take effect.
 
+**Note:** Do not add `.tacos-disabled` to a slice that is currently locked by
+an open pull request. The unlock workflow also respects the sentinel, so a
+locked slice that becomes disabled will not be automatically unlocked when its
+PR is closed. Release any TACOS-GHA locks before disabling a slice.
+
 # Usage
 
 ## The Pull Request

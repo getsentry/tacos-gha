@@ -167,7 +167,8 @@ class TestDependentSlices:
 
 
 class TestDisabledSentinel:
-    def test_disabled_slice_excluded_from_fs(self) -> None:
+    def test_disabled_slice_still_in_categorized(self) -> None:
+        """TFCategorized sees all slices; .tacos-disabled filtering is separate."""
         paths = (
             OSPath("terraform/slice-0/main.tf"),
             OSPath("terraform/slice-0/.tacos-disabled"),
