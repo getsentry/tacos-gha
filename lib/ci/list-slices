@@ -2,6 +2,9 @@
 # stdin: json listing of all files editted
 set -euo pipefail
 
+export TACOS_DISABLED_FILE
+TACOS_DISABLED_FILE="$(mktemp)"
+
 jq '.[]' --raw-output |
   python3.12 -P -m lib.tacos.dependent_slices |
   # transform newline-delimited list into json:
@@ -12,3 +15,12 @@ jq '.[]' --raw-output |
   # prettify
   jq . \
 ;
+
+if [ -s "$TACOS_DISABLED_FILE" ]; then
+  jq -c '.' "$TACOS_DISABLED_FILE" |
+    gha-set-output disabled_slices
+else
+  echo '[]' | gha-set-output disabled_slices
+fi
+
+rm -f "$TACOS_DISABLED_FILE"

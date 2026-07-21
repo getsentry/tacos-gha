@@ -61,6 +61,15 @@ The sentinel file must be committed and tracked by git to take effect. The
 unlock workflow ignores the sentinel so that locks on disabled slices are
 still released when a pull request is closed or converted to draft.
 
+If a PR touches disabled slices, TACOS-GHA will post a comment listing them.
+To customize the message, write it into the `.tacos-disabled` file:
+
+```
+echo "This slice is now managed by Spacelift." > terragrunt/regions/multi-tenant/kafka/.tacos-disabled
+```
+
+An empty file uses a default message.
+
 # Usage
 
 ## The Pull Request

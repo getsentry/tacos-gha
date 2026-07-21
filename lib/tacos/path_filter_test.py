@@ -58,6 +58,29 @@ class TestPathFilterDisabled:
         slice_dir.mkdir(parents=True)
         assert not pf._is_disabled_from_disk(str(slice_dir))
 
+    def test_disabled_message_custom(self, tmp_path: OSPath) -> None:
+        pf = PathFilter(allowed=frozenset())
+        slice_dir = tmp_path / "terraform" / "slice-0"
+        slice_dir.mkdir(parents=True)
+        (slice_dir / ".tacos-disabled").write_text("Managed by Spacelift now.")
+        assert pf.disabled_message(str(slice_dir)) == "Managed by Spacelift now."
+
+    def test_disabled_message_default(self, tmp_path: OSPath) -> None:
+        pf = PathFilter(allowed=frozenset())
+        slice_dir = tmp_path / "terraform" / "slice-0"
+        slice_dir.mkdir(parents=True)
+        (slice_dir / ".tacos-disabled").touch()
+        assert pf.disabled_message(str(slice_dir)) == "This slice has been disabled in TACOS-GHA."
+
+    def test_disabled_message_from_parent(self, tmp_path: OSPath) -> None:
+        pf = PathFilter(allowed=frozenset())
+        parent = tmp_path / "terraform"
+        parent.mkdir(parents=True)
+        (parent / ".tacos-disabled").write_text("Entire subtree migrated.")
+        slice_dir = parent / "slice-0"
+        slice_dir.mkdir()
+        assert pf.disabled_message(str(slice_dir)) == "Entire subtree migrated."
+
 
 class TestPathFilterAllowlist:
     def test_empty_allows_all(self) -> None:

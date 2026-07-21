@@ -244,7 +244,9 @@ def lines_to_paths(lines: Iterable[str]) -> Generator[OSPath]:
 
 def main() -> int:
     import fileinput
+    import json
     import os
+    import sys
 
     fs = FileSystem.from_git()
     modified_paths = lines_to_paths(fileinput.input(encoding="utf-8"))
@@ -252,13 +254,24 @@ def main() -> int:
     path_filter = PathFilter.from_config()
     ignore_disabled = bool(os.environ.get("TACOS_IGNORE_DISABLED"))
 
+    disabled: list[dict[str, str]] = []
+
     for slice in dependent_slices(modified_paths, fs):
         if not ignore_disabled and path_filter.is_disabled(str(slice), fs.files):
             sh.debug(f"slice disabled by .tacos-disabled: {slice}")
+            disabled.append({
+                "slice": str(slice),
+                "message": path_filter.disabled_message(str(slice)),
+            })
         elif path_filter.match(str(slice)):
             print(slice)
         else:
             sh.debug(f"slice ignored due to allowlist: {slice}")
+
+    disabled_file = os.environ.get("TACOS_DISABLED_FILE")
+    if disabled_file:
+        with open(disabled_file, "w") as f:
+            json.dump(disabled, f)
 
     return 0
 

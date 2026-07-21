@@ -38,6 +38,18 @@ class PathFilter:
                 return True
         return False
 
+    def disabled_message(self, path: str) -> str:
+        """Read the content of the nearest .tacos-disabled sentinel file."""
+        p = OSPath(path)
+        for ancestor in (p, *p.parents):
+            sentinel = ancestor / self.disabled_sentinel
+            if sentinel.is_file():
+                content = sentinel.read_text().strip()
+                if content:
+                    return content
+                break
+        return "This slice has been disabled in TACOS-GHA."
+
     def match(self, path: str) -> bool:
         if not self.allowed:
             return True

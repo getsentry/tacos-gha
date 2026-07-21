@@ -71,6 +71,11 @@ jobs:
         id: list-slices
         uses: ./tacos-gha/.github/actions/list-slices
 
+      - name: Notify Disabled Slices
+        uses: ./tacos-gha/.github/actions/notify-disabled-slices
+        with:
+          disabled_slices: ${{ steps.list-slices.outputs.disabled_slices }}
+
   tacos_plan:
     name: TACOS Plan
     needs: [determine-tf-root-modules]

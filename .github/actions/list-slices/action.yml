@@ -9,6 +9,9 @@ outputs:
   slices:
     description: "JSON list of paths to relevant TF/TG slices"
     value: ${{ steps.list-slices.outputs.slices }}
+  disabled_slices:
+    description: "JSON list of disabled slices with messages"
+    value: ${{ steps.list-slices.outputs.disabled_slices }}
 
 runs:
   using: composite
