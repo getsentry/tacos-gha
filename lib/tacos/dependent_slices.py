@@ -251,7 +251,9 @@ def main() -> int:
     path_filter = PathFilter.from_config()
 
     for slice in dependent_slices(modified_paths, fs):
-        if path_filter.match(str(slice)):
+        if path_filter.is_disabled(str(slice), fs.files):
+            sh.debug(f"slice disabled by .tacos-disabled: {slice}")
+        elif path_filter.match(str(slice), fs.files):
             print(slice)
         else:
             sh.debug(f"slice ignored due to allowlist: {slice}")

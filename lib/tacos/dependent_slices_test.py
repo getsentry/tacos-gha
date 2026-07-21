@@ -166,6 +166,34 @@ class TestDependentSlices:
         )
 
 
+class TestDisabledSentinel:
+    def test_disabled_slice_excluded_from_fs(self) -> None:
+        paths = (
+            OSPath("terraform/slice-0/main.tf"),
+            OSPath("terraform/slice-0/.tacos-disabled"),
+            OSPath("terraform/slice-1/main.tf"),
+        )
+        fs = D.FileSystem.from_paths(paths)
+        categorized = D.TFCategorized.from_fs(fs)
+        assert categorized.slices == frozenset({
+            D.TopLevelTFModule(D.TFModule(D.Dir(Path("terraform/slice-0")))),
+            D.TopLevelTFModule(D.TFModule(D.Dir(Path("terraform/slice-1")))),
+        })
+
+    def test_sentinel_does_not_affect_categorization(self) -> None:
+        """The sentinel is a filter, not a categorization concern.
+        TFCategorized still sees disabled slices; filtering happens later."""
+        paths = (
+            OSPath("env/prod/slice-0/thing.tf"),
+            OSPath("env/prod/slice-0/.tacos-disabled"),
+        )
+        fs = D.FileSystem.from_paths(paths)
+        categorized = D.TFCategorized.from_fs(fs)
+        assert D.TopLevelTFModule(
+            D.TFModule(D.Dir(Path("env/prod/slice-0")))
+        ) in categorized.slices
+
+
 class TestRegressions:
     """Real-world cases that (initially) weren't caught by unit-tests."""
 
