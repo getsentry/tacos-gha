@@ -18,7 +18,7 @@ tf_working_dir() {
   root_module="$1"
   if [[ -e "$root_module/terragrunt.hcl" ]]; then
     ( cd "$root_module"
-      if [ "${TERRAGRUNT_VERSION}" = "0.54.15" ]; then
+      if [[ "${TERRAGRUNT_VERSION}" == 0.* ]]; then
         # validate-inputs makes terragrunt generate its templates
         terragrunt --terragrunt-no-auto-init=false validate-inputs
 

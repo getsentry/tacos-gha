@@ -164,7 +164,7 @@ def tf_working_dir(root_module: Path) -> Path:
 
     if OSPath(root_module / "terragrunt.hcl").exists():
         with sh.cd(root_module):
-            if TERRAGRUNT_VERSION == "0.54.15":
+            if TERRAGRUNT_VERSION.startswith("0."):
                 working_dir_key = "WorkingDir"
                 sh.run(("terragrunt", "validate-inputs"))
                 info = sh.json(("terragrunt", "terragrunt-info"))

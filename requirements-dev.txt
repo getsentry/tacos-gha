@@ -6,11 +6,11 @@
 #
 astroid==3.2.4
     # via pylint
-black==24.4.2
+black==26.3.1
     # via -r requirements-dev.in
 build==1.2.1
     # via pip-tools
-cffi==1.16.0
+cffi==2.1.0
     # via cryptography
 cfgv==3.4.0
     # via pre-commit
@@ -27,7 +27,7 @@ coverage==7.6.0
     #   coverage-enable-subprocess
 coverage-enable-subprocess==1.0
     # via -r requirements-dev.in
-cryptography==43.0.0
+cryptography==48.0.1
     # via pyjwt
 dill==0.3.8
     # via pylint
@@ -35,7 +35,7 @@ distlib==0.3.8
     # via virtualenv
 execnet==2.1.1
     # via pytest-xdist
-filelock==3.15.4
+filelock==3.25.2
     # via virtualenv
 identify==2.6.0
     # via pre-commit
@@ -65,9 +65,10 @@ packaging==24.1
     #   build
     #   pudb
     #   pytest
+    #   wheel
 parso==0.8.4
     # via jedi
-pathspec==0.12.1
+pathspec==1.0.4
     # via black
 pip-tools==7.4.1
     # via -r requirements-dev.in
@@ -84,10 +85,12 @@ pudb==2024.1.2
     # via -r requirements-dev.in
 pycparser==2.22
     # via cffi
-pygments==2.18.0
+pygments==2.20.0
     # via pudb
-pyjwt==2.8.0
-    # via -r requirements-dev.in
+pyjwt==2.13.0
+    # via
+    #   -r requirements-dev.in
+    #   pyjwt
 pylint==3.2.6
     # via -r requirements-dev.in
 pyproject-hooks==1.1.0
@@ -102,6 +105,8 @@ pytest==8.3.1
     #   pytest-xdist
 pytest-xdist==3.6.1
     # via -r requirements-dev.in
+pytokens==0.4.1
+    # via black
 pyyaml==6.0.1
     # via pre-commit
 tomlkit==0.13.0
@@ -116,13 +121,13 @@ urwid==2.6.15
     #   urwid-readline
 urwid-readline==0.14
     # via pudb
-virtualenv==20.35.4
+virtualenv==20.36.1
     # via
     #   -r requirements-dev.in
     #   pre-commit
 wcwidth==0.2.13
     # via urwid
-wheel==0.43.0
+wheel==0.46.2
     # via pip-tools
 
 # The following packages are considered to be unsafe in a requirements file:

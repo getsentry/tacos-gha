@@ -35,6 +35,41 @@ These allowlists can consist of empty lines, comments where the first character
 of the line is a #, and patterns that will be matched to slices with with
 python's [fnmatch module](https://docs.python.org/3/library/fnmatch.html).
 
+## Disabling TACOS-GHA for a slice
+
+To disable TACOS-GHA for a specific slice or subtree, create an empty
+`.tacos-disabled` sentinel file in the target directory. TACOS-GHA will skip
+any slice that contains a `.tacos-disabled` file in its directory or any
+ancestor directory. This is useful for incrementally retiring slices from
+TACOS-GHA management.
+
+For example, to disable all slices under `terragrunt/regions/multi-tenant/kafka/`:
+
+```
+touch terragrunt/regions/multi-tenant/kafka/.tacos-disabled
+git add terragrunt/regions/multi-tenant/kafka/.tacos-disabled
+```
+
+To disable a single slice:
+
+```
+touch terragrunt/regions/multi-tenant/kafka/snuba-errors/us/.tacos-disabled
+git add terragrunt/regions/multi-tenant/kafka/snuba-errors/us/.tacos-disabled
+```
+
+The sentinel file must be committed and tracked by git to take effect. The
+unlock workflow ignores the sentinel so that locks on disabled slices are
+still released when a pull request is closed or converted to draft.
+
+If a PR touches disabled slices, TACOS-GHA will post a comment listing them.
+To customize the message, write it into the `.tacos-disabled` file:
+
+```
+echo "This slice is now managed externally." > terragrunt/regions/multi-tenant/kafka/.tacos-disabled
+```
+
+An empty file uses a default message.
+
 # Usage
 
 ## The Pull Request
