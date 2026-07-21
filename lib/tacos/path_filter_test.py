@@ -90,6 +90,19 @@ class TestPathFilterDisabled:
         (slice_dir / ".tacos-disabled").symlink_to(target)
         assert not pf._is_disabled_from_disk(str(slice_dir))
 
+    def test_symlink_sentinel_ignored_from_fs(self, tmp_path: OSPath) -> None:
+        pf = PathFilter(allowed=frozenset())
+        slice_dir = tmp_path / "terraform" / "slice-0"
+        slice_dir.mkdir(parents=True)
+        target = tmp_path / "secret"
+        target.write_text("token=s3cret")
+        (slice_dir / ".tacos-disabled").symlink_to(target)
+        fs_files: frozenset[Path] = frozenset({
+            Path(str(slice_dir / "main.tf")),
+            Path(str(slice_dir / ".tacos-disabled")),
+        })
+        assert not pf.is_disabled(str(slice_dir), fs_files)
+
     def test_symlink_sentinel_message_returns_default(self, tmp_path: OSPath) -> None:
         pf = PathFilter(allowed=frozenset())
         slice_dir = tmp_path / "terraform" / "slice-0"

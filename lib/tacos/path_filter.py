@@ -35,7 +35,8 @@ class PathFilter:
     def _is_disabled_from_fs(self, path: str, fs_files: frozenset[Path]) -> bool:
         p = Path(path)
         for ancestor in (p, *p.parents):
-            if Path(str(ancestor / self.disabled_sentinel)) in fs_files:
+            sentinel = Path(str(ancestor / self.disabled_sentinel))
+            if sentinel in fs_files and not OSPath(sentinel).is_symlink():
                 return True
         return False
 
