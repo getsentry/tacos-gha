@@ -65,7 +65,7 @@ If a PR touches disabled slices, TACOS-GHA will post a comment listing them.
 To customize the message, write it into the `.tacos-disabled` file:
 
 ```
-echo "This slice is now managed by Spacelift." > terragrunt/regions/multi-tenant/kafka/.tacos-disabled
+echo "This slice is now managed externally." > terragrunt/regions/multi-tenant/kafka/.tacos-disabled
 ```
 
 An empty file uses a default message.
