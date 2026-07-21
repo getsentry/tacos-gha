@@ -81,6 +81,24 @@ class TestPathFilterDisabled:
         slice_dir.mkdir()
         assert pf.disabled_message(str(slice_dir)) == "Entire subtree migrated."
 
+    def test_symlink_sentinel_ignored_on_disk(self, tmp_path: OSPath) -> None:
+        pf = PathFilter(allowed=frozenset())
+        slice_dir = tmp_path / "terraform" / "slice-0"
+        slice_dir.mkdir(parents=True)
+        target = tmp_path / "secret"
+        target.write_text("token=s3cret")
+        (slice_dir / ".tacos-disabled").symlink_to(target)
+        assert not pf._is_disabled_from_disk(str(slice_dir))
+
+    def test_symlink_sentinel_message_returns_default(self, tmp_path: OSPath) -> None:
+        pf = PathFilter(allowed=frozenset())
+        slice_dir = tmp_path / "terraform" / "slice-0"
+        slice_dir.mkdir(parents=True)
+        target = tmp_path / "secret"
+        target.write_text("token=s3cret")
+        (slice_dir / ".tacos-disabled").symlink_to(target)
+        assert pf.disabled_message(str(slice_dir)) == "This slice has been disabled in TACOS-GHA."
+
 
 class TestPathFilterAllowlist:
     def test_empty_allows_all(self) -> None:

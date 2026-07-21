@@ -27,7 +27,8 @@ class PathFilter:
     def _is_disabled_from_disk(self, path: str) -> bool:
         p = OSPath(path)
         for ancestor in (p, *p.parents):
-            if (ancestor / self.disabled_sentinel).is_file():
+            sentinel = ancestor / self.disabled_sentinel
+            if sentinel.is_file() and not sentinel.is_symlink():
                 return True
         return False
 
@@ -43,7 +44,7 @@ class PathFilter:
         p = OSPath(path)
         for ancestor in (p, *p.parents):
             sentinel = ancestor / self.disabled_sentinel
-            if sentinel.is_file():
+            if sentinel.is_file() and not sentinel.is_symlink():
                 content = sentinel.read_text().strip()
                 if content:
                     return content
