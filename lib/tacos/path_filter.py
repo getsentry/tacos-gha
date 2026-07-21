@@ -38,9 +38,7 @@ class PathFilter:
                 return True
         return False
 
-    def match(self, path: str, fs_files: frozenset[Path] | None = None) -> bool:
-        if self.is_disabled(path, fs_files):
-            return False
+    def match(self, path: str) -> bool:
         if not self.allowed:
             return True
         for pattern in self.allowed:

@@ -40,20 +40,10 @@ class TestPathFilterDisabled:
         assert pf.is_disabled("terraform/slice-0", fs_files)
         assert not pf.is_disabled("terraform/slice-1", fs_files)
 
-    def test_match_returns_false_when_disabled(self) -> None:
+    def test_match_ignores_disabled(self) -> None:
+        """match() only checks the allowlist; disabled filtering is the caller's job."""
         pf = PathFilter(allowed=frozenset({"terraform/*"}))
-        fs_files: frozenset[Path] = frozenset({
-            Path("terraform/slice-0/main.tf"),
-            Path("terraform/slice-0/.tacos-disabled"),
-        })
-        assert not pf.match("terraform/slice-0", fs_files)
-
-    def test_match_returns_true_when_not_disabled(self) -> None:
-        pf = PathFilter(allowed=frozenset({"terraform/*"}))
-        fs_files: frozenset[Path] = frozenset({
-            Path("terraform/slice-0/main.tf"),
-        })
-        assert pf.match("terraform/slice-0", fs_files)
+        assert pf.match("terraform/slice-0")
 
     def test_disabled_at_disk(self, tmp_path: OSPath) -> None:
         pf = PathFilter(allowed=frozenset())
