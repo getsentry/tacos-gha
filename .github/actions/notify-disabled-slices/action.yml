@@ -1,0 +1,51 @@
+name: Notify Disabled Slices
+
+inputs:
+  disabled_slices:
+    description: "JSON list of disabled slices from list-slices action"
+    required: true
+
+runs:
+  using: composite
+
+  steps:
+    - name: Render Comment
+      id: render
+      if: inputs.disabled_slices != '[]'
+      shell: bash
+      env:
+        DISABLED_SLICES: ${{ inputs.disabled_slices }}
+      run: |
+        comment="### ⚠️ Disabled Slices"
+        comment+=$'\n\n'
+        comment+="The following slices in this PR are **disabled** in TACOS-GHA and will not be planned or applied:"
+        comment+=$'\n\n'
+
+        while IFS= read -r line; do
+          slice="$(echo "$line" | jq -r '.slice')"
+          message="$(echo "$line" | jq -r '.message')"
+          comment+="- \`${slice}\` — ${message}"
+          comment+=$'\n'
+        done < <(echo "$DISABLED_SLICES" | jq -c '.[]')
+
+        delimiter="TACOS_$(openssl rand -hex 8)"
+        {
+          echo "comment<<${delimiter}"
+          echo "$comment"
+          echo "${delimiter}"
+        } >> "$GITHUB_OUTPUT"
+
+    - name: Post Disabled Slices Comment
+      if: inputs.disabled_slices != '[]'
+      uses: thollander/actions-comment-pull-request@24bffb9b452ba05a4f3f77933840a6a841d1b32b # v3.0.1
+      with:
+        comment-tag: tacos-disabled
+        mode: recreate
+        message: ${{ steps.render.outputs.comment }}
+
+    - name: Remove Stale Disabled Slices Comment
+      if: inputs.disabled_slices == '[]'
+      uses: thollander/actions-comment-pull-request@24bffb9b452ba05a4f3f77933840a6a841d1b32b # v3.0.1
+      with:
+        comment-tag: tacos-disabled
+        mode: delete
