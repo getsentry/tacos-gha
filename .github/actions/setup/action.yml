@@ -88,6 +88,7 @@ runs:
         cd "$TF_ROOT_MODULE"
         gha-set-env 'TF_VERSION' < "$(nearest-config-file .terraform-version)"
         gha-set-env 'TERRAGRUNT_VERSION' < "$(nearest-config-file .terragrunt-version)"
+        gha-set-env 'OPENTOFU_VERSION' < "$(nearest-config-file .opentofu-version)"
 
     - name: Setup Terragrunt
       uses: autero1/action-terragrunt@916673c030d67131f15d32dab2e527a9339e0897 # v1.3.2
@@ -99,6 +100,12 @@ runs:
       with:
         terraform_wrapper: false
         terraform_version: ${{ env.TF_VERSION }}
+
+    - name: Setup Opentofu
+      uses: opentofu/setup-opentofu@a1320f892987e89d278cc92dc5adc984fb93aca4 # v2.0.2
+      with:
+        tofu_wrapper: false
+        tofu_version: ${{ env.OPENTOFU_VERSION }}
 
     - name: Install terraform logging tools
       shell: ${{inputs.shell}}
