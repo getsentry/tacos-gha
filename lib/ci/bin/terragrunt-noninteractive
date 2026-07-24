@@ -23,7 +23,7 @@ export TERRAGRUNT_NO_AUTO_APPROVE=true
 # * we use tf-lock-acquire to take the lock, before terragrunt starts
 # * we run `terraform refresh` separately, in ci-tf-init
 export TF_CLI_ARGS=""
-export TF_CLI_ARGS_init="-lock=false -upgrade"
+export TF_CLI_ARGS_init="-lock=false -upgrade -reconfigure"
 export TF_CLI_ARGS_refresh="-lock=false -refresh=false"
 export TF_CLI_ARGS_plan="-lock=false -refresh=false -detailed-exitcode"
 export TF_CLI_ARGS_apply="-lock=false -refresh=false"
