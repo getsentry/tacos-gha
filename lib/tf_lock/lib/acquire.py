@@ -24,7 +24,8 @@ echo line: "$line"
     )
 else:
     TIMEOUT = 1 * TF_SLEEP + 1
-TERRAFORM = ("terraform", "console")
+    _tf_bin = getenv("TERRAFORM_BINARY") or "tofu"
+    TERRAFORM: Command = (_tf_bin, "console")
 
 
 def debug(*msg: object) -> None:
