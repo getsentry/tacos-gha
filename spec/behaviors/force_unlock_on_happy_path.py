@@ -22,7 +22,7 @@ def test(pr: tacos_demo.PR) -> None:
             == f"### TACOS Unlock: {pr.slices.subpath}/{slice}"
         )
 
-        assert "\nstate has been successfully unlocked!\n" in comment
+        assert "state has been successfully unlocked!\n" in comment
 
         assert "<summary>tf-lock-release: success: .(" in comment
         # the next bit is github-username@fake-pr-domain, which seems tricky
