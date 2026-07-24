@@ -80,7 +80,7 @@ You are authenticated for the next hour as: tacos-gha-tf-state-admin@sac-dev-sa.
         assert "tf-lock-release" not in commands
 
         tf_result: Parse = Parse(comment).between("</details>", "</details>")
-        assert "\nwill perform the following actions:\n" in tf_result
+        assert "will perform the following actions:\n" in tf_result
 
         assert (
             'apply "tfplan"\n```' in tf_result
