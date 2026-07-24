@@ -37,11 +37,11 @@ while (( i < limit )); do
     echo '{"lock": false}'
     exit 0
   elif grep -Eq <<< "$error" \
-      'Error: .*(Backend initialization required, please run "terraform init"|Required plugins are not installed)'
+      'Error: .*(Backend initialization required|Required plugins are not installed)'
     then
     ( # NB: need to undo the cd to keep relative paths valid
       cd "$working_dir"
-      if ! noise="$("$TF" init 2>&1)" || (( i == limit )); then
+      if ! noise="$("$TF" init -reconfigure 2>&1)" || (( i == limit )); then
         echo >&2 Terraform init failed!
         echo >&2 "$noise"
         exit 1
