@@ -3,6 +3,8 @@ set -eEuo pipefail
 HERE="$(dirname "$(readlink -f "$0")")"
 . "$HERE/"lib/env.sh
 
+TF="${TERRAFORM_BINARY:-$(command -v tofu >/dev/null 2>&1 && echo tofu || echo terraform)}"
+
 root_module="${1:-"$PWD"}"
 working_dir="$(tf_working_dir "$root_module")"
 
@@ -16,7 +18,7 @@ while (( i < limit )); do
   fancy_error="$(
     cd "$working_dir" || exit 1
     # swap stdout and stderr:
-    terraform force-unlock -force -- -1 3>&2 2>&1 1>&3 <<< ""
+    "$TF" force-unlock -force -- -1 3>&2 2>&1 1>&3 <<< ""
   )" && status=$? || status=$?
   # strip ansi fanciness from error messages, for automated consumption
   error="$(
@@ -31,15 +33,15 @@ while (( i < limit )); do
     then
     echo >&2 "No remote tfstate configured, path: '$root_module'"
     exit 1
-  elif grep -Eq <<< "$error" $'storage: object doesn'\''t exist$'; then
+  elif grep -Eq <<< "$error" $'storage: object doesn'\''t exist'; then
     echo '{"lock": false}'
     exit 0
   elif grep -Eq <<< "$error" \
-      'Error: .*(Backend initialization required, please run "terraform init"|Required plugins are not installed)'
+      'Error: .*(Backend initialization required|Required plugins are not installed)'
     then
     ( # NB: need to undo the cd to keep relative paths valid
       cd "$working_dir"
-      if ! noise="$(terraform init 2>&1)" || (( i == limit )); then
+      if ! noise="$("$TF" init -reconfigure 2>&1)" || (( i == limit )); then
         echo >&2 Terraform init failed!
         echo >&2 "$noise"
         exit 1
