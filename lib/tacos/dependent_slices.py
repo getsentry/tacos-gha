@@ -185,14 +185,17 @@ class TFCategorized:
 
     def config_deps(self) -> SliceDeps:
         """Map from config dirs to the slices that (could) depend on them."""
-        config_deps: dict[TFConfigDir, set[TopLevelTFModule]] = {}
-        for config_dir in self.config_dirs:
-            config_deps[config_dir] = set()
-            for slice in self.slices:
-                if dir_contains(config_dir, slice):
-                    config_deps[config_dir].add(slice)
+        return {
+            config_dir: self.slices_depending_on(config_dir)
+            for config_dir in self.config_dirs
+        }
 
-        return {var: frozenset(val) for var, val in config_deps.items()}
+    def slices_depending_on(
+        self, config_dir: TFConfigDir
+    ) -> frozenset[TopLevelTFModule]:
+        return frozenset(
+            slice for slice in self.slices if dir_contains(config_dir, slice)
+        )
 
     @property
     def config_dirs(self) -> frozenset[TFConfigDir]:
@@ -229,9 +232,8 @@ def dependent_slices(
     # do we need to worry about indirect modifications?
     if modified.shared_dirs or modified.config_files:
         all = TFCategorized.from_fs(fs)
-        config_deps = all.config_deps()
         for config_dir in modified.config_dirs:
-            yield from sorted(config_deps[config_dir])
+            yield from sorted(all.slices_depending_on(config_dir))
 
 
 def lines_to_paths(lines: Iterable[str]) -> Generator[OSPath]:
@@ -257,7 +259,9 @@ def main() -> int:
     disabled: list[dict[str, str]] = []
 
     for slice in dependent_slices(modified_paths, fs):
-        if not ignore_disabled and path_filter.is_disabled(str(slice), fs.files):
+        if not ignore_disabled and path_filter.is_disabled(
+            str(slice), fs.files
+        ):
             sh.debug(f"slice disabled by .tacos-disabled: {slice}")
             disabled.append({
                 "slice": str(slice),
