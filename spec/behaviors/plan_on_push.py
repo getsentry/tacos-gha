@@ -70,7 +70,7 @@ tf-lock-acquire: success: .(""",  # the next bit is github-username@fake-pr-doma
 $ sudo-gcp terragrunt run-all init
 You are authenticated for the next hour as: tacos-gha-tf-state-admin@sac-dev-sa.iam.gserviceaccount.com
 """,
-                "\nhas been successfully initialized!\n",
+                "has been successfully initialized!\n",
                 "\n$ sudo-gcp terragrunt run-all refresh\n",
                 "\n$ sudo-gcp terragrunt run-all plan -out $slice/tfplan\n",
             ),
