@@ -70,7 +70,7 @@ tf-lock-acquire: success: .(""",  # the next bit is github-username@fake-pr-doma
 $ sudo-gcp terragrunt run-all init
 You are authenticated for the next hour as: tacos-gha-tf-state-admin@sac-dev-sa.iam.gserviceaccount.com
 """,
-                "\nTerraform has been successfully initialized!\n",
+                "\nhas been successfully initialized!\n",
                 "\n$ sudo-gcp terragrunt run-all refresh\n",
                 "\n$ sudo-gcp terragrunt run-all plan -out $slice/tfplan\n",
             ),
@@ -80,16 +80,11 @@ You are authenticated for the next hour as: tacos-gha-tf-state-admin@sac-dev-sa.
         assert "tf-lock-release" not in commands
 
         tf_result: Parse = Parse(comment).between("</details>", "</details>")
-        assert "\nTerraform will perform the following actions:\n" in tf_result
+        assert "\nwill perform the following actions:\n" in tf_result
 
-        assert tf_result.strip().endswith(
-            """\
-Saved the plan to:
-tfplan
-
-To perform exactly these actions, run the following command to apply:
-    terraform apply "tfplan"
-```"""
+        assert (
+            'apply "tfplan"\n```' in tf_result
+            and "Saved the plan to:\ntfplan" in tf_result
         )
 
     # lock should continue to be held

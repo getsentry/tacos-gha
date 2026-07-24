@@ -16,6 +16,7 @@ from lib.types import Path
 from lib.user_error import UserError
 
 HERE = sh.get_HERE(__file__)
+_TF_BIN = environ.get("TERRAFORM_BINARY") or "tofu"
 TF_LOCK_EHELD = 3
 TERRAGRUNT_VERSION = environ["TERRAGRUNT_VERSION"]
 
@@ -135,7 +136,7 @@ def tf_lock_release(root_module: Path, env: Environ) -> None:
         try:
             with sh.cd(tf_working_dir(root_module)):
                 sh.run((
-                    "terraform",
+                    _TF_BIN,
                     "force-unlock",
                     "-force",
                     "--",
