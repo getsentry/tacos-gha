@@ -161,7 +161,7 @@ class SliceSummary(NamedTuple):
     def applied(self) -> bool:
         """The job succeeded and made changes."""
         if self.tacos_verb == "apply" and self._in_any_log_line(
-            "Terraform will perform the following actions:"
+            "will perform the following actions:"
         ):
             return self.returncode == 0
         else:
