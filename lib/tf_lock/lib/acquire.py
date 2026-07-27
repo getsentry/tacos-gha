@@ -56,7 +56,10 @@ async def get_prompt(output: asyncio.StreamReader) -> str:
                 raise
         prompt = ansi_denoise(data)
         if prompt:
-            return prompt.decode("UTF-8")
+            try:
+                return prompt.decode("UTF-8")
+            except UnicodeDecodeError:
+                raise Exception(f"prompt decode failure: {prompt}")
     return ""
 
 
