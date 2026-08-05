@@ -190,13 +190,41 @@ class TestDisabledSentinel:
         )
         fs = D.FileSystem.from_paths(paths)
         categorized = D.TFCategorized.from_fs(fs)
-        assert D.TopLevelTFModule(
-            D.TFModule(D.Dir(Path("env/prod/slice-0")))
-        ) in categorized.slices
+        assert (
+            D.TopLevelTFModule(D.TFModule(D.Dir(Path("env/prod/slice-0"))))
+            in categorized.slices
+        )
 
 
 class TestRegressions:
     """Real-world cases that (initially) weren't caught by unit-tests."""
+
+    def test_emptied_slice(self) -> None:
+        fs = D.FileSystem.from_paths((
+            OSPath("env/prod/removed/README.md"),
+            OSPath("env/prod/remaining/main.tf"),
+        ))
+        modified = (OSPath("env/prod/removed/main.tf"),)
+
+        assert tuple(D.dependent_slices(modified, fs)) == ()
+
+    def test_deleted_config_still_plans_descendants(self) -> None:
+        fs = D.FileSystem.from_paths((OSPath("env/prod/slice-0/main.tf"),))
+        modified = (OSPath("env/prod/terragrunt.hcl"),)
+
+        assert tuple(D.dependent_slices(modified, fs)) == (
+            D.TopLevelTFModule(D.TFModule(D.Dir(Path("env/prod/slice-0")))),
+        )
+
+    def test_emptied_shared_module_plans_sibling_slices(self) -> None:
+        # Deleting the last file under a shared module/modules dir must still
+        # replan the sibling slices, exactly as modifying it would.
+        fs = D.FileSystem.from_paths((OSPath("env/prod/slice-0/main.tf"),))
+        modified = (OSPath("env/prod/modules/foo/main.tf"),)
+
+        assert tuple(D.dependent_slices(modified, fs)) == (
+            D.TopLevelTFModule(D.TFModule(D.Dir(Path("env/prod/slice-0")))),
+        )
 
     def test_root_is_slice(self) -> None:
         modified = {
