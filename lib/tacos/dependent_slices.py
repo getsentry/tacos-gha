@@ -200,11 +200,23 @@ class TFCategorized:
     @property
     def config_dirs(self) -> frozenset[TFConfigDir]:
         """directories containing a config file or a shared-modules dir"""
-        return frozenset(
-            TFConfigDir(parent(path))
-            for paths in (self.shared_dirs, self.config_files)
-            for path in paths
-        )
+        config_dirs: set[TFConfigDir] = set()
+
+        for shared_dir in self.shared_dirs:
+            config_dirs.add(TFConfigDir(parent(shared_dir)))
+
+        for config_file in self.config_files:
+            config_dir = parent(config_file)
+            # A config file living inside a shared module/modules dir (e.g.
+            # because the module was emptied and is no longer recognized as a
+            # shared dir) still affects the slices beside that shared dir, not
+            # just the ones contained by the (now-deleted) module.
+            if shared := tf_find_shared_dir(TFModule(config_dir)):
+                config_dirs.add(TFConfigDir(parent(shared)))
+            else:
+                config_dirs.add(TFConfigDir(config_dir))
+
+        return frozenset(config_dirs)
 
 
 def uniq(f: Callable[P, Iterable[T]]) -> Callable[P, Generator[T]]:

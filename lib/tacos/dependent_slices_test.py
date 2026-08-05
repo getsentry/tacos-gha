@@ -216,6 +216,16 @@ class TestRegressions:
             D.TopLevelTFModule(D.TFModule(D.Dir(Path("env/prod/slice-0")))),
         )
 
+    def test_emptied_shared_module_plans_sibling_slices(self) -> None:
+        # Deleting the last file under a shared module/modules dir must still
+        # replan the sibling slices, exactly as modifying it would.
+        fs = D.FileSystem.from_paths((OSPath("env/prod/slice-0/main.tf"),))
+        modified = (OSPath("env/prod/modules/foo/main.tf"),)
+
+        assert tuple(D.dependent_slices(modified, fs)) == (
+            D.TopLevelTFModule(D.TFModule(D.Dir(Path("env/prod/slice-0")))),
+        )
+
     def test_root_is_slice(self) -> None:
         modified = {
             OSPath("proj/control/_import.tf"),
