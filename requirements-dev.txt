@@ -27,7 +27,7 @@ coverage==7.6.0
     #   coverage-enable-subprocess
 coverage-enable-subprocess==1.0
     # via -r requirements-dev.in
-cryptography==48.0.1
+cryptography==50.0.0
     # via pyjwt
 dill==0.3.8
     # via pylint
@@ -88,9 +88,7 @@ pycparser==2.22
 pygments==2.20.0
     # via pudb
 pyjwt==2.13.0
-    # via
-    #   -r requirements-dev.in
-    #   pyjwt
+    # via -r requirements-dev.in
 pylint==3.2.6
     # via -r requirements-dev.in
 pyproject-hooks==1.1.0
