@@ -56,10 +56,10 @@ async def get_prompt(output: asyncio.StreamReader) -> str:
                 raise
         prompt = ansi_denoise(data)
         if prompt:
-            try:
-                return prompt.decode("UTF-8")
-            except UnicodeDecodeError:
-                raise Exception(f"prompt decode failure: {prompt}")
+            # The 128-byte read can split a multi-byte character (e.g. the
+            # box-drawing in terraform warnings); this is only used to spot
+            # the ASCII "> " prompt, so replace rather than crash.
+            return prompt.decode("UTF-8", errors="replace")
     return ""
 
 
