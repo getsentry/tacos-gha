@@ -36,7 +36,9 @@ distlib==0.3.8
 execnet==2.1.1
     # via pytest-xdist
 filelock==3.25.2
-    # via virtualenv
+    # via
+    #   python-discovery
+    #   virtualenv
 identify==2.6.0
     # via pre-commit
 iniconfig==2.0.0
@@ -103,6 +105,8 @@ pytest==8.3.1
     #   pytest-xdist
 pytest-xdist==3.6.1
     # via -r requirements-dev.in
+python-discovery==1.6.1
+    # via virtualenv
 pytokens==0.4.1
     # via black
 pyyaml==6.0.1
@@ -119,7 +123,7 @@ urwid==2.6.15
     #   urwid-readline
 urwid-readline==0.14
     # via pudb
-virtualenv==20.36.1
+virtualenv==21.7.13
     # via
     #   -r requirements-dev.in
     #   pre-commit
