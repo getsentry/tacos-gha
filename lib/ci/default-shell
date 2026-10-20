@@ -20,11 +20,9 @@ exec >&2
 chmod -R g+rw "$(dirname "$GITHUB_OUTPUT")"
 
 sudo=(
-  # switch user to "$USER" (by default this is a noop)
-  sudo --preserve-env --set-home -u "$USER"
-
-  # sudo refuses to preserve certain vars: https://github.com/sudo-project/sudo/blob/main/plugins/sudoers/env.c#L138
-  env PATH="$PATH"
+  # switch user to "$USER" (by default this is a noop), keeping our environ.
+  # NOTE: $HOME is kept too; set-username-and-hostname points it at $USER's home
+  sudo-keep-env -u "$USER" --
 
   # the "inner half" of this script
   default-shell-post-sudo
