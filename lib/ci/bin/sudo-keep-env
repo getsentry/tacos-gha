@@ -1,0 +1,29 @@
+#!/bin/bash
+# Like `sudo --preserve-env SUDO_OPTION... COMMAND...`, but portable to sudo-rs.
+#
+# sudo-rs (the default sudo since ubuntu 25.10, so GitHub's ubuntu-26.04
+# runners) ignores a bare `--preserve-env`:
+#   sudo: preserving the entire environment is not supported, '--preserve-env' is ignored
+# Classic sudo also refuses to preserve some vars (e.g. PATH), see:
+#   https://github.com/sudo-project/sudo/blob/main/plugins/sudoers/env.c#L138
+# So: pass every exported var explicitly, via `env`, after switching user.
+#
+# usage: sudo-keep-env [SUDO_OPTION...] -- COMMAND [ARG...]
+set -euo pipefail
+
+sudo_opts=()
+while (( $# > 0 )) && [[ "$1" != -- ]]; do
+  sudo_opts+=("$1")
+  shift
+done
+if (( $# < 2 )); then
+  echo >&2 'usage: sudo-keep-env [SUDO_OPTION...] -- COMMAND [ARG...]'
+  exit 2
+fi
+shift  # the --
+
+# NUL-delimited, so multi-line values survive; `env` (not `compgen -e`) so
+# vars that aren't valid shell identifiers (e.g. INPUT_FOO-BAR) survive too
+mapfile -d '' environ < <(env -0)
+
+exec sudo "${sudo_opts[@]}" env "${environ[@]}" "$@"
