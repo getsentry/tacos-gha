@@ -1,3 +1,4 @@
 #!/bin/bash
 set -euxo pipefail
-sudo -Eu "$USER" ssh-add "$@"
+HERE="$(dirname "$(readlink -f "$0")")"
+"$HERE/"sudo-keep-env -u "$USER" -- ssh-add "$@"
