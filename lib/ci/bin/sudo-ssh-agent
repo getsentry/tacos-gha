@@ -1,4 +1,22 @@
 #!/bin/bash
 set -euxo pipefail
 HERE="$(dirname "$(readlink -f "$0")")"
+
+# OpenSSH >= 10.1 (e.g. GitHub's ubuntu-26.04 runners) puts the agent socket
+# under ~/.ssh/agent/ instead of /tmp/ssh-XXXX/. Our $USER's home is a symlink
+# to /home/runner, so it can't create that dir:
+#   ensure_mkdir: mkdir /home/$USER/.ssh/agent: Permission denied
+# Restore the old layout: a private /tmp dir owned by $USER. Skipped when the
+# caller picks a socket (-a) or kills the agent (-k).
+want_socket=true
+for arg in "$@"; do
+  case "$arg" in
+    -a | -a* | -k) want_socket=false ;;
+  esac
+done
+if "$want_socket"; then
+  sock_dir="$(sudo -u "$USER" mktemp -d /tmp/ssh-XXXXXXXXXX)"
+  set -- -a "$sock_dir/agent.sock" "$@"
+fi
+
 "$HERE/"sudo-keep-env -u "$USER" -- ssh-agent "$@"
