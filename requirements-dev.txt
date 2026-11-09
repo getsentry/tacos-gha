@@ -113,7 +113,7 @@ typing-extensions==4.12.2
     # via
     #   mypy
     #   urwid
-urwid==2.6.15
+urwid==4.0.7
     # via
     #   pudb
     #   urwid-readline
@@ -123,7 +123,7 @@ virtualenv==20.36.1
     # via
     #   -r requirements-dev.in
     #   pre-commit
-wcwidth==0.2.13
+wcwidth==0.9.4
     # via urwid
 wheel==0.46.2
     # via pip-tools
